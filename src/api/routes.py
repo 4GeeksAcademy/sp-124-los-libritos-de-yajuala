@@ -25,13 +25,13 @@ def handle_hello():
 # CRUD libros ---------------------------------
 
 
-@app.route("/books", methods=["GET"])
+@api.route("/books", methods=["GET"])
 def get_books():
     books = Book.query.all()
     return jsonify([b.serialize() for b in books]), 200
 
 
-@app.route("/books/<int:book_id>", methods=["GET"])
+@api.route("/books/<int:book_id>", methods=["GET"])
 def get_book(book_id):
     book = Book.query.get(book_id)
     if not book:
@@ -39,7 +39,7 @@ def get_book(book_id):
     return jsonify(book.serialize()), 200
 
 
-@app.route("/books", methods=["POST"])
+@api.route("/books", methods=["POST"])
 def create_book():
     body = request.get_json(silent=True) or {}
 
@@ -61,7 +61,7 @@ def create_book():
     return jsonify(book.serialize()), 201
 
 
-@app.route("/books/<int:book_id>", methods=["PUT"])
+@api.route("/books/<int:book_id>", methods=["PUT"])
 def update_book(book_id):
     book = Book.query.get(book_id)
     if not book:
@@ -85,7 +85,7 @@ def update_book(book_id):
     return jsonify(book.serialize()), 200
 
 
-@app.route("/books/<int:book_id>", methods=["DELETE"])
+@api.route("/books/<int:book_id>", methods=["DELETE"])
 def delete_book(book_id):
     book = Book.query.get(book_id)
     if not book:
