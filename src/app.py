@@ -68,54 +68,7 @@ def serve_any_other_file(path):
     return response
 
 
-@app.route('/user', methods=['GET']) 
-def get_users(): 
-    users = User.query.all() 
-    return jsonify([user.serialize() for user in users]), 200
 
-@app.route('/user/<int:user_id>', methods=['GET']) 
-def get_user(user_id): 
-    user = User.query.get(user_id) 
-    if user is None: 
-        return jsonify({"msg": "User not found"}), 404 
-    return jsonify(user.serialize()), 200
-
-@app.route('/user', methods=['POST']) 
-def add_user(): 
-    data = request.json 
-    
-    required_fields = ["name", "lastname", "email", "password"] 
-    for field in required_fields: 
-        if field not in data: 
-            return jsonify({"msg": f"Missing field: {field}"}), 400 
-        
-    existing_user = User.query.filter_by(email=data["email"]).first() 
-    if existing_user: 
-        return jsonify({"msg": "Email already registered"}), 400 
-    
-    new_user = User( 
-        name=data["name"], 
-        lastname=data["lastname"], 
-        email=data["email"], 
-        password=data["password"], 
-        is_active=True 
-    ) 
-    
-    db.session.add(new_user) 
-    db.session.commit() 
-    
-    return jsonify(new_user.serialize()), 201
-
-@app.route('/user/<int:user_id>', methods=['DELETE']) 
-def delete_user(user_id): 
-    user = User.query.get(user_id) 
-    if user is None: 
-        return jsonify({"msg": "User not found"}), 404 
-    
-    db.session.delete(user) 
-    db.session.commit() 
-    
-    return jsonify({"msg": "User deleted"}), 200
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
