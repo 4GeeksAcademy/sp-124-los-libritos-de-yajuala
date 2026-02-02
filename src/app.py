@@ -11,7 +11,7 @@ from api.models_books import Book
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
-from api.models_books import Book
+
 
 # from models import Person
 
@@ -68,80 +68,6 @@ def serve_any_other_file(path):
     return response
 
 
-# CRUD libros ---------------------------------
-
-
-@app.route("/books", methods=["GET"])
-def get_books():
-    books = Book.query.all()
-    return jsonify([b.serialize() for b in books]), 200
-
-
-@app.route("/books/<int:book_id>", methods=["GET"])
-def get_book(book_id):
-    book = Book.query.get(book_id)
-    if not book:
-        return jsonify({"msg": "Libro no encontrado"}), 404
-    return jsonify(book.serialize()), 200
-
-
-@app.route("/books", methods=["POST"])
-def create_book():
-    body = request.get_json(silent=True) or {}
-
-    titulo = body.get("titulo")
-    autor = body.get("autor")
-    isbn = body.get("isbn")
-
-    if not titulo or not autor or not isbn:
-        return jsonify({"msg": "Faltan campos: titulo, autor, isbn"}), 400
-
-    exists = Book.query.filter_by(isbn=isbn).first()
-    if exists:
-        return jsonify({"msg": "Ya existe un libro con ese isbn"}), 409
-
-    book = Book(titulo=titulo, autor=autor, isbn=isbn)
-    db.session.add(book)
-    db.session.commit()
-
-    return jsonify(book.serialize()), 201
-
-
-@app.route("/books/<int:book_id>", methods=["PUT"])
-def update_book(book_id):
-    book = Book.query.get(book_id)
-    if not book:
-        return jsonify({"msg": "Libro no encontrado"}), 404
-
-    body = request.get_json(silent=True) or {}
-
-    if "titulo" in body:
-        book.titulo = body["titulo"]
-    if "autor" in body:
-        book.autor = body["autor"]
-    if "isbn" in body:
-        new_isbn = body["isbn"]
-        exists = Book.query.filter(
-            Book.isbn == new_isbn, Book.id != book_id).first()
-        if exists:
-            return jsonify({"msg": "Ya existe otro libro con ese isbn"}), 409
-        book.isbn = new_isbn
-
-    db.session.commit()
-    return jsonify(book.serialize()), 200
-
-
-@app.route("/books/<int:book_id>", methods=["DELETE"])
-def delete_book(book_id):
-    book = Book.query.get(book_id)
-    if not book:
-        return jsonify({"msg": "Libro no encontrado"}), 404
-
-    db.session.delete(book)
-    db.session.commit()
-    return jsonify({"msg": "Libro eliminado"}), 200
-
-# cambios 
 
 
 
