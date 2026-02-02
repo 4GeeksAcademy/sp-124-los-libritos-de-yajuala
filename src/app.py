@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
-from api.models import db
+from api.models import db, User
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
@@ -57,6 +57,8 @@ def sitemap():
     return send_from_directory(static_file_dir, 'index.html')
 
 # any other endpoint will try to serve it like a static file
+
+
 @app.route('/<path:path>', methods=['GET'])
 def serve_any_other_file(path):
     if not os.path.isfile(os.path.join(static_file_dir, path)):
@@ -65,6 +67,55 @@ def serve_any_other_file(path):
     response.cache_control.max_age = 0  # avoid cache memory
     return response
 
+
+@app.route('/user', methods=['GET']) 
+def get_users(): 
+    users = User.query.all() 
+    return jsonify([user.serialize() for user in users]), 200
+
+@app.route('/user/<int:user_id>', methods=['GET']) 
+def get_user(user_id): 
+    user = User.query.get(user_id) 
+    if user is None: 
+        return jsonify({"msg": "User not found"}), 404 
+    return jsonify(user.serialize()), 200
+
+@app.route('/user', methods=['POST']) 
+def add_user(): 
+    data = request.json 
+    
+    required_fields = ["name", "lastname", "email", "password"] 
+    for field in required_fields: 
+        if field not in data: 
+            return jsonify({"msg": f"Missing field: {field}"}), 400 
+        
+    existing_user = User.query.filter_by(email=data["email"]).first() 
+    if existing_user: 
+        return jsonify({"msg": "Email already registered"}), 400 
+    
+    new_user = User( 
+        name=data["name"], 
+        lastname=data["lastname"], 
+        email=data["email"], 
+        password=data["password"], 
+        is_active=True 
+    ) 
+    
+    db.session.add(new_user) 
+    db.session.commit() 
+    
+    return jsonify(new_user.serialize()), 201
+
+@app.route('/user/<int:user_id>', methods=['DELETE']) 
+def delete_user(user_id): 
+    user = User.query.get(user_id) 
+    if user is None: 
+        return jsonify({"msg": "User not found"}), 404 
+    
+    db.session.delete(user) 
+    db.session.commit() 
+    
+    return jsonify({"msg": "User deleted"}), 200
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
