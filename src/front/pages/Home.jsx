@@ -37,6 +37,7 @@ export const Home = () => {
 	}, [])
 
 	return (
+<<<<<<< HEAD
 		<div className="text-center mt-5">
 			<h1 className="display-4">Hello Rigo!!</h1>
 			<p className="lead">
@@ -62,5 +63,8 @@ export const Home = () => {
 				)}
 			</div>
 		</div>
+=======
+		<></>
+>>>>>>> 4f5113a944e4f533b2fd082bfbb641e7e4d9a8f4
 	);
 }; 
