@@ -33,6 +33,7 @@ export const Home = () => {
 	}, [])
 
 	return (
+<<<<<<< HEAD
 		<div className="text-center mt-5">
 			<div className="alert alert-info">
 				{store.message ? (
@@ -44,5 +45,8 @@ export const Home = () => {
 				)}
 			</div>
 		</div>
+=======
+		<></>
+>>>>>>> develop
 	);
 }; 
