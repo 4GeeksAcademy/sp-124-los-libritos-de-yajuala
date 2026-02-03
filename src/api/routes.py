@@ -22,7 +22,7 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
-# CRUD libros ---------------------------------
+# CRUD libros layla---------------------------------
 
 
 @api.route("/books", methods=["GET"])
@@ -95,6 +95,6 @@ def delete_book(book_id):
     db.session.commit()
     return jsonify({"msg": "Libro eliminado"}), 200
 
-# cambios 
+# Fin CruD Libros Layla 
 
     
