@@ -41,12 +41,10 @@ export default function ClientsPage() {
             <div className="d-flex justify-content-between">
                 <h1 className="mb-4">Clientes</h1>
 
-                <button
-                    className="btn btn-warning mb-3"
-                    onClick={() => setEditingClient({ name: "", lastname: "", email: "", password: "" })}
-                >
+                <Link to="/clients/create" className="btn btn-warning mb-5">
                     Crear Cliente
-                </button>
+                </Link>
+
             </div>
 
             <div className="row">
@@ -61,9 +59,10 @@ export default function ClientsPage() {
                                     Ver ficha
                                 </Link>
 
-                                <button className="btn btn-primary me-2" onClick={() => setEditingClient(c)}>
+                                <Link to={`/clients/${c.id}/edit`} className="btn btn-primary me-2">
                                     Editar
-                                </button>
+                                </Link>
+
 
                                 <button className="btn btn-danger" onClick={() => deleteCliente(c.id)}>
                                     Eliminar
