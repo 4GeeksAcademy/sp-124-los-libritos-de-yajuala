@@ -14,9 +14,16 @@ import AddProvider from "./pages/proveedores/AddProvider";
 import ViewProvider from "./pages/proveedores/ViewProvider";
 import ClientsPage from "./pages/clients/ClientsPage";
 import ClientDetailPage from "./pages/clients/ClientDetailPage";
-import { Books } from "./pages/Books/Books";
 import AddNewClient from "./pages/clients/AddNewClient";
 import EditClientPage from "./pages/clients/EditClientPage";
+
+import { Books } from "./pages/Books/Books";
+import { BookCreate } from "./pages/Books/BookCreate";
+import { BookDetail } from "./pages/Books/BookDetail";
+import { BookEdit } from "./pages/Books/BookEdit";
+
+
+
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -41,8 +48,13 @@ export const router = createBrowserRouter(
       <Route path="/clients/create" element={<AddNewClient />} />
       <Route path="/clients/:id/edit" element={<EditClientPage />} />
       <Route path="/demo" element={<Demo />} />
-      <Route path="/books" element={<Books />} />
       <Route path="/provider/view/:providerId" element={<ViewProvider />} />
+
+      <Route path="books" element={<Books />} />
+      <Route path="books/new" element={<BookCreate />} />
+      <Route path="books/:id" element={<BookDetail />} />
+      <Route path="books/:id/edit" element={<BookEdit />} />
+
     </Route>
   )
 );
