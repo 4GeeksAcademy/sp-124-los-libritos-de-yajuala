@@ -13,6 +13,7 @@ import Provider from "./pages/proveedores/Provider";
 import AddProvider from "./pages/proveedores/AddProvider";
 import ClientsPage from "./pages/clients/ClientsPage";
 import ClientDetailPage from "./pages/clients/ClientDetailPage";
+import { Books } from "./pages/Books/Books";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -34,6 +35,8 @@ export const router = createBrowserRouter(
       <Route path="/providers/new" element={<AddProvider />} />
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/clients/:id" element={<ClientDetailPage />} />
+      <Route path="/demo" element={<Demo />} />
+      <Route path="/books" element={<Books />} />
     </Route>
   )
 );
