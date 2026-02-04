@@ -1,11 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
 
 export const Navbar = () => {
-  const location = useLocation();
+	const location = useLocation();
 
-  const isClientsPage = location.pathname.startsWith("/clients");
-
-  return (
-   <></>
-  );
+	return (
+		<nav className="navbar navbar-light bg-light">
+			<div className="container">
+				<Link to="/">
+					<span className="navbar-brand mb-0 h1">Back to Home</span>
+				</Link>
+				<Link to="/provider">
+					<span className="navbar-brand mb-0 h1">Proveedores</span>
+				</Link>
+				<div className="ml-auto">
+					<Link to="/demo">
+						<button className="btn btn-primary">Check the Context in action</button>
+					</Link>
+				</div>
+			</div>
+		</nav>
+	);
 };
