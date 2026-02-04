@@ -22,7 +22,12 @@ import { BookCreate } from "./pages/Books/BookCreate";
 import { BookDetail } from "./pages/Books/BookDetail";
 import { BookEdit } from "./pages/Books/BookEdit";
 
-
+import CartsPage from "./pages/Carts/CartsPage";
+import AddCartPage from "./pages/Carts/AddCartPage";
+import CartDetailPage from "./pages/Carts/CartDetailPage";
+import EditCartPage from "./pages/Carts/EditCartPage";
+import AddBookToCartPage from "./pages/Carts/AddBookToCartPage";
+import EditCartBookPage from "./pages/Carts/EditCartBookPage";
 
 
 export const router = createBrowserRouter(
@@ -54,6 +59,13 @@ export const router = createBrowserRouter(
       <Route path="books/new" element={<BookCreate />} />
       <Route path="books/:id" element={<BookDetail />} />
       <Route path="books/:id/edit" element={<BookEdit />} />
+
+      <Route path="carts" element={<CartsPage />} />
+      <Route path="carts/create" element={<AddCartPage />} />
+      <Route path="carts/:id" element={<CartDetailPage />} />
+      <Route path="carts/:id/edit" element={<EditCartPage />} />
+      <Route path="carts/:id/add-book" element={<AddBookToCartPage />} />
+      <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
 
     </Route>
   )
