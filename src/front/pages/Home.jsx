@@ -58,6 +58,10 @@ Please check if the backend is running and the backend port is public.`
 				<span className="navbar-brand mb-0 h1">Proveedores</span>
 			</Link>
 
+			<Link to="/carts" className="btn btn-danger btn-lg">
+				Ver Carritos
+			</Link>
+
 		</div>
 	);
 };
