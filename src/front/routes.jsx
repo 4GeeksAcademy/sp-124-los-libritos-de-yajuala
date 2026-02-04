@@ -11,6 +11,7 @@ import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 import Provider from "./pages/proveedores/Provider";
 import AddProvider from "./pages/proveedores/AddProvider";
+import ViewProvider from "./pages/proveedores/ViewProvider";
 import ClientsPage from "./pages/clients/ClientsPage";
 import ClientDetailPage from "./pages/clients/ClientDetailPage";
 import { Books } from "./pages/Books/Books";
@@ -33,6 +34,7 @@ export const router = createBrowserRouter(
       <Route path="/provider" element={<Provider />} />
       <Route path="/provider/:providerId" element={<AddProvider />} />
       <Route path="/providers/new" element={<AddProvider />} />
+      <Route path="/provider/view/:providerId" element={<ViewProvider />} />
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/clients/:id" element={<ClientDetailPage />} />
       <Route path="/demo" element={<Demo />} />
