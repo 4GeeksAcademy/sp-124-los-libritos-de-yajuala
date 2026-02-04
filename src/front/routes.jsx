@@ -11,6 +11,7 @@ import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 import Provider from "./pages/proveedores/Provider";
 import AddProvider from "./pages/proveedores/AddProvider";
+import ViewProvider from "./pages/proveedores/ViewProvider";
 import ClientsPage from "./pages/clients/ClientsPage";
 import ClientDetailPage from "./pages/clients/ClientDetailPage";
 import { Books } from "./pages/Books/Books";
@@ -28,19 +29,20 @@ export const router = createBrowserRouter(
     // Root Route: All navigation will start from here.
     <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>} >
 
-        {/* Nested Routes: Defines sub-routes within the BaseHome component. */}
-        <Route path= "/" element={<Home />} />
-        <Route path="/single/:theId" element={ <Single />} />  {/* Dynamic route for single items */}
-        <Route path="/demo" element={<Demo />} />
+      {/* Nested Routes: Defines sub-routes within the BaseHome component. */}
+      <Route path="/" element={<Home />} />
+      <Route path="/single/:theId" element={<Single />} />  {/* Dynamic route for single items */}
+      <Route path="/demo" element={<Demo />} />
       <Route path="/provider" element={<Provider />} />
       <Route path="/provider/:providerId" element={<AddProvider />} />
       <Route path="/providers/new" element={<AddProvider />} />
-        <Route path="/clients" element={<ClientsPage />} />
-        <Route path="/clients/:id" element={<ClientDetailPage />} />
-        <Route path="/clients/create" element={<AddNewClient />} />
-        <Route path="/clients/:id/edit" element={<EditClientPage />} />
-        <Route path="/demo" element={<Demo />} />
-        <Route path="/books" element={<Books />} />
-      </Route>
-    )
+      <Route path="/clients" element={<ClientsPage />} />
+      <Route path="/clients/:id" element={<ClientDetailPage />} />
+      <Route path="/clients/create" element={<AddNewClient />} />
+      <Route path="/clients/:id/edit" element={<EditClientPage />} />
+      <Route path="/demo" element={<Demo />} />
+      <Route path="/books" element={<Books />} />
+      <Route path="/provider/view/:providerId" element={<ViewProvider />} />
+    </Route>
+  )
 );

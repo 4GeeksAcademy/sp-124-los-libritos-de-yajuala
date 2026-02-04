@@ -54,6 +54,10 @@ Please check if the backend is running and the backend port is public.`
 				Ir a Libros
 			</button>
 
+			<Link to="/provider" className="btn btn-warning btn-lg m-2">
+				<span className="navbar-brand mb-0 h1">Proveedores</span>
+			</Link>
+
 		</div>
 	);
 };
