@@ -6,11 +6,6 @@ export const Navbar = () => {
 	return (
 		<nav className="navbar navbar-light bg-light">
 			<div className="container">
-				{!isClientsPage && (
-					<Link to="/clients" className="btn btn-success btn-lg m-2">
-						Clientes
-					</Link>
-				)}
 				<Link to="/">
 					<span className="navbar-brand mb-0 h1">Back to Home</span>
 				</Link>

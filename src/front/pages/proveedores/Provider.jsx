@@ -10,7 +10,7 @@ const Provider = () => {
 
   const navigate = useNavigate();
 
-  //Cargar proveedores
+  // Cargar proveedores
   useEffect(() => {
     fetch(API_BASE + "/api/provider")
       .then(res => {
@@ -27,7 +27,7 @@ const Provider = () => {
       });
   }, []);
 
-  //
+  // Eliminar proveedor
   const deleteProvider = async (id) => {
     const confirmDelete = confirm("¿Seguro que quieres eliminar este proveedor?");
     if (!confirmDelete) return;
@@ -37,7 +37,7 @@ const Provider = () => {
         method: "DELETE"
       });
 
-      if (!res.ok) throw new Error("Error al eliminar");
+      if (!res.ok) throw new Error("Error al eliminar proveedor");
 
       setProviders(providers.filter(p => p.id !== id));
     } catch (err) {
@@ -45,7 +45,7 @@ const Provider = () => {
     }
   };
 
-  //Filtrado por buscador implementaqcion agregada de prueba
+  // Filtrado por buscador
   const filteredProviders = providers.filter(provider =>
     provider.nombre.toLowerCase().includes(search.toLowerCase()) ||
     provider.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -56,9 +56,18 @@ const Provider = () => {
 
   return (
     <div className="container mt-4">
-      <h1>Listado de Proveedores</h1>
+      <div className="d-flex justify-content-between align-items-center">
+        <h1>Listado de Proveedores</h1>
 
-      {/*Buscador*/}
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/providers/new")}
+        >
+          + Nuevo Proveedor
+        </button>
+      </div>
+
+      {/* Buscador */}
       <input
         type="text"
         className="form-control mt-3"

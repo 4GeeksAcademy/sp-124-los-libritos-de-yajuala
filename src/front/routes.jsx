@@ -31,6 +31,7 @@ export const router = createBrowserRouter(
       <Route path="/demo" element={<Demo />} />
       <Route path="/provider" element={<Provider />} />
       <Route path="/provider/:providerId" element={<AddProvider />} />
+      <Route path="/providers/new" element={<AddProvider />} />
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/clients/:id" element={<ClientDetailPage />} />
     </Route>
