@@ -57,6 +57,13 @@ Please check if the backend is running and the backend port is public.`
 			<Link to="/provider" className="btn btn-warning btn-lg m-2">
 				<span className="navbar-brand mb-0 h1">Proveedores</span>
 			</Link>
+			<Link to="/categorialibro" className="btn btn-info btn-lg m-2">
+				<span className="navbar-brand mb-0 h1">Categorías Libros</span>
+			</Link>
+			<Link to="/categorias" className="btn btn-info btn-lg m-2">
+				<span className="navbar-brand mb-0 h1">Categorías</span>
+			</Link>
+
 
 		</div>
 	);

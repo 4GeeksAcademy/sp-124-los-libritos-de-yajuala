@@ -73,3 +73,56 @@ class Provider(db.Model):
             "password": self.password,
             "documento": self.documento
         }
+
+
+class Categorias(db.Model):
+    __tablename__ = "categorias"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    nombre = db.Column(
+        db.String(150),
+        nullable=False,
+        index=True
+    )
+
+    descripcion = db.Column(
+        db.String(350),
+        nullable=False,
+        index=True
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "descripcion": self.descripcion
+        }
+
+
+class Categoria_Libro(db.Model):
+    __tablename__ = "categoria_libro"
+
+    categoria_id = db.Column(
+        db.Integer,
+        db.ForeignKey('categorias.id'),
+        primary_key=True  # Marcamos como PK
+    )
+
+    libro_id = db.Column(
+        db.Integer,
+        db.ForeignKey('book.id'),
+        primary_key=True  # Marcamos como PK
+    )
+
+    categoria = db.relationship("Categorias", backref="relaciones")
+    libro = db.relationship("Book", backref="relaciones")
+
+    def serialize(self):
+        return {
+            "categoria_id": self.categoria_id,
+            "libro_id": self.libro_id
+        }

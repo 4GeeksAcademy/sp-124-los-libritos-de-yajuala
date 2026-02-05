@@ -18,6 +18,15 @@ import { Books } from "./pages/Books/Books";
 import AddNewClient from "./pages/clients/AddNewClient";
 import EditClientPage from "./pages/clients/EditClientPage";
 
+import Categorias from "./pages/categorias/Categorias";
+import AddCategorias from "./pages/categorias/AddCategorias";
+import ViewCategorias from "./pages/categorias/ViewCategorias";
+
+import CategoriaLibro from "./pages/categorialibro/CategoriaLibro";
+import AddCategoriaLibro from "./pages/categorialibro/AddCategoriaLibro";
+import ViewCategoriaLibro from "./pages/categorialibro/ViewCategoriaLibro";
+
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     // CreateRoutesFromElements function allows you to build route elements declaratively.
@@ -43,6 +52,12 @@ export const router = createBrowserRouter(
       <Route path="/demo" element={<Demo />} />
       <Route path="/books" element={<Books />} />
       <Route path="/provider/view/:providerId" element={<ViewProvider />} />
+      <Route path="/categorias" element={<Categorias />} />
+      <Route path="/categorias/new" element={<AddCategorias />} />
+      <Route path="/categorias/view/:categoriaId" element={<ViewCategorias />} />
+      <Route path="/categorialibro" element={<CategoriaLibro />} />
+      <Route path="/categorialibro/new" element={<AddCategoriaLibro />} />
+      <Route path="/categorialibro/view/:categoriaId/:libroId" element={<ViewCategoriaLibro />}/>
     </Route>
   )
 );
