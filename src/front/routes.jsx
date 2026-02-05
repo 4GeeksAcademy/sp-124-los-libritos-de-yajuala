@@ -29,6 +29,18 @@ import EditCartPage from "./pages/Carts/EditCartPage";
 import AddBookToCartPage from "./pages/Carts/AddBookToCartPage";
 import EditCartBookPage from "./pages/Carts/EditCartBookPage";
 
+import { Delivery } from "./pages/Delivery/DeliveryList.jsx";
+import { DeliveryCreate } from "./pages/Delivery/DeliveryCreate.jsx";
+import { DeliveryDetail } from "./pages/Delivery/DeliveryDetail.jsx";
+import { DeliveryEdit } from "./pages/Delivery/DeliveryEdit.jsx";
+
+import { Reviews } from "./pages/Reviews/Reviews.jsx";
+import { ReviewCreate } from "./pages/Reviews/ReviewCreate.jsx";
+import { ReviewDetail } from "./pages/Reviews/ReviewDetail.jsx";
+import { ReviewEdit } from "./pages/Reviews/ReviewEdit.jsx";
+
+
+
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -66,6 +78,17 @@ export const router = createBrowserRouter(
       <Route path="carts/:id/edit" element={<EditCartPage />} />
       <Route path="carts/:id/add-book" element={<AddBookToCartPage />} />
       <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
+
+      <Route path="delivery" element={<Delivery />} />
+      <Route path="delivery/new" element={<DeliveryCreate />} />
+      <Route path="delivery/:id" element={<DeliveryDetail />} />
+      <Route path="delivery/:id/edit" element={<DeliveryEdit />} />
+
+      <Route path="reviews" element={<Reviews />} />
+      <Route path="reviews/new" element={<ReviewCreate />} />
+      <Route path="reviews/:id" element={<ReviewDetail />} />
+      <Route path="reviews/:id/edit" element={<ReviewEdit />} />
+
 
     </Route>
   )
