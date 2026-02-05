@@ -6,6 +6,10 @@ from api.models import db, User, Provider, Cart, CartBook
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models_books import Book
+from api.models_delivery import Delivery
+from api.models_reviews import Review
+
+
 
 
 api = Blueprint('api', __name__)
@@ -392,3 +396,202 @@ def delete_cart_book(item_id):
     db.session.commit()
 
     return jsonify({"msg": "Item eliminado"}), 200
+
+# CRUD Delivery Layla
+
+@api.route("/delivery", methods=["GET"])
+def get_delivery_list():
+    items = Delivery.query.all()
+    return jsonify([d.serialize() for d in items]), 200
+
+
+@api.route("/delivery/<int:delivery_id>", methods=["GET"])
+def get_delivery_detail(delivery_id):
+    item = Delivery.query.get(delivery_id)
+    if not item:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+    return jsonify(item.serialize()), 200
+
+
+@api.route("/delivery", methods=["POST"])
+def create_delivery():
+    body = request.get_json(silent=True) or {}
+
+    required = ["nombre", "apellido", "email", "password", "identificacion"]
+    for f in required:
+        if not body.get(f):
+            return jsonify({"msg": f"Falta {f}"}), 400
+
+  
+    if Delivery.query.filter_by(email=body["email"]).first():
+        return jsonify({"msg": "Email ya existe"}), 409
+
+    if Delivery.query.filter_by(identificacion=body["identificacion"]).first():
+        return jsonify({"msg": "Identificacion ya existe"}), 409
+
+    d = Delivery(
+        nombre=body["nombre"],
+        apellido=body["apellido"],
+        email=body["email"],
+        identificacion=body["identificacion"],
+        password_hash="temp"
+    )
+    d.set_password(body["password"])
+
+    db.session.add(d)
+    db.session.commit()
+
+    return jsonify(d.serialize()), 201
+
+
+@api.route("/delivery/<int:delivery_id>", methods=["PUT"])
+def update_delivery(delivery_id):
+    d = Delivery.query.get(delivery_id)
+    if not d:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    body = request.get_json(silent=True) or {}
+
+   
+    if "email" in body and body["email"] != d.email:
+        if Delivery.query.filter_by(email=body["email"]).first():
+            return jsonify({"msg": "Email ya existe"}), 409
+        d.email = body["email"]
+
+  
+    if "identificacion" in body and body["identificacion"] != d.identificacion:
+        if Delivery.query.filter_by(identificacion=body["identificacion"]).first():
+            return jsonify({"msg": "Identificacion ya existe"}), 409
+        d.identificacion = body["identificacion"]
+
+    if "nombre" in body:
+        d.nombre = body["nombre"]
+    if "apellido" in body:
+        d.apellido = body["apellido"]
+
+    
+    if body.get("password"):
+        d.set_password(body["password"])
+
+    db.session.commit()
+    return jsonify(d.serialize()), 200
+
+
+@api.route("/delivery/<int:delivery_id>", methods=["DELETE"])
+def delete_delivery(delivery_id):
+    d = Delivery.query.get(delivery_id)
+    if not d:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    db.session.delete(d)
+    db.session.commit()
+    return jsonify({"msg": "Repartidor eliminado"}), 200
+
+# Fin Crud Delivery Layla
+
+# CRUD Reviews Layla ---------------------------------
+
+@api.route("/reviews", methods=["GET"])
+def get_reviews():
+    reviews = Review.query.all()
+    return jsonify([r.serialize() for r in reviews]), 200
+
+
+@api.route("/reviews/<int:review_id>", methods=["GET"])
+def get_review(review_id):
+    r = Review.query.get(review_id)
+    if not r:
+        return jsonify({"msg": "Review no encontrada"}), 404
+    return jsonify(r.serialize()), 200
+
+
+@api.route("/reviews", methods=["POST"])
+def create_review():
+    body = request.get_json(silent=True) or {}
+
+    required = ["id_cliente", "id_libro", "puntuacion"]
+    for f in required:
+        if body.get(f) is None:
+            return jsonify({"msg": f"Falta {f}"}), 400
+
+    
+    cliente = User.query.get(body["id_cliente"])
+    if not cliente:
+        return jsonify({"msg": "Cliente no encontrado"}), 404
+
+    
+    libro = Book.query.get(body["id_libro"])
+    if not libro:
+        return jsonify({"msg": "Libro no encontrado"}), 404
+
+    
+    try:
+        puntuacion = int(body["puntuacion"])
+    except Exception:
+        return jsonify({"msg": "puntuacion debe ser un número"}), 400
+
+    if puntuacion < 1 or puntuacion > 5:
+        return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
+
+    review = Review(
+        id_cliente=body["id_cliente"],
+        id_libro=body["id_libro"],
+        puntuacion=puntuacion,
+        comentario=body.get("comentario")
+    )
+
+    db.session.add(review)
+    db.session.commit()
+
+    return jsonify(review.serialize()), 201
+
+
+@api.route("/reviews/<int:review_id>", methods=["PUT"])
+def update_review(review_id):
+    review = Review.query.get(review_id)
+    if not review:
+        return jsonify({"msg": "Review no encontrada"}), 404
+
+    body = request.get_json(silent=True) or {}
+
+    if "id_cliente" in body:
+        cliente = User.query.get(body["id_cliente"])
+        if not cliente:
+            return jsonify({"msg": "Cliente no encontrado"}), 404
+        review.id_cliente = body["id_cliente"]
+
+    if "id_libro" in body:
+        libro = Book.query.get(body["id_libro"])
+        if not libro:
+            return jsonify({"msg": "Libro no encontrado"}), 404
+        review.id_libro = body["id_libro"]
+
+    if "puntuacion" in body:
+        try:
+            puntuacion = int(body["puntuacion"])
+        except Exception:
+            return jsonify({"msg": "puntuacion debe ser un número"}), 400
+
+        if puntuacion < 1 or puntuacion > 5:
+            return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
+
+        review.puntuacion = puntuacion
+
+    if "comentario" in body:
+        review.comentario = body["comentario"]
+
+    db.session.commit()
+    return jsonify(review.serialize()), 200
+
+
+@api.route("/reviews/<int:review_id>", methods=["DELETE"])
+def delete_review(review_id):
+    review = Review.query.get(review_id)
+    if not review:
+        return jsonify({"msg": "Review no encontrada"}), 404
+
+    db.session.delete(review)
+    db.session.commit()
+    return jsonify({"msg": "Review eliminada"}), 200
+
+# Fin CRUD Reviews Layla

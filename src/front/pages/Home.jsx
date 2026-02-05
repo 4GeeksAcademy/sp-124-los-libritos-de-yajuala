@@ -62,6 +62,20 @@ Please check if the backend is running and the backend port is public.`
 				Ver Carritos
 			</Link>
 
+			<button
+				type="button" className="btn btn-info btn-lg m-2"
+				onClick={() => navigate("/delivery")}>
+				Repartidores
+			</button>
+
+			<button
+				type="button" className="btn btn-success btn-lg m-2"
+				onClick={() => navigate("/reviews")}>
+				Reviews
+			</button>
+
+
+
 		</div>
 	);
 };
