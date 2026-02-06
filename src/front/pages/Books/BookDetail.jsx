@@ -45,6 +45,7 @@ export const BookDetail = () => {
         <div className="card-body">
           <p><strong>Título:</strong> {book.titulo}</p>
           <p><strong>Autor:</strong> {book.autor}</p>
+          <p><strong>Precio:</strong> {book.precio} €</p>
           <p><strong>ISBN:</strong> {book.isbn}</p>
 
           <div className="d-flex gap-2">

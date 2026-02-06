@@ -197,9 +197,9 @@ def get_books():
     return jsonify([b.serialize() for b in books]), 200
 
 
-@api.route("/books/<int:book_id>", methods=["GET"])
-def get_book(book_id):
-    book = Book.query.get(book_id)
+@api.route("/books/<int:id>", methods=["GET"])
+def get_book(id):
+    book = Book.query.get(id)
     if not book:
         return jsonify({"msg": "Libro no encontrado"}), 404
     return jsonify(book.serialize()), 200
@@ -212,43 +212,53 @@ def create_book():
     titulo = body.get("titulo")
     autor = body.get("autor")
     isbn = body.get("isbn")
+    precio_raw = body.get("precio")
 
     if not titulo or not autor or not isbn:
         return jsonify({"msg": "Faltan campos: titulo, autor, isbn"}), 400
+
+    if precio_raw in (None, "", " "):
+        return jsonify({"msg": "El precio es obligatorio"}), 400
+
+    try:
+        precio = float(precio_raw)
+    except:
+        return jsonify({"msg": "El precio debe ser un número"}), 400
 
     exists = Book.query.filter_by(isbn=isbn).first()
     if exists:
         return jsonify({"msg": "Ya existe un libro con ese isbn"}), 409
 
-    book = Book(titulo=titulo, autor=autor, isbn=isbn)
+    book = Book(
+        titulo=titulo,
+        autor=autor,
+        isbn=isbn,
+        precio=precio
+    )
+
     db.session.add(book)
     db.session.commit()
 
     return jsonify(book.serialize()), 201
 
 
-@api.route("/books/<int:book_id>", methods=["PUT"])
-def update_book(book_id):
-    book = Book.query.get(book_id)
+
+@api.route("/books/<int:id>", methods=["PUT"])
+def update_book(id):
+    data = request.json
+    book = Book.query.get(id)
+
     if not book:
         return jsonify({"msg": "Libro no encontrado"}), 404
 
-    body = request.get_json(silent=True) or {}
-
-    if "titulo" in body:
-        book.titulo = body["titulo"]
-    if "autor" in body:
-        book.autor = body["autor"]
-    if "isbn" in body:
-        new_isbn = body["isbn"]
-        exists = Book.query.filter(
-            Book.isbn == new_isbn, Book.id != book_id).first()
-        if exists:
-            return jsonify({"msg": "Ya existe otro libro con ese isbn"}), 409
-        book.isbn = new_isbn
+    book.titulo = data.get("titulo", book.titulo)
+    book.autor = data.get("autor", book.autor)
+    book.isbn = data.get("isbn", book.isbn)
+    book.precio = float(data.get("precio", book.precio))
 
     db.session.commit()
     return jsonify(book.serialize()), 200
+
 
 
 @api.route("/books/<int:book_id>", methods=["DELETE"])
@@ -257,205 +267,14 @@ def delete_book(book_id):
     if not book:
         return jsonify({"msg": "Libro no encontrado"}), 404
 
+    if CartBook.query.filter_by(id_libro=id).first():
+        return jsonify({"msg": "No se puede borrar un libro que está en carritos"}), 400
+
     db.session.delete(book)
     db.session.commit()
     return jsonify({"msg": "Libro eliminado"}), 200
 
 # Fin CruD Libros Layla
-
-# CRUD Categoria-libro
-
-
-@api.route("/categorialibro", methods=["POST"])
-def create_categoria_libro():
-    body = request.get_json(silent=True) or {}
-
-    categoria_id = body.get("categoria_id")
-    libro_id = body.get("libro_id")
-
-    if categoria_id is None or libro_id is None:
-        return jsonify({"msg": "Faltan campos: categoria_id, libro_id"}), 400
-
-    categoria = Categorias.query.get(categoria_id)
-    libro = Book.query.get(libro_id)
-    if not categoria or not libro:
-        return jsonify({"msg": "Categoría o Libro no existe"}), 404
-
-    existing = Categoria_Libro.query.filter_by(
-        categoria_id=categoria_id, libro_id=libro_id
-    ).first()
-    if existing:
-        return jsonify({"msg": "La relación ya existe"}), 409
-
-    relacion = Categoria_Libro(categoria_id=categoria_id, libro_id=libro_id)
-    db.session.add(relacion)
-    db.session.commit()
-
-    return jsonify(relacion.serialize()), 201
-
-
-@api.route("/categorialibro", methods=["GET"])
-def list_categorialibro():
-    relaciones = Categoria_Libro.query.all()
-
-    return jsonify([
-        {
-            "categoria_id": r.categoria_id,
-            "libro_id": r.libro_id,
-            "categoria": r.categoria.serialize() if r.categoria else None,
-            "libro": r.libro.serialize() if r.libro else None
-        }
-        for r in relaciones
-    ]), 200
-
-
-@api.route("/categorialibro/<int:categoria_id>/<int:libro_id>", methods=["GET"])
-def get_categoria_libro(categoria_id, libro_id):
-    relacion = Categoria_Libro.query.filter_by(
-        categoria_id=categoria_id, libro_id=libro_id
-    ).first()
-
-    if not relacion:
-        return jsonify({"msg": "Relación no encontrada"}), 404
-
-    return jsonify({
-        "categoria_id": relacion.categoria_id,
-        "libro_id": relacion.libro_id,
-        "categoria": {"id": relacion.categoria.id, "nombre": relacion.categoria.nombre} if relacion.categoria else None,
-        "libro": {"id": relacion.libro.id, "titulo": relacion.libro.titulo} if relacion.libro else None
-    }), 200
-
-
-@api.route("/categorialibro/<int:categoria_id>/<int:libro_id>", methods=["PUT"])
-def update_categoria_libro(categoria_id, libro_id):
-    body = request.get_json(silent=True) or {}
-
-    new_categoria_id = body.get("categoria_id")
-    new_libro_id = body.get("libro_id")
-
-    if new_categoria_id is None or new_libro_id is None:
-        return jsonify({"msg": "Faltan campos: categoria_id, libro_id"}), 400
-
-    relacion = Categoria_Libro.query.filter_by(
-        categoria_id=categoria_id,
-        libro_id=libro_id
-    ).first()
-
-    if not relacion:
-        return jsonify({"msg": "Relación no encontrada"}), 404
-
-    categoria = Categorias.query.get(new_categoria_id)
-    libro = Book.query.get(new_libro_id)
-    if not categoria or not libro:
-        return jsonify({"msg": "Categoría o Libro no existe"}), 404
-
-    exists = Categoria_Libro.query.filter_by(
-        categoria_id=new_categoria_id,
-        libro_id=new_libro_id
-    ).first()
-    if exists:
-        return jsonify({"msg": "Ya existe esa relación"}), 409
-
-    db.session.delete(relacion)
-    nueva_relacion = Categoria_Libro(
-        categoria_id=new_categoria_id,
-        libro_id=new_libro_id
-    )
-    db.session.add(nueva_relacion)
-
-    db.session.commit()
-
-    return jsonify(nueva_relacion.serialize()), 200
-
-
-@api.route("/categorialibro/<int:categoria_id>/<int:libro_id>", methods=["DELETE"])
-def delete_categoria_libro(categoria_id, libro_id):
-    relacion = Categoria_Libro.query.filter_by(
-        categoria_id=categoria_id,
-        libro_id=libro_id
-    ).first()
-
-    if not relacion:
-        return jsonify({"msg": "Relación no encontrada"}), 404
-
-    db.session.delete(relacion)
-    db.session.commit()
-
-    return jsonify({"msg": "Relación eliminada correctamente"}), 200
-
-
-# CRUD Categorias
-
-
-@api.route("/categorias", methods=["GET"])
-def list_categorias():
-    categorias = Categorias.query.all()
-    return jsonify([c.serialize() for c in categorias]), 200
-
-
-@api.route("/categorias/<int:id>", methods=["GET"])
-def get_categoria(id):
-    categoria = Categorias.query.get(id)
-    if not categoria:
-        return jsonify({"msg": "Categoría no encontrada"}), 404
-    return jsonify(categoria.serialize()), 200
-
-
-@api.route("/categorias", methods=["POST"])
-def create_categoria():
-    body = request.get_json(silent=True) or {}
-
-    nombre = body.get("nombre")
-    descripcion = body.get("descripcion")
-
-    if not nombre or not descripcion:
-        return jsonify({"msg": "Faltan campos: nombre, descripcion"}), 400
-
-    exists = Categorias.query.filter_by(nombre=nombre).first()
-    if exists:
-        return jsonify({"msg": "Ya existe una categoría con ese nombre"}), 409
-
-    categoria = Categorias(
-        nombre=nombre,
-        descripcion=descripcion
-    )
-
-    db.session.add(categoria)
-    db.session.commit()
-
-    return jsonify(categoria.serialize()), 201
-
-
-@api.route("/categorias/<int:id>", methods=["PUT"])
-def update_categoria(id):
-    categoria = Categorias.query.get(id)
-    if not categoria:
-        return jsonify({"msg": "Categoría no encontrada"}), 404
-
-    data = request.get_json(silent=True) or {}
-    nombre = data.get("nombre")
-    descripcion = data.get("descripcion")
-
-    if not nombre or not descripcion:
-        return jsonify({"msg": "Faltan campos"}), 400
-
-    categoria.nombre = nombre
-    categoria.descripcion = descripcion
-    db.session.commit()
-
-    return jsonify(categoria.serialize()), 200
-
-
-@api.route("/categorias/<int:id>", methods=["DELETE"])
-def delete_categoria(id):
-    categoria = Categorias.query.get(id)
-    if not categoria:
-        return jsonify({"msg": "Categoría no encontrada"}), 404
-
-    db.session.delete(categoria)
-    db.session.commit()
-
-    return jsonify({"msg": "Categoría eliminada"}), 200
 
 
 @api.route("/carts", methods=["GET"])

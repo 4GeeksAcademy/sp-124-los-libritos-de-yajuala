@@ -6,7 +6,6 @@ export default function AddCartPage() {
 
   const [form, setForm] = useState({
     id_cliente: "",
-    monto_total: 0,
     estado: "pendiente"
   });
 
@@ -18,11 +17,15 @@ export default function AddCartPage() {
     await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/carts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
+      body: JSON.stringify({
+        id_cliente: form.id_cliente,
+        estado: form.estado
+      })
     });
 
     navigate("/carts");
   };
+
 
   return (
     <div className="container mt-4">
@@ -35,17 +38,6 @@ export default function AddCartPage() {
             name="id_cliente"
             className="form-control"
             value={form.id_cliente}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Monto Total</label>
-          <input
-            name="monto_total"
-            type="number"
-            className="form-control"
-            value={form.monto_total}
             onChange={handleChange}
           />
         </div>

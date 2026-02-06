@@ -6,6 +6,7 @@ export default function CartDetailPage() {
   const [cart, setCart] = useState(null);
   const [items, setItems] = useState([]);
 
+
   const total = items.reduce((acc, item) => {
     const precioConDescuento = item.precio * (1 - item.descuento);
     return acc + precioConDescuento * item.cantidad;
@@ -23,6 +24,15 @@ export default function CartDetailPage() {
     const data = await res.json();
     setItems(data);
   };
+
+  const deleteItem = async (itemId) => {
+    await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart-books/${itemId}`, {
+      method: "DELETE"
+    });
+
+    fetchItems();
+  };
+
 
 
   useEffect(() => {
@@ -51,7 +61,12 @@ export default function CartDetailPage() {
           <div key={item.id} className="card p-3 mb-2 shadow-sm">
             <h5>{item.libro.titulo}</h5>
             <p><strong>Cantidad:</strong> {item.cantidad}</p>
-            <p><strong>Precio:</strong> {item.precio} €</p>
+            <p><strong>Precio del libro:</strong> {item.libro.precio} €</p>
+            <p>
+              <strong>Subtotal:</strong>{" "}
+              {((item.precio * (1 - item.descuento)) * item.cantidad).toFixed(2)} €
+            </p>
+
             <p><strong>Descuento:</strong> {item.descuento * 100}%</p>
             <div className="d-flex">
               <Link
