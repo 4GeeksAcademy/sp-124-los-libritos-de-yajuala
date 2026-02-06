@@ -14,9 +14,30 @@ import AddProvider from "./pages/proveedores/AddProvider";
 import ViewProvider from "./pages/proveedores/ViewProvider";
 import ClientsPage from "./pages/clients/ClientsPage";
 import ClientDetailPage from "./pages/clients/ClientDetailPage";
-import { Books } from "./pages/Books/Books";
 import AddNewClient from "./pages/clients/AddNewClient";
 import EditClientPage from "./pages/clients/EditClientPage";
+
+import { Books } from "./pages/Books/Books";
+import { BookCreate } from "./pages/Books/BookCreate";
+import { BookDetail } from "./pages/Books/BookDetail";
+import { BookEdit } from "./pages/Books/BookEdit";
+
+import CartsPage from "./pages/Carts/CartsPage";
+import AddCartPage from "./pages/Carts/AddCartPage";
+import CartDetailPage from "./pages/Carts/CartDetailPage";
+import EditCartPage from "./pages/Carts/EditCartPage";
+import AddBookToCartPage from "./pages/Carts/AddBookToCartPage";
+import EditCartBookPage from "./pages/Carts/EditCartBookPage";
+
+import { Delivery } from "./pages/Delivery/DeliveryList.jsx";
+import { DeliveryCreate } from "./pages/Delivery/DeliveryCreate.jsx";
+import { DeliveryDetail } from "./pages/Delivery/DeliveryDetail.jsx";
+import { DeliveryEdit } from "./pages/Delivery/DeliveryEdit.jsx";
+
+import { Reviews } from "./pages/Reviews/Reviews.jsx";
+import { ReviewCreate } from "./pages/Reviews/ReviewCreate.jsx";
+import { ReviewDetail } from "./pages/Reviews/ReviewDetail.jsx";
+import { ReviewEdit } from "./pages/Reviews/ReviewEdit.jsx";
 
 import Categorias from "./pages/categorias/Categorias";
 import AddCategorias from "./pages/categorias/AddCategorias";
@@ -26,6 +47,7 @@ import CategoriaLibro from "./pages/categorialibro/CategoriaLibro";
 import AddCategoriaLibro from "./pages/categorialibro/AddCategoriaLibro";
 import ViewCategoriaLibro from "./pages/categorialibro/ViewCategoriaLibro";
 import EditCategoriaLibro from "./pages/categorialibro/EditCategoriaLibro";
+
 
 
 export const router = createBrowserRouter(
@@ -51,9 +73,30 @@ export const router = createBrowserRouter(
       <Route path="/clients/create" element={<AddNewClient />} />
       <Route path="/clients/:id/edit" element={<EditClientPage />} />
       <Route path="/demo" element={<Demo />} />
-      <Route path="/books" element={<Books />} />
       <Route path="/provider/view/:providerId" element={<ViewProvider />} />
-      
+
+      <Route path="books" element={<Books />} />
+      <Route path="books/new" element={<BookCreate />} />
+      <Route path="books/:id" element={<BookDetail />} />
+      <Route path="books/:id/edit" element={<BookEdit />} />
+
+      <Route path="carts" element={<CartsPage />} />
+      <Route path="carts/create" element={<AddCartPage />} />
+      <Route path="carts/:id" element={<CartDetailPage />} />
+      <Route path="carts/:id/edit" element={<EditCartPage />} />
+      <Route path="carts/:id/add-book" element={<AddBookToCartPage />} />
+      <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
+
+      <Route path="delivery" element={<Delivery />} />
+      <Route path="delivery/new" element={<DeliveryCreate />} />
+      <Route path="delivery/:id" element={<DeliveryDetail />} />
+      <Route path="delivery/:id/edit" element={<DeliveryEdit />} />
+
+      <Route path="reviews" element={<Reviews />} />
+      <Route path="reviews/new" element={<ReviewCreate />} />
+      <Route path="reviews/:id" element={<ReviewDetail />} />
+      <Route path="reviews/:id/edit" element={<ReviewEdit />} />
+
       <Route path="/categorias" element={<Categorias />} />
       <Route path="/categorias/new" element={<AddCategorias />} />
       <Route path="/categorias/view/:categoriaId" element={<ViewCategorias />} />

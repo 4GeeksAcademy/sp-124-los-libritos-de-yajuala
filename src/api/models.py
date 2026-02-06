@@ -133,3 +133,93 @@ class Categoria_Libro(db.Model):
             "categoria_id": self.categoria_id,
             "libro_id": self.libro_id
         }
+    
+class Cart(db.Model):
+    __tablename__ = "carts"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_cliente = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    fecha = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=db.func.now()
+    )
+
+    monto_total = db.Column(
+        db.Float,
+        nullable=False,
+        default=0.0
+    )
+
+    estado = db.Column(
+        db.String(50),
+        nullable=False,
+        default="pendiente"
+    )
+
+    cliente = db.relationship("User", backref="carritos")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_cliente": self.id_cliente,
+            "fecha": self.fecha.isoformat(),
+            "monto_total": self.monto_total,
+            "estado": self.estado
+        }
+
+
+class CartBook(db.Model):
+    __tablename__ = "cart_books"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_carrito = db.Column(
+        db.Integer,
+        db.ForeignKey("carts.id"),
+        nullable=False
+    )
+
+    id_libro = db.Column(
+        db.Integer,
+        db.ForeignKey("book.id"),
+        nullable=False
+    )
+
+    cantidad = db.Column(
+        db.Integer,
+        nullable=False,
+        default=1
+    )
+
+    precio = db.Column(
+        db.Float,
+        nullable=False
+    )
+
+    descuento = db.Column(
+        db.Float,
+        nullable=False,
+        default=0.0
+    )
+
+    # Relaciones opcionales
+    carrito = db.relationship("Cart", backref="items")
+    libro = db.relationship("Book")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_carrito": self.id_carrito,
+            "id_libro": self.id_libro,
+            "cantidad": self.cantidad,
+            "precio": self.precio,
+            "descuento": self.descuento,
+            "libro": self.libro.serialize() if self.libro else None
+        }

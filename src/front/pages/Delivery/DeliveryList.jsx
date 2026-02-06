@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export const Books = () => {
-  const [books, setBooks] = useState([]);
+export const Delivery = () => {
+  const [delivery, setDelivery] = useState([]);
   const navigate = useNavigate();
 
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 
-  const getBooks = async () => {
+  const getDelivery = async () => {
     try {
-      const resp = await fetch(backendUrl + "/api/books");
+      const resp = await fetch(backendUrl + "/api/delivery");
       const data = await resp.json();
-      if (resp.ok) setBooks(data);
+      if (resp.ok) setDelivery(data);
     } catch (error) {
-      console.error("Error loading books", error);
+      console.error("Error loading delivery", error);
     }
   };
 
-  const deleteBook = async (bookId) => {
+  const deleteDelivery = async (deliveryId) => {
     try {
-      const resp = await fetch(`${backendUrl}/api/books/${bookId}`, {
+      const resp = await fetch(`${backendUrl}/api/delivery/${deliveryId}`, {
         method: "DELETE",
       });
 
@@ -27,70 +27,79 @@ export const Books = () => {
       const data = ct.includes("application/json") ? await resp.json() : null;
 
       if (!resp.ok) {
-        alert(data?.msg || "Error eliminando libro");
+        alert(data?.msg || "Error eliminando repartidor");
         return;
       }
 
-      getBooks();
+      getDelivery();
     } catch (error) {
       alert("Error de red");
     }
   };
 
   useEffect(() => {
-    getBooks();
+    getDelivery();
   }, []);
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="m-0">Libros</h1>
-        <button className="btn btn-warning" onClick={() => navigate("/books/new")}>
-          Crear libro
+        <h1 className="m-0">Repartidores</h1>
+        <button
+          className="btn btn-warning"
+          onClick={() => navigate("/delivery/new")}
+        >
+          Crear repartidor
         </button>
       </div>
 
       <div className="row">
-        {books.length === 0 ? (
+        {delivery.length === 0 ? (
           <div className="col-12 col-md-6 col-lg-4">
             <div className="card border-secondary">
               <div className="card-body">
-                <h5 className="card-title text-muted">Sin libros</h5>
-                <p className="card-text text-muted">Aún no hay libros creados</p>
+                <h5 className="card-title text-muted">Sin repartidores</h5>
+                <p className="card-text text-muted">
+                  Aún no hay repartidores creados
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          books.map((book) => (
-            <div key={book.id} className="col-12 col-md-6 col-lg-4 mb-3">
+          delivery.map((d) => (
+            <div key={d.id} className="col-12 col-md-6 col-lg-4 mb-3">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title">{book.titulo}</h5>
+                  <h5 className="card-title">
+                    {d.nombre} {d.apellido}
+                  </h5>
+
                   <p className="card-text mb-1">
-                    <strong>Autor:</strong> {book.autor}
+                    <strong>Email:</strong> {d.email}
                   </p>
+
                   <p className="card-text">
-                    <strong>ISBN:</strong> {book.isbn}
+                    <strong>Identificación:</strong> {d.identificacion}
                   </p>
 
                   <div className="d-flex gap-2">
                     <button
                       className="btn btn-info btn-sm"
-                      onClick={() => navigate(`/books/${book.id}`)}
+                      onClick={() => navigate(`/delivery/${d.id}`)}
                     >
                       Ver ficha
                     </button>
 
                     <button
                       className="btn btn-primary btn-sm"
-                      onClick={() => navigate(`/books/${book.id}/edit`)}
+                      onClick={() => navigate(`/delivery/${d.id}/edit`)}
                     >
                       Editar
                     </button>
 
                     <button
                       className="btn btn-danger btn-sm"
-                      onClick={() => deleteBook(book.id)}
+                      onClick={() => deleteDelivery(d.id)}
                     >
                       Eliminar
                     </button>
