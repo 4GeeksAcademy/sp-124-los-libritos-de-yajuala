@@ -3,7 +3,6 @@ from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-
 db = SQLAlchemy()
 
 
@@ -86,7 +85,8 @@ class Categorias(db.Model):
     nombre = db.Column(
         db.String(150),
         nullable=False,
-        index=True
+        index=True,
+        unique=True
     )
 
     descripcion = db.Column(
@@ -108,18 +108,25 @@ class Categoria_Libro(db.Model):
 
     categoria_id = db.Column(
         db.Integer,
-        db.ForeignKey('categorias.id'),
-        primary_key=True  # Marcamos como PK
+        db.ForeignKey("categorias.id"),
+        primary_key=True
     )
 
     libro_id = db.Column(
         db.Integer,
-        db.ForeignKey('book.id'),
-        primary_key=True  # Marcamos como PK
+        db.ForeignKey("book.id"),
+        primary_key=True
     )
 
-    categoria = db.relationship("Categorias", backref="relaciones")
-    libro = db.relationship("Book", backref="relaciones")
+    categoria = db.relationship(
+        "Categorias",
+        backref=db.backref("categoria_libros", cascade="all, delete-orphan")
+    )
+
+    libro = db.relationship(
+        "Book",
+        backref=db.backref("categoria_libros", cascade="all, delete-orphan")
+    )
 
     def serialize(self):
         return {

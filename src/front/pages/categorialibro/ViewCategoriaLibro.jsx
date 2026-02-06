@@ -11,20 +11,42 @@ const ViewCategoriaLibro = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(API_BASE + `/api/categorialibro/${categoriaId}/${libroId}`)
-            .then(res => {
-                if (!res.ok) throw new Error("Error al cargar relación");
-                return res.json();
-            })
-            .then(data => {
+        const fetchRelacion = async () => {
+            try {
+                const res = await fetch(
+                    `${API_BASE}/api/categorialibro/${categoriaId}/${libroId}`
+                );
+
+                const text = await res.text();
+
+                if (!res.ok) {
+                    let msg = "Error al cargar relación";
+
+                    try {
+                        const json = JSON.parse(text);
+                        msg = json.msg || msg;
+                    } catch {
+                        console.error("Respuesta no JSON:", text);
+                    }
+
+                    throw new Error(msg);
+                }
+
+                const data = JSON.parse(text);
                 setRelacion(data);
-                setLoading(false);
-            })
-            .catch(err => {
+
+            } catch (err) {
                 console.error(err);
+                setRelacion(null);
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchRelacion();
     }, [categoriaId, libroId]);
+
+
 
     if (loading) return <p>Cargando relación...</p>;
     if (!relacion) return <p>Relación no encontrada</p>;
@@ -58,7 +80,9 @@ const ViewCategoriaLibro = () => {
 
                 <button
                     className="btn btn-warning"
-                    onClick={() => navigate(`/categorialibro/${relacion.categoria_id}/${relacion.libro_id}`)}
+                    onClick={() =>
+                        navigate(`/categorialibro/edit/${relacion.categoria_id}/${relacion.libro_id}`)
+                    }
                 >
                     Editar
                 </button>

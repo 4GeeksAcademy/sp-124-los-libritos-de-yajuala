@@ -4,53 +4,58 @@ import { useNavigate, useParams } from "react-router-dom";
 const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
 
 const AddCategoria = () => {
-    const { categoriaId } = useParams(); // si existe => editar
+    const { categoriaId } = useParams();
     const navigate = useNavigate();
-
-    const [loading, setLoading] = useState(false);
-    const [categoria, setCategoria] = useState({
-        nombre: ""
-    });
 
     const isEdit = Boolean(categoriaId);
 
-    // Cargar datos de la categoría si es edición
+    const [loading, setLoading] = useState(false);
+    const [categoria, setCategoria] = useState({
+        nombre: "",
+        descripcion: ""
+    });
+
+    // Cargar categoría si es edición
     useEffect(() => {
         if (!isEdit) return;
 
-        setLoading(true);
+        const fetchCategoria = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(`${API_BASE}/api/categorias/${categoriaId}`);
+                const text = await res.text();
 
-        fetch(API_BASE + `/api/categorias/${categoriaId}`)
-            .then(res => {
                 if (!res.ok) throw new Error("Error al cargar categoría");
-                return res.json();
-            })
-            .then(data => {
+
+                const data = JSON.parse(text);
                 setCategoria({
-                    nombre: data.nombre || ""
+                    nombre: data.nombre || "",
+                    descripcion: data.descripcion || ""
                 });
-                setLoading(false);
-            })
-            .catch(err => {
+
+            } catch (err) {
                 console.error(err);
+                alert("No se pudo cargar la categoría");
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchCategoria();
     }, [categoriaId, isEdit]);
 
-    // Manejar cambios en inputs
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setCategoria({ ...categoria, [name]: value });
+        setCategoria(prev => ({ ...prev, [name]: value }));
     };
 
-    // Crear o actualizar
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         const method = isEdit ? "PUT" : "POST";
         const url = isEdit
-            ? API_BASE + `/api/categorias/${categoriaId}`
-            : API_BASE + "/api/categorias";
+            ? `${API_BASE}/api/categorias/${categoriaId}`
+            : `${API_BASE}/api/categorias`;
 
         try {
             const res = await fetch(url, {
@@ -58,15 +63,27 @@ const AddCategoria = () => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(categoria)
+                body: JSON.stringify({
+                    nombre: categoria.nombre,
+                    descripcion: categoria.descripcion
+                })
             });
 
-            if (!res.ok) throw new Error("Error al guardar categoría");
+            const text = await res.text();
+
+            if (!res.ok) {
+                let msg = "Error al guardar categoría";
+                try {
+                    msg = JSON.parse(text).msg || msg;
+                } catch { }
+                throw new Error(msg);
+            }
 
             navigate("/categorias");
+
         } catch (err) {
             console.error(err);
-            alert("Error al guardar la categoría");
+            alert(err.message);
         }
     };
 
@@ -85,6 +102,18 @@ const AddCategoria = () => {
                         name="nombre"
                         value={categoria.nombre}
                         onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Descripción</label>
+                    <textarea
+                        className="form-control"
+                        name="descripcion"
+                        value={categoria.descripcion}
+                        onChange={handleChange}
+                        rows={3}
                         required
                     />
                 </div>

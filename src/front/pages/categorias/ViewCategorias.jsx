@@ -7,56 +7,147 @@ const ViewCategorias = () => {
     const { categoriaId } = useParams();
     const navigate = useNavigate();
 
-    const [categoria, setCategoria] = useState(null);
+    const [categoria, setCategoria] = useState({
+        nombre: "",
+        descripcion: ""
+    });
     const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState(false); // Estado para editar
 
+    // Cargar categoría
     useEffect(() => {
-        fetch(API_BASE + `/api/categorias/${categoriaId}`)
-            .then(res => {
-                if (!res.ok) throw new Error("Error al cargar categoría");
-                return res.json();
-            })
-            .then(data => {
-                setCategoria(data);
-                setLoading(false);
-            })
-            .catch(err => {
+        if (!categoriaId) return;
+
+        const fetchCategoria = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(`${API_BASE}/api/categorias/${categoriaId}`);
+                const text = await res.text();
+
+                if (!res.ok) {
+                    let msg = "Error al cargar categoría";
+                    try {
+                        msg = JSON.parse(text).msg || msg;
+                    } catch { }
+                    throw new Error(msg);
+                }
+
+                const data = JSON.parse(text);
+                setCategoria({
+                    nombre: data.nombre || "",
+                    descripcion: data.descripcion || ""
+                });
+
+            } catch (err) {
                 console.error(err);
+                alert(err.message || "No se pudo cargar la categoría");
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchCategoria();
     }, [categoriaId]);
 
-    if (loading) return <p>Cargando categorías...</p>;
-    if (!categoria) return <p>Categorías no encontrada</p>;
+    // Manejar cambios de inputs
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setCategoria(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Guardar cambios (PUT)
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch(`${API_BASE}/api/categorias/${categoriaId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(categoria)
+            });
+
+            const text = await res.text();
+            if (!res.ok) {
+                let msg = "Error al actualizar categoría";
+                try { msg = JSON.parse(text).msg || msg; } catch { }
+                throw new Error(msg);
+            }
+
+            alert("Categoría actualizada correctamente");
+            setEditing(false);
+
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    };
+
+    if (loading) return <p>Cargando categoría...</p>;
 
     return (
         <div className="container mt-4">
-            <h1>Detalle de la Categoría</h1>
+            <h1>{editing ? "Editar Categoría" : "Detalle de la Categoría"}</h1>
 
-            <ul className="list-group mt-3">
-                <li className="list-group-item">
-                    <strong>ID:</strong> {categoria.id}
-                </li>
-                <li className="list-group-item">
-                    <strong>Nombre:</strong> {categoria.nombre}
-                </li>
-            </ul>
+            <form onSubmit={handleUpdate} className="mt-3">
+                <div className="mb-3">
+                    <label className="form-label">Nombre</label>
+                    <input
+                        type="text"
+                        name="nombre"
+                        value={categoria.nombre}
+                        onChange={handleChange}
+                        className="form-control"
+                        disabled={!editing}
+                        required
+                    />
+                </div>
 
-            <div className="mt-4">
-                <button
-                    className="btn btn-secondary me-2"
-                    onClick={() => navigate(-1)}
-                >
-                    Volver
-                </button>
+                <div className="mb-3">
+                    <label className="form-label">Descripción</label>
+                    <textarea
+                        name="descripcion"
+                        value={categoria.descripcion}
+                        onChange={handleChange}
+                        className="form-control"
+                        rows={3}
+                        disabled={!editing}
+                        required
+                    />
+                </div>
 
-                <button
-                    className="btn btn-warning"
-                    onClick={() => navigate(`/categorias/${categoria.id}`)}
-                >
-                    Editar
-                </button>
-            </div>
+                <div className="mt-3">
+                    {!editing ? (
+                        <button
+                            type="button"
+                            className="btn btn-warning me-2"
+                            onClick={() => setEditing(true)}
+                        >
+                            Editar
+                        </button>
+                    ) : (
+                        <>
+                            <button type="submit" className="btn btn-success me-2">
+                                Actualizar
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => setEditing(false)}
+                            >
+                                Cancelar
+                            </button>
+                        </>
+                    )}
+
+                    <button
+                        type="button"
+                        className="btn btn-secondary ms-2"
+                        onClick={() => navigate(-1)}
+                    >
+                        Volver
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };

@@ -1,80 +1,81 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
 
-const AddCategoriaLibro = () => {
+const EditCategoriaLibro = () => {
+    const { categoriaId, libroId } = useParams();
     const navigate = useNavigate();
 
     const [categorias, setCategorias] = useState([]);
     const [libros, setLibros] = useState([]);
+
     const [selectedCategoria, setSelectedCategoria] = useState("");
     const [selectedLibro, setSelectedLibro] = useState("");
+
     const [loading, setLoading] = useState(true);
 
-    // Cargar categorías y libros disponibles
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [catRes, bookRes] = await Promise.all([
-                    fetch(API_BASE + "/api/categorias"),
-                    fetch(API_BASE + "/api/books")
+                const [relRes, catRes, bookRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/categorialibro/${categoriaId}/${libroId}`),
+                    fetch(`${API_BASE}/api/categorias`),
+                    fetch(`${API_BASE}/api/books`)
                 ]);
 
-                if (!catRes.ok) throw new Error("Error al cargar categorías");
-                if (!bookRes.ok) throw new Error("Error al cargar libros");
+                const relText = await relRes.text();
+                if (!relRes.ok) throw new Error("Relación no encontrada");
+
+                const relData = JSON.parse(relText);
+                setSelectedCategoria(String(relData.categoria_id));
+                setSelectedLibro(String(relData.libro_id));
 
                 const catData = await catRes.json();
                 const bookData = await bookRes.json();
 
                 setCategorias(catData);
                 setLibros(bookData);
-                setLoading(false);
+
             } catch (err) {
                 console.error(err);
+            } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, []);
+    }, [categoriaId, libroId]);
 
-    // Manejar envío del formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!selectedCategoria || !selectedLibro) {
-            alert("Debes seleccionar categoría y libro");
-            return;
-        }
-
         try {
-            const res = await fetch(`${API_BASE}/api/categorialibro`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    categoria_id: Number(selectedCategoria),
-                    libro_id: Number(selectedLibro)
-                })
-            });
+            const res = await fetch(
+                `${API_BASE}/api/categorialibro/${categoriaId}/${libroId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        categoria_id: Number(selectedCategoria),
+                        libro_id: Number(selectedLibro)
+                    })
+                }
+            );
+
+            const text = await res.text();
 
             if (!res.ok) {
-                const text = await res.text(); // por seguridad
-                let msg = "Error al crear la relación";
-
+                let msg = "Error al actualizar la relación";
                 try {
-                    const json = JSON.parse(text);
-                    msg = json.msg || msg;
-                } catch {
-                    console.error("Respuesta no JSON:", text);
-                }
-
+                    msg = JSON.parse(text).msg || msg;
+                } catch {}
                 throw new Error(msg);
             }
 
-            alert("Relación creada correctamente");
+            alert("Relación actualizada correctamente");
             navigate("/categorialibro");
 
         } catch (err) {
@@ -83,16 +84,15 @@ const AddCategoriaLibro = () => {
         }
     };
 
-
-    if (loading) return <p>Cargando categorías y libros...</p>;
+    if (loading) return <p>Cargando relación...</p>;
 
     return (
         <div className="container mt-4">
-            <h1>Nueva Relación Categoría-Libro</h1>
+            <h1>Editar Relación Categoría-Libro</h1>
 
             <form onSubmit={handleSubmit} className="mt-3">
                 <div className="mb-3">
-                    <label className="form-label">Selecciona Categoría</label>
+                    <label className="form-label">Categoría</label>
                     <select
                         className="form-select"
                         value={selectedCategoria}
@@ -100,7 +100,7 @@ const AddCategoriaLibro = () => {
                         required
                     >
                         <option value="">-- Selecciona categoría --</option>
-                        {categorias.map((c) => (
+                        {categorias.map(c => (
                             <option key={c.id} value={c.id}>
                                 {c.nombre}
                             </option>
@@ -109,7 +109,7 @@ const AddCategoriaLibro = () => {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">Selecciona Libro</label>
+                    <label className="form-label">Libro</label>
                     <select
                         className="form-select"
                         value={selectedLibro}
@@ -117,7 +117,7 @@ const AddCategoriaLibro = () => {
                         required
                     >
                         <option value="">-- Selecciona libro --</option>
-                        {libros.map((l) => (
+                        {libros.map(l => (
                             <option key={l.id} value={l.id}>
                                 {l.titulo} ({l.autor})
                             </option>
@@ -125,8 +125,8 @@ const AddCategoriaLibro = () => {
                     </select>
                 </div>
 
-                <button type="submit" className="btn btn-success me-2">
-                    Crear Relación
+                <button type="submit" className="btn btn-warning me-2">
+                    Actualizar
                 </button>
 
                 <button
@@ -141,4 +141,4 @@ const AddCategoriaLibro = () => {
     );
 };
 
-export default AddCategoriaLibro;
+export default EditCategoriaLibro;

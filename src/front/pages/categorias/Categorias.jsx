@@ -92,17 +92,12 @@ const Categorias = () => {
                                 <td>{categoria.nombre}</td>
                                 <td>
                                     <button
-                                        className="btn btn-info btn-sm me-2"
+                                        className="btn btn-warning btn-sm me-2"
                                         onClick={() => navigate(`/categorias/view/${categoria.id}`)}
                                     >
-                                        Ver
+                                        Editar / Ver
                                     </button>
-                                    <button
-                                        className="btn btn-warning btn-sm me-2"
-                                        onClick={() => navigate(`/categorias/${categoria.id}`)}
-                                    >
-                                        Editar
-                                    </button>
+
 
                                     <button
                                         className="btn btn-danger btn-sm"

@@ -98,14 +98,12 @@ const CategoriasLibro = () => {
                                 <td>{cl.libro?.titulo || "-"}</td>
                                 <td>
                                     <button
-                                        className="btn btn-warning btn-sm me-2"
-                                        onClick={() => navigate(`/categorialibro/${cl.categoria_id}/${cl.libro_id}`)}
-                                    >
-                                        Editar
-                                    </button>
-                                    <button
                                         className="btn btn-info btn-sm me-2"
-                                        onClick={() => navigate(`/categorialibro/${cl.categoria_id}/${cl.libro_id}`)}
+                                        onClick={() =>
+                                            navigate(`/categorialibro/view/${cl.categoria_id}/${cl.libro_id}`)
+                                        }
+
+
                                     >
                                         Ver
                                     </button>
