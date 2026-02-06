@@ -91,7 +91,6 @@ export default function ClientDetailPage() {
           )}
 
 
-
           <Link to="/clients" className="btn btn-secondary mt-3">
             Volver a Clientes
           </Link>

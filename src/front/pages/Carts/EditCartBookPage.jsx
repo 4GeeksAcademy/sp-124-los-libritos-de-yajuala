@@ -10,7 +10,11 @@ export default function EditCartBookPage() {
     const fetchItem = async () => {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart-books/${id}`);
         const data = await res.json();
-        setItem(data);
+        setItem({
+            ...data,
+            precio: data.precio || data.libro?.precio || 0
+        });
+
     };
 
     useEffect(() => {

@@ -70,6 +70,11 @@ export const Books = () => {
                     <strong>Autor:</strong> {book.autor}
                   </p>
                   <p className="card-text">
+  <strong>Precio:</strong> {book.precio} €
+</p>
+
+                  
+                  <p className="card-text">
                     <strong>ISBN:</strong> {book.isbn}
                   </p>
 

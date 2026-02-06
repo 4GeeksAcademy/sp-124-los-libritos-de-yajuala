@@ -2,22 +2,35 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const BookCreate = () => {
-  const [form, setForm] = useState({ titulo: "", autor: "", isbn: "" });
+  const [form, setForm] = useState({
+    titulo: "",
+    autor: "",
+    isbn: "",
+    precio: ""
+  });
+
   const navigate = useNavigate();
 
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 
   const createBook = async () => {
     try {
-      if (!form.titulo || !form.autor || !form.isbn) {
-        alert("Completa titulo, autor e isbn");
+      if (!form.titulo || !form.autor || !form.isbn || !form.precio) {
+        alert("Completa título, autor, ISBN y precio");
         return;
       }
+
 
       const resp = await fetch(`${backendUrl}/api/books`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          titulo: form.titulo,
+          autor: form.autor,
+          isbn: form.isbn,
+          precio: parseFloat(form.precio)
+        })
+
       });
 
       const ct = resp.headers.get("content-type") || "";
@@ -28,7 +41,8 @@ export const BookCreate = () => {
         return;
       }
 
-      setForm({ titulo: "", autor: "", isbn: "" });
+      setForm({ titulo: "", autor: "", isbn: "", precio: "" });
+
       navigate("/books");
     } catch (error) {
       alert("Error de red");
@@ -59,6 +73,16 @@ export const BookCreate = () => {
             value={form.autor}
             onChange={(e) => setForm({ ...form, autor: e.target.value })}
           />
+
+          <label className="form-label">Precio</label>
+          <input
+            type="number"
+            className="form-control mb-3"
+            value={form.precio}
+            onChange={(e) => setForm({ ...form, precio: e.target.value })}
+            step="0.01"
+          />
+
 
           <label className="form-label">ISBN</label>
           <input

@@ -149,7 +149,6 @@ class CartBook(db.Model):
         default=0.0
     )
 
-    # Relaciones opcionales
     carrito = db.relationship("Cart", backref="items")
     libro = db.relationship("Book")
 

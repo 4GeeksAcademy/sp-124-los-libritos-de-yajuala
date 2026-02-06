@@ -24,20 +24,36 @@ export default function AddBookToCartPage() {
   }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "id_libro") {
+      const selectedBook = books.find(b => b.id === parseInt(value));
+
+      setForm({
+        ...form,
+        id_libro: parseInt(value),        // <-- convertir a número
+        precio: selectedBook ? selectedBook.precio : 0
+      });
+      return;
+    }
+
+
+    setForm({ ...form, [name]: value });
   };
+
 
   const saveItem = async () => {
     await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart-books`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id_carrito: id,
-        id_libro: form.id_libro,
-        cantidad: form.cantidad,
-        precio: form.precio,
-        descuento: form.descuento
+        id_carrito: parseInt(id),
+        id_libro: parseInt(form.id_libro),
+        cantidad: parseInt(form.cantidad),
+        precio: parseFloat(form.precio),
+        descuento: parseFloat(form.descuento)
       })
+
     });
 
     navigate(`/carts/${id}`);
@@ -61,6 +77,7 @@ export default function AddBookToCartPage() {
             {books.map(b => (
               <option key={b.id} value={b.id}>
                 {b.titulo} — {b.autor}
+
               </option>
             ))}
           </select>
