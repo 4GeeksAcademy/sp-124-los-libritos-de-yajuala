@@ -39,6 +39,14 @@ import { ReviewCreate } from "./pages/Reviews/ReviewCreate.jsx";
 import { ReviewDetail } from "./pages/Reviews/ReviewDetail.jsx";
 import { ReviewEdit } from "./pages/Reviews/ReviewEdit.jsx";
 
+import Categorias from "./pages/categorias/Categorias";
+import AddCategorias from "./pages/categorias/AddCategorias";
+import ViewCategorias from "./pages/categorias/ViewCategorias";
+
+import CategoriaLibro from "./pages/categorialibro/CategoriaLibro";
+import AddCategoriaLibro from "./pages/categorialibro/AddCategoriaLibro";
+import ViewCategoriaLibro from "./pages/categorialibro/ViewCategoriaLibro";
+import EditCategoriaLibro from "./pages/categorialibro/EditCategoriaLibro";
 
 
 
@@ -89,6 +97,14 @@ export const router = createBrowserRouter(
       <Route path="reviews/:id" element={<ReviewDetail />} />
       <Route path="reviews/:id/edit" element={<ReviewEdit />} />
 
+      <Route path="/categorias" element={<Categorias />} />
+      <Route path="/categorias/new" element={<AddCategorias />} />
+      <Route path="/categorias/view/:categoriaId" element={<ViewCategorias />} />
+
+      <Route path="/categorialibro" element={<CategoriaLibro />} />
+      <Route path="/categorialibro/new" element={<AddCategoriaLibro />} />
+      <Route path="/categorialibro/view/:categoriaId/:libroId" element={<ViewCategoriaLibro />} />
+      <Route path="/categorialibro/edit/:categoriaId/:libroId" element={<EditCategoriaLibro />} />
 
     </Route>
   )
