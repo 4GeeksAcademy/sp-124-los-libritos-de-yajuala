@@ -28,12 +28,15 @@ export const Navbar = () => {
             <> 
               <span className="me-3">Bienvenido, {store.user.name}</span> 
               
-              <button 
-                className="btn btn-outline-primary me-2" 
-                onClick={() => navigate("/user")} 
-              > 
-                Mi cuenta 
-              </button> 
+              {store.user.role !== "admin" && (
+  <button 
+    className="btn btn-outline-primary me-2" 
+    onClick={() => navigate("/user")}
+  >
+    Mi cuenta
+  </button>
+)}
+
               
               <button 
                 className="btn btn-danger" 
