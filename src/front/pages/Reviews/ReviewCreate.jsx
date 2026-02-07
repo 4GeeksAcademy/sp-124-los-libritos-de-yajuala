@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const ReviewCreate = () => {
@@ -12,6 +12,37 @@ export const ReviewCreate = () => {
     puntuacion: "",
     comentario: "",
   });
+
+  const [clientes, setClientes] = useState([]);
+  const [libros, setLibros] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar clientes y libros disponibles (selector)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [clientsRes, booksRes] = await Promise.all([
+          fetch(backendUrl + "/api/clients"),
+          fetch(backendUrl + "/api/books"),
+        ]);
+
+        if (!clientsRes.ok) throw new Error("Error al cargar clientes");
+        if (!booksRes.ok) throw new Error("Error al cargar libros");
+
+        const clientsData = await clientsRes.json();
+        const booksData = await booksRes.json();
+
+        setClientes(clientsData);
+        setLibros(booksData);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     setForm({
@@ -55,33 +86,47 @@ export const ReviewCreate = () => {
     }
   };
 
+  if (loading) return <p>Cargando clientes y libros...</p>;
+
   return (
     <div className="container mt-5">
       <h1 className="mb-4">Crear Review</h1>
 
       <form onSubmit={handleSubmit} className="card p-4">
         <div className="mb-3">
-          <label className="form-label">ID Cliente</label>
-          <input
-            type="number"
+          <label className="form-label">Cliente</label>
+          <select
             name="id_cliente"
-            className="form-control"
+            className="form-select"
             value={form.id_cliente}
             onChange={handleChange}
             required
-          />
+          >
+            <option value="">-- Selecciona cliente --</option>
+            {clientes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre || c.email}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mb-3">
-          <label className="form-label">ID Libro</label>
-          <input
-            type="number"
+          <label className="form-label">Libro</label>
+          <select
             name="id_libro"
-            className="form-control"
+            className="form-select"
             value={form.id_libro}
             onChange={handleChange}
             required
-          />
+          >
+            <option value="">-- Selecciona libro --</option>
+            {libros.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.titulo} ({l.autor})
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mb-3">
