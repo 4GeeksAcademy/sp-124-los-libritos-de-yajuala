@@ -21,13 +21,13 @@ export const ReviewCreate = () => {
   const [libros, setLibros] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargar clientes y libros disponibles (selector)
+  // Cargar clientes y libros
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [clientsRes, booksRes] = await Promise.all([
-          fetch(backendUrl + "/api/clients"),
-          fetch(backendUrl + "/api/books"),
+          fetch(backendUrl + "/api/clients", { credentials: "include" }),
+          fetch(backendUrl + "/api/books", { credentials: "include" }),
         ]);
 
         if (!clientsRes.ok) throw new Error("Error al cargar clientes");
@@ -38,15 +38,15 @@ export const ReviewCreate = () => {
 
         setClientes(clientsData);
         setLibros(booksData);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error(error);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [backendUrl]);
 
   const handleChange = (e) => {
     setForm({
@@ -56,45 +56,43 @@ export const ReviewCreate = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!form.id_libro || !form.puntuacion) {
-    alert("Faltan campos obligatorios");
-    return;
-  }
-
-  const body = {
-    id_libro: Number(form.id_libro),
-    puntuacion: Number(form.puntuacion),
-    comentario: form.comentario || null,
-  };
-
-  if (!user) {
-    if (!form.id_cliente) {
-      alert("Debes indicar el ID del cliente");
+    if (!form.id_libro || !form.puntuacion) {
+      alert("Faltan campos obligatorios");
       return;
     }
-    body.id_cliente = Number(form.id_cliente);
-  }
 
-  try {
+    const body = {
+      id_libro: Number(form.id_libro),
+      puntuacion: Number(form.puntuacion),
+      comentario: form.comentario || null,
+    };
 
-  const resp = await fetch(backendUrl + "/api/reviews", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${store.token}`
-    },
-    body: JSON.stringify(body),
-  });
-
-
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      alert(data.msg || "Error creando review");
-      return;
+    if (!user) {
+      if (!form.id_cliente) {
+        alert("Debes seleccionar un cliente");
+        return;
+      }
+      body.id_cliente = Number(form.id_cliente);
     }
+
+    try {
+      const resp = await fetch(backendUrl + "/api/reviews", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        alert(data.msg || "Error creando review");
+        return;
+      }
 
       navigate("/reviews");
     } catch (error) {
