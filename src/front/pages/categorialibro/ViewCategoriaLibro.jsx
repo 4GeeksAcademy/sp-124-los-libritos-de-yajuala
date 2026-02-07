@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
-const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
+const API_BASE = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
 
 const ViewCategoriaLibro = () => {
     const { categoriaId, libroId } = useParams(); // Recibimos ambos IDs
     const navigate = useNavigate();
+    const { store, dispatch } = useGlobalReducer();
 
     const [relacion, setRelacion] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -51,6 +53,12 @@ const ViewCategoriaLibro = () => {
     if (loading) return <p>Cargando relación...</p>;
     if (!relacion) return <p>Relación no encontrada</p>;
 
+    const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
     return (
         <div className="container mt-4">
             <h1>Detalle de la Relación Categoría-Libro</h1>
@@ -77,7 +85,7 @@ const ViewCategoriaLibro = () => {
                 >
                     Volver
                 </button>
-
+            {!isClient && (
                 <button
                     className="btn btn-warning"
                     onClick={() =>
@@ -86,6 +94,8 @@ const ViewCategoriaLibro = () => {
                 >
                     Editar
                 </button>
+            )}
+                
             </div>
         </div>
     );

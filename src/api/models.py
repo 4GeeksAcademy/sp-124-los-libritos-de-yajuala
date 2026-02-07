@@ -7,14 +7,22 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
+    __tablename__ = "user"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     lastname: Mapped[str] = mapped_column(String(120), nullable=False)
-    email: Mapped[str] = mapped_column(
-        String(120), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(nullable=False)
-    is_active: Mapped[bool] = mapped_column(
-        Boolean(), default=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    role: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default="client"
+    )
+
+
+
 
     def serialize(self):
         return {
@@ -22,6 +30,7 @@ class User(db.Model):
             "name": self.name,
             "lastname": self.lastname,
             "email": self.email,
+            "role": self.role,
         }
 
 

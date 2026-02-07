@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
-const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
+const API_BASE = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
 
 const ViewCategorias = () => {
     const { categoriaId } = useParams();
     const navigate = useNavigate();
+    const { store, dispatch } = useGlobalReducer();
 
     const [categoria, setCategoria] = useState({
         nombre: "",
@@ -84,6 +86,12 @@ const ViewCategorias = () => {
 
     if (loading) return <p>Cargando categoría...</p>;
 
+    const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
     return (
         <div className="container mt-4">
             <h1>{editing ? "Editar Categoría" : "Detalle de la Categoría"}</h1>
@@ -116,28 +124,34 @@ const ViewCategorias = () => {
                 </div>
 
                 <div className="mt-3">
-                    {!editing ? (
-                        <button
-                            type="button"
-                            className="btn btn-warning me-2"
-                            onClick={() => setEditing(true)}
-                        >
-                            Editar
-                        </button>
-                    ) : (
-                        <>
-                            <button type="submit" className="btn btn-success me-2">
-                                Actualizar
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={() => setEditing(false)}
-                            >
-                                Cancelar
-                            </button>
-                        </>
-                    )}
+                    {!isClient && (
+    <>
+        {!editing ? (
+            <button
+                type="button"
+                className="btn btn-warning me-2"
+                onClick={() => setEditing(true)}
+            >
+                Editar
+            </button>
+        ) : (
+            <>
+                <button type="submit" className="btn btn-success me-2">
+                    Actualizar
+                </button>
+
+                <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setEditing(false)}
+                >
+                    Cancelar
+                </button>
+            </>
+        )}
+    </>
+)}
+
 
                     <button
                         type="button"

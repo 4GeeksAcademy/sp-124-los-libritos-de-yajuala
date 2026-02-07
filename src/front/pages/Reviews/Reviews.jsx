@@ -1,11 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer.jsx";
+
 
 export const Reviews = () => {
   const [reviews, setReviews] = useState([]);
   const navigate = useNavigate();
 
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
+
+  const { store } = useGlobalReducer();
+  const user = store.user;
+  const role = store.user?.role;
+  const isAdmin = role === "admin";
+  const isProvider = role === "provider";
+  const isDelivery = role === "delivery";
+  const isClient = role === "client";
+
+  const isOwner = (review) => user && review.id_cliente === user.id;
+
+
+
 
   const getReviews = async () => {
     try {
@@ -45,9 +60,12 @@ export const Reviews = () => {
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Reviews</h1>
-        <button className="btn btn-warning" onClick={() => navigate("/reviews/new")}>
-          Crear review
-        </button>
+        {user && (
+          <button className="btn btn-warning" onClick={() => navigate("/reviews/new")}>
+            Crear review
+          </button>
+        )}
+
       </div>
 
       <div className="row">
@@ -93,20 +111,25 @@ export const Reviews = () => {
                       Ver ficha
                     </button>
 
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => navigate(`/reviews/${review.id}/edit`)}
-                    >
-                      Editar
-                    </button>
+                    {(isAdmin || isOwner(review)) && (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => navigate(`/reviews/${review.id}/edit`)}
+                      >
+                        Editar
+                      </button>
+                    )}
 
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => deleteReview(review.id)}
-                    >
-                      Eliminar
-                    </button>
+                    {(isAdmin || isOwner(review)) && (
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => deleteReview(review.id)}
+                      >
+                        Eliminar
+                      </button>
+                    )}
                   </div>
+
                 </div>
               </div>
             </div>

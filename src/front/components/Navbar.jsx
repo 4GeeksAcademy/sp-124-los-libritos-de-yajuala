@@ -1,45 +1,50 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer";
+
 
 export const Navbar = () => {
   const location = useLocation();
+  const { store, actions } = useGlobalReducer();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    actions.setUser(null);
+    navigate("/");
+  };
 
   return (
     <>
-      <nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-          <a class="navbar-brand" href="#">Navbar</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <Link className="nav-link active" aria-current="page" to="/">Home</Link>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
-              </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Dropdown
-                </a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Action</a></li>
-                  <li><a class="dropdown-item" href="#">Another action</a></li>
-                  <li><hr class="dropdown-divider" /></li>
-                  <li><a class="dropdown-item" href="#">Something else here</a></li>
-                </ul>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-              </li>
-            </ul>
-            <form class="d-flex" role="search">
-              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-              <button class="btn btn-outline-success" type="submit">Search</button>
-            </form>
-          </div>
-        </div>
+      <nav className="navbar navbar-expand-lg navbar-light bg-light px-3">
+        <a className="navbar-brand" onClick={() => navigate("/")}>
+          Los Libritos de Yajuala
+        </a>
+        <span className="ms-3" style={{ cursor: "pointer", fontWeight: "500" }} onClick={() => navigate("/")}
+        >
+          Home
+        </span>
+
+        <div className="ms-auto"> 
+          {store.user ? ( 
+            <> 
+              <span className="me-3">Bienvenido, {store.user.name}</span> 
+              
+              <button 
+                className="btn btn-outline-primary me-2" 
+                onClick={() => navigate("/user")} 
+              > 
+                Mi cuenta 
+              </button> 
+              
+              <button 
+                className="btn btn-danger" 
+                onClick={handleLogout}> 
+                Logout 
+              </button> 
+            </> 
+          ) : ( 
+          <></> 
+        )} 
+      </div>
       </nav></>
   );
 };

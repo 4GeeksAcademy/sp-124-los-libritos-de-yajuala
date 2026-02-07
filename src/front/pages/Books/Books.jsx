@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
 export const Books = () => {
   const [books, setBooks] = useState([]);
   const navigate = useNavigate();
+  const { store, dispatch } = useGlobalReducer();
 
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 
@@ -41,13 +43,22 @@ export const Books = () => {
     getBooks();
   }, []);
 
+  const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Libros</h1>
+      {!isClient && (
         <button className="btn btn-warning" onClick={() => navigate("/books/new")}>
           Crear libro
         </button>
+      )}
+        
       </div>
 
       <div className="row">
@@ -85,7 +96,8 @@ export const Books = () => {
                     >
                       Ver ficha
                     </button>
-
+                  {!isClient && (
+                    <>
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => navigate(`/books/${book.id}/edit`)}
@@ -98,7 +110,9 @@ export const Books = () => {
                       onClick={() => deleteBook(book.id)}
                     >
                       Eliminar
-                    </button>
+                    </button></>
+                  )}
+                    
                   </div>
                 </div>
               </div>

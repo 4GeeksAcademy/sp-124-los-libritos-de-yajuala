@@ -4,6 +4,8 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook
 from api.models_books import Book
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+
 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -45,7 +47,7 @@ def get_user(user_id):
 def add_user():
     data = request.json
 
-    required_fields = ["name", "lastname", "email", "password"]
+    required_fields = ["name", "lastname", "email", "password", "role"]
     for field in required_fields:
         if field not in data:
             return jsonify({"msg": f"Missing field: {field}"}), 400
@@ -59,7 +61,7 @@ def add_user():
         lastname=data["lastname"],
         email=data["email"],
         password=data["password"],
-        is_active=True
+        role=data["role"]
     )
 
     db.session.add(new_user)
@@ -242,7 +244,6 @@ def create_book():
     return jsonify(book.serialize()), 201
 
 
-
 @api.route("/books/<int:id>", methods=["PUT"])
 def update_book(id):
     data = request.json
@@ -260,7 +261,6 @@ def update_book(id):
     return jsonify(book.serialize()), 200
 
 
-
 @api.route("/books/<int:book_id>", methods=["DELETE"])
 def delete_book(book_id):
     book = Book.query.get(book_id)
@@ -275,6 +275,198 @@ def delete_book(book_id):
     return jsonify({"msg": "Libro eliminado"}), 200
 
 # Fin CruD Libros Layla
+
+
+@api.route("/categorialibro", methods=["POST"])
+def create_categoria_libro():
+    body = request.get_json(silent=True) or {}
+
+    categoria_id = body.get("categoria_id")
+    libro_id = body.get("libro_id")
+
+    if categoria_id is None or libro_id is None:
+        return jsonify({"msg": "Faltan campos: categoria_id, libro_id"}), 400
+
+    categoria = Categorias.query.get(categoria_id)
+    libro = Book.query.get(libro_id)
+    if not categoria or not libro:
+        return jsonify({"msg": "Categoría o Libro no existe"}), 404
+
+    existing = Categoria_Libro.query.filter_by(
+        categoria_id=categoria_id, libro_id=libro_id
+    ).first()
+    if existing:
+        return jsonify({"msg": "La relación ya existe"}), 409
+
+    relacion = Categoria_Libro(categoria_id=categoria_id, libro_id=libro_id)
+    db.session.add(relacion)
+    db.session.commit()
+
+    return jsonify(relacion.serialize()), 201
+
+
+@api.route("/categorialibro", methods=["GET"])
+def list_categorialibro():
+    relaciones = Categoria_Libro.query.all()
+
+    return jsonify([
+        {
+            "categoria_id": r.categoria_id,
+            "libro_id": r.libro_id,
+            "categoria": r.categoria.serialize() if r.categoria else None,
+            "libro": r.libro.serialize() if r.libro else None
+        }
+        for r in relaciones
+    ]), 200
+
+
+@api.route("/categorialibro/<int:categoria_id>/<int:libro_id>", methods=["GET"])
+def get_categoria_libro(categoria_id, libro_id):
+    relacion = Categoria_Libro.query.filter_by(
+        categoria_id=categoria_id, libro_id=libro_id
+    ).first()
+
+    if not relacion:
+        return jsonify({"msg": "Relación no encontrada"}), 404
+
+    return jsonify({
+        "categoria_id": relacion.categoria_id,
+        "libro_id": relacion.libro_id,
+        "categoria": {"id": relacion.categoria.id, "nombre": relacion.categoria.nombre} if relacion.categoria else None,
+        "libro": {"id": relacion.libro.id, "titulo": relacion.libro.titulo} if relacion.libro else None
+    }), 200
+
+
+@api.route("/categorialibro/<int:categoria_id>/<int:libro_id>", methods=["PUT"])
+def update_categoria_libro(categoria_id, libro_id):
+    body = request.get_json(silent=True) or {}
+
+    new_categoria_id = body.get("categoria_id")
+    new_libro_id = body.get("libro_id")
+
+    if new_categoria_id is None or new_libro_id is None:
+        return jsonify({"msg": "Faltan campos: categoria_id, libro_id"}), 400
+
+    relacion = Categoria_Libro.query.filter_by(
+        categoria_id=categoria_id,
+        libro_id=libro_id
+    ).first()
+
+    if not relacion:
+        return jsonify({"msg": "Relación no encontrada"}), 404
+
+    categoria = Categorias.query.get(new_categoria_id)
+    libro = Book.query.get(new_libro_id)
+    if not categoria or not libro:
+        return jsonify({"msg": "Categoría o Libro no existe"}), 404
+
+    exists = Categoria_Libro.query.filter_by(
+        categoria_id=new_categoria_id,
+        libro_id=new_libro_id
+    ).first()
+    if exists:
+        return jsonify({"msg": "Ya existe esa relación"}), 409
+
+    db.session.delete(relacion)
+    nueva_relacion = Categoria_Libro(
+        categoria_id=new_categoria_id,
+        libro_id=new_libro_id
+    )
+    db.session.add(nueva_relacion)
+
+    db.session.commit()
+
+    return jsonify(nueva_relacion.serialize()), 200
+
+
+@api.route("/categorialibro/<int:categoria_id>/<int:libro_id>", methods=["DELETE"])
+def delete_categoria_libro(categoria_id, libro_id):
+    relacion = Categoria_Libro.query.filter_by(
+        categoria_id=categoria_id,
+        libro_id=libro_id
+    ).first()
+
+    if not relacion:
+        return jsonify({"msg": "Relación no encontrada"}), 404
+
+    db.session.delete(relacion)
+    db.session.commit()
+
+    return jsonify({"msg": "Relación eliminada correctamente"}), 200
+
+
+# CRUD Categorias
+
+
+@api.route("/categorias", methods=["GET"])
+def list_categorias():
+    categorias = Categorias.query.all()
+    return jsonify([c.serialize() for c in categorias]), 200
+
+
+@api.route("/categorias/<int:id>", methods=["GET"])
+def get_categoria(id):
+    categoria = Categorias.query.get(id)
+    if not categoria:
+        return jsonify({"msg": "Categoría no encontrada"}), 404
+    return jsonify(categoria.serialize()), 200
+
+
+@api.route("/categorias", methods=["POST"])
+def create_categoria():
+    body = request.get_json(silent=True) or {}
+
+    nombre = body.get("nombre")
+    descripcion = body.get("descripcion")
+
+    if not nombre or not descripcion:
+        return jsonify({"msg": "Faltan campos: nombre, descripcion"}), 400
+
+    exists = Categorias.query.filter_by(nombre=nombre).first()
+    if exists:
+        return jsonify({"msg": "Ya existe una categoría con ese nombre"}), 409
+
+    categoria = Categorias(
+        nombre=nombre,
+        descripcion=descripcion
+    )
+
+    db.session.add(categoria)
+    db.session.commit()
+
+    return jsonify(categoria.serialize()), 201
+
+
+@api.route("/categorias/<int:id>", methods=["PUT"])
+def update_categoria(id):
+    categoria = Categorias.query.get(id)
+    if not categoria:
+        return jsonify({"msg": "Categoría no encontrada"}), 404
+
+    data = request.get_json(silent=True) or {}
+    nombre = data.get("nombre")
+    descripcion = data.get("descripcion")
+
+    if not nombre or not descripcion:
+        return jsonify({"msg": "Faltan campos"}), 400
+
+    categoria.nombre = nombre
+    categoria.descripcion = descripcion
+    db.session.commit()
+
+    return jsonify(categoria.serialize()), 200
+
+
+@api.route("/categorias/<int:id>", methods=["DELETE"])
+def delete_categoria(id):
+    categoria = Categorias.query.get(id)
+    if not categoria:
+        return jsonify({"msg": "Categoría no encontrada"}), 404
+
+    db.session.delete(categoria)
+    db.session.commit()
+
+    return jsonify({"msg": "Categoría eliminada"}), 200
 
 
 @api.route("/carts", methods=["GET"])
@@ -531,8 +723,21 @@ def get_review(review_id):
 
 
 @api.route("/reviews", methods=["POST"])
+@jwt_required()
 def create_review():
     body = request.get_json(silent=True) or {}
+
+    user_id = get_jwt_identity() 
+    user = User.query.get(int(user_id))
+
+    if not user:
+        return jsonify({"msg": "Usuario no encontrado"}), 404
+
+    if user.role == "client":
+        body["id_cliente"] = user.id
+
+    if user.role == "admin" and body.get("id_cliente") is None:
+        return jsonify({"msg": "Falta id_cliente"}), 400
 
     required = ["id_cliente", "id_libro", "puntuacion"]
     for f in required:
@@ -566,6 +771,7 @@ def create_review():
     db.session.commit()
 
     return jsonify(review.serialize()), 201
+
 
 
 @api.route("/reviews/<int:review_id>", methods=["PUT"])
@@ -617,3 +823,33 @@ def delete_review(review_id):
     return jsonify({"msg": "Review eliminada"}), 200
 
 # Fin CRUD Reviews Layla
+
+
+@api.route("/login", methods=["POST"])
+def login():
+    body = request.get_json() or {}
+
+    email = body.get("email")
+    password = body.get("password")
+
+    if not email or not password:
+        return jsonify({"msg": "Email y contraseña requeridos"}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user or user.password != password:
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+    access_token = create_access_token(identity=str(user.id))
+
+    return jsonify({
+        "msg": "Login correcto",
+        "token": access_token,
+        "user": user.serialize()
+    }), 200
+
+
+@api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
+def get_carritos_usuario(user_id):
+    carritos = Cart.query.filter_by(id_cliente=user_id).all()
+    return jsonify([c.serialize() for c in carritos]), 200
