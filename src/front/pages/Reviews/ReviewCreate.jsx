@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer.jsx";
 
 export const ReviewCreate = () => {
   const navigate = useNavigate();
 
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 
+  const { store } = useGlobalReducer();
+  const user = store.user;
+
   const [form, setForm] = useState({
-    id_cliente: "",
     id_libro: "",
     puntuacion: "",
     comentario: "",
+    id_cliente: ""
   });
 
   const handleChange = (e) => {
@@ -21,56 +25,72 @@ export const ReviewCreate = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!form.id_cliente || !form.id_libro || !form.puntuacion) {
-      alert("Faltan campos obligatorios");
+  if (!form.id_libro || !form.puntuacion) {
+    alert("Faltan campos obligatorios");
+    return;
+  }
+
+  const body = {
+    id_libro: Number(form.id_libro),
+    puntuacion: Number(form.puntuacion),
+    comentario: form.comentario || null,
+  };
+
+  if (!user) {
+    if (!form.id_cliente) {
+      alert("Debes indicar el ID del cliente");
+      return;
+    }
+    body.id_cliente = Number(form.id_cliente);
+  }
+
+  try {
+
+  const resp = await fetch(backendUrl + "/api/reviews", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${store.token}`
+    },
+    body: JSON.stringify(body),
+  });
+
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      alert(data.msg || "Error creando review");
       return;
     }
 
-    try {
-      const resp = await fetch(backendUrl + "/api/reviews", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id_cliente: Number(form.id_cliente),
-          id_libro: Number(form.id_libro),
-          puntuacion: Number(form.puntuacion),
-          comentario: form.comentario || null,
-        }),
-      });
+    navigate("/reviews");
+  } catch (error) {
+    alert("Error de red");
+  }
+};
 
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        alert(data.msg || "Error creando review");
-        return;
-      }
-
-      navigate("/reviews");
-    } catch (error) {
-      alert("Error de red");
-    }
-  };
 
   return (
     <div className="container mt-5">
       <h1 className="mb-4">Crear Review</h1>
 
       <form onSubmit={handleSubmit} className="card p-4">
-        <div className="mb-3">
-          <label className="form-label">ID Cliente</label>
-          <input
-            type="number"
-            name="id_cliente"
-            className="form-control"
-            value={form.id_cliente}
-            onChange={handleChange}
-            required
-          />
-        </div>
+
+        {!user && (
+          <div className="mb-3">
+            <label className="form-label">ID Cliente</label>
+            <input
+              type="number"
+              name="id_cliente"
+              className="form-control"
+              value={form.id_cliente}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        )}
 
         <div className="mb-3">
           <label className="form-label">ID Libro</label>

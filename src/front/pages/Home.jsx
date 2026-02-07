@@ -1,14 +1,10 @@
 import React, { useEffect } from "react";
-import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export const Home = () => {
 	const { store, dispatch } = useGlobalReducer();
 	const navigate = useNavigate();
-	const location = useLocation();
-
-	const isClientsPage = location.pathname.startsWith("/clients");
 
 	const loadMessage = async () => {
 		try {
@@ -21,14 +17,8 @@ export const Home = () => {
 			const data = await response.json();
 
 			if (response.ok) dispatch({ type: "set_hello", payload: data.message });
-
-			return data;
 		} catch (error) {
-			if (error.message)
-				throw new Error(
-					`Could not fetch the message from the backend.
-Please check if the backend is running and the backend port is public.`
-				);
+			console.error("Error loading message", error);
 		}
 	};
 
@@ -36,51 +26,60 @@ Please check if the backend is running and the backend port is public.`
 		loadMessage();
 	}, []);
 
+	const user = store.user;
+	const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
+
 	return (
 		<div className="text-center mt-5">
-
-			{!isClientsPage && (
-				<Link to="/clients" className="btn btn-success btn-lg m-2">
-					Clientes
-				</Link>
+			{isAdmin && ( 
+				<> 
+					<Link to="/clients" className="btn btn-success btn-lg m-2">Clientes</Link> 
+					<Link to="/provider" className="btn btn-warning btn-lg m-2">Proveedores</Link> 
+					<Link to="/categorialibro" className="btn btn-info btn-lg m-2">Categorías Libros</Link> 
+					<Link to="/categorias" className="btn btn-info btn-lg m-2">Categorías</Link> 
+					<Link to="/carts" className="btn btn-danger btn-lg m-2">Ver Carritos</Link> 
+					<button className="btn btn-info btn-lg m-2" onClick={() => navigate("/delivery")}> Repartidores </button> 
+					<button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}> Ir a Libros </button> 
+					<button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}> Reviews </button> 
+				</> 
 			)}
 
-			{/* Botón Layla ir a libros */}
-			<button
-				type="button"
-				className="btn btn-primary btn-lg"
-				onClick={() => navigate("/books")}
-			>
-				Ir a Libros
-			</button>
+			{isProvider && ( 
+				<> 
+					<Link to="/categorialibro" className="btn btn-info btn-lg m-2">Categorías Libros</Link> 
+					<Link to="/categorias" className="btn btn-info btn-lg m-2">Categorías</Link> 
+					<button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}> Ir a Libros </button> 
+					<button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}> Reviews </button> 
+				</> 
+			)}
 
-			<Link to="/provider" className="btn btn-warning btn-lg m-2">
-				<span className="navbar-brand mb-0 h1">Proveedores</span>
-			</Link>
-			<Link to="/categorialibro" className="btn btn-info btn-lg m-2">
-				<span className="navbar-brand mb-0 h1">Categorías Libros</span>
-			</Link>
-			<Link to="/categorias" className="btn btn-info btn-lg m-2">
-				<span className="navbar-brand mb-0 h1">Categorías</span>
-			</Link>
+			{isDelivery && ( 
+				<> 
+					<Link to="/clients" className="btn btn-success btn-lg m-2">Clientes</Link> 
+					<Link to="/carts" className="btn btn-danger btn-lg m-2">Ver Carritos</Link> 
+				</> 
+			)}
+
+			{isClient && ( 
+				<> 
+					<Link to="/categorialibro" className="btn btn-info btn-lg m-2">Categorías Libros</Link> 
+					<Link to="/categorias" className="btn btn-info btn-lg m-2">Categorías</Link> 
+					<button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}> Ir a Libros </button> 
+					<button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}> Reviews </button> 
+				</> 
+			)}
 
 
-			<Link to="/carts" className="btn btn-danger btn-lg">
-				Ver Carritos
-			</Link>
-
-			<button
-				type="button" className="btn btn-info btn-lg m-2"
-				onClick={() => navigate("/delivery")}>
-				Repartidores
-			</button>
-
-			<button
-				type="button" className="btn btn-success btn-lg m-2"
-				onClick={() => navigate("/reviews")}>
-				Reviews
-			</button>
-
+			{!user && (
+				<Link to="/login" className="btn btn-primary btn-lg m-2">
+					Login cliente
+				</Link>
+			)}
 
 
 		</div>

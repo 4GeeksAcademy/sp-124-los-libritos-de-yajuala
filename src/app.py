@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 from api.utils import APIException, generate_sitemap
 from api.models import db
@@ -21,6 +22,11 @@ static_file_dir = os.path.join(os.path.dirname(
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
+app.config["JWT_SECRET_KEY"] = "super-secret-key"  
+app.config["JWT_TOKEN_LOCATION"] = ["headers"] 
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False 
+
+jwt = JWTManager(app)
 # ✅ CORS (para que el front pueda llamar al backend desde otro puerto/origen)
 app.config["CORS_HEADERS"] = "Content-Type"
 CORS(

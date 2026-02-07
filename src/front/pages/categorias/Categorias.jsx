@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
-const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
+const API_BASE = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+
 
 const Categorias = () => {
     const [categorias, setCategorias] = useState([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
+    const { store, dispatch } = useGlobalReducer();
 
     const navigate = useNavigate();
 
@@ -52,17 +55,26 @@ const Categorias = () => {
 
     if (loading) return <p>Cargando categorías...</p>;
 
+    const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
+
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center">
                 <h1>Listado de Categorías</h1>
-
+            {!isClient && (
                 <button
                     className="btn btn-primary"
                     onClick={() => navigate("/categorias/new")}
                 >
                     + Nueva Categoría
                 </button>
+            )}
+                
             </div>
 
             {/* Buscador */}
@@ -95,16 +107,18 @@ const Categorias = () => {
                                         className="btn btn-warning btn-sm me-2"
                                         onClick={() => navigate(`/categorias/view/${categoria.id}`)}
                                     >
-                                        Editar / Ver
+                                        Ver
                                     </button>
 
-
+                                {!isClient && (
                                     <button
                                         className="btn btn-danger btn-sm"
                                         onClick={() => deleteCategoria(categoria.id)}
                                     >
                                         Eliminar
                                     </button>
+                                )}
+                                    
                                 </td>
                             </tr>
                         ))}
