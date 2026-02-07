@@ -17,7 +17,8 @@ from api.models_reviews import Review
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
-CORS(api)
+# CORS(api)
+CORS(api, supports_credentials=True)
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -727,26 +728,16 @@ def get_review(review_id):
 def create_review():
     body = request.get_json(silent=True) or {}
 
-    user_id = get_jwt_identity() 
+    
+    user_id = get_jwt_identity()
     user = User.query.get(int(user_id))
 
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
 
-    if user.role == "client":
-        body["id_cliente"] = user.id
-
-    if user.role == "admin" and body.get("id_cliente") is None:
-        return jsonify({"msg": "Falta id_cliente"}), 400
-
-    required = ["id_cliente", "id_libro", "puntuacion"]
-    for f in required:
-        if body.get(f) is None:
-            return jsonify({"msg": f"Falta {f}"}), 400
-
-    cliente = User.query.get(body["id_cliente"])
-    if not cliente:
-        return jsonify({"msg": "Cliente no encontrado"}), 404
+    
+    if body.get("id_libro") is None or body.get("puntuacion") is None:
+        return jsonify({"msg": "Faltan campos obligatorios"}), 400
 
     libro = Book.query.get(body["id_libro"])
     if not libro:
@@ -761,7 +752,7 @@ def create_review():
         return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
 
     review = Review(
-        id_cliente=body["id_cliente"],
+        id_cliente=user.id,          # ← usuario logueado
         id_libro=body["id_libro"],
         puntuacion=puntuacion,
         comentario=body.get("comentario")
@@ -771,6 +762,7 @@ def create_review():
     db.session.commit()
 
     return jsonify(review.serialize()), 201
+
 
 
 
