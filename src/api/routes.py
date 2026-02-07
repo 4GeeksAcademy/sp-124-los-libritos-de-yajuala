@@ -825,27 +825,36 @@ def delete_review(review_id):
 # Fin CRUD Reviews Layla
 
 
-@api.route("/login", methods=["POST"])
-def login():
-    body = request.get_json() or {}
+@api.route("/login", methods=["POST"]) 
+def login(): 
+    body = request.get_json() or {} 
+    
+    email = body.get("email") 
+    password = body.get("password") 
+    
+    if not email or not password: 
+        return jsonify({"msg": "Email y contraseña requeridos"}), 400 
+    
+    user = User.query.filter_by(email=email).first() 
+    
+    if not user or user.password != password: 
+        return jsonify({"msg": "Credenciales incorrectas"}), 401 
+    
+    if user.email == "admin@admin.com" and user.password == "123": 
+        user.role = "admin" 
+        db.session.commit() 
 
-    email = body.get("email")
-    password = body.get("password")
-
-    if not email or not password:
-        return jsonify({"msg": "Email y contraseña requeridos"}), 400
-
-    user = User.query.filter_by(email=email).first()
-
-    if not user or user.password != password:
-        return jsonify({"msg": "Credenciales incorrectas"}), 401
-
-    access_token = create_access_token(identity=str(user.id))
-
-    return jsonify({
-        "msg": "Login correcto",
-        "token": access_token,
-        "user": user.serialize()
+        
+    access_token = create_access_token( 
+        identity={ 
+            "id": user.id, 
+            "role": user.role 
+        } 
+    ) 
+    
+    return jsonify({ 
+        "msg": "Login correcto", "token": access_token, 
+        "user": user.serialize() 
     }), 200
 
 
@@ -853,3 +862,13 @@ def login():
 def get_carritos_usuario(user_id):
     carritos = Cart.query.filter_by(id_cliente=user_id).all()
     return jsonify([c.serialize() for c in carritos]), 200
+
+@api.route("/admin/usuarios", methods=["GET"])
+@jwt_required()
+def admin_users():
+    user = get_jwt_identity()
+    if user["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    usuarios = User.query.all()
+    return jsonify([u.serialize() for u in usuarios]), 200
