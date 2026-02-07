@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
-const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
+const API_BASE = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+
 
 const CategoriasLibro = () => {
     const [categoriasLibro, setCategoriasLibro] = useState([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
+    const { store, dispatch } = useGlobalReducer();
 
     const navigate = useNavigate();
 
@@ -54,17 +57,25 @@ const CategoriasLibro = () => {
 
     if (loading) return <p>Cargando relaciones...</p>;
 
+    const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
     return (
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center">
                 <h1>Listado de Categorías-Libro</h1>
-
+            {!isClient && (
                 <button
                     className="btn btn-primary"
                     onClick={() => navigate("/categorialibro/new")}
                 >
                     + Nueva Relación
                 </button>
+            )}
+                
             </div>
 
             {/* Buscador */}
@@ -107,13 +118,15 @@ const CategoriasLibro = () => {
                                     >
                                         Ver
                                     </button>
-
+                                {!isClient && (
                                     <button
                                         className="btn btn-danger btn-sm"
                                         onClick={() => deleteRelacion(cl.categoria_id, cl.libro_id)}
                                     >
                                         Eliminar
                                     </button>
+                                )}
+                                    
                                 </td>
                             </tr>
                         ))}

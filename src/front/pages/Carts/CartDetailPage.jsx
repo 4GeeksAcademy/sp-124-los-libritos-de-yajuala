@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
 export default function CartDetailPage() {
   const { id } = useParams();
   const [cart, setCart] = useState(null);
   const [items, setItems] = useState([]);
+  const { store, dispatch } = useGlobalReducer();
 
 
   const total = items.reduce((acc, item) => {
@@ -42,6 +44,12 @@ export default function CartDetailPage() {
 
   if (!cart) return <p className="text-center mt-5">Cargando...</p>;
 
+  const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
   return (
     <div className="container mt-4">
       <h1>Carrito #{cart.id}</h1>
@@ -68,6 +76,7 @@ export default function CartDetailPage() {
             </p>
 
             <p><strong>Descuento:</strong> {item.descuento * 100}%</p>
+            {!isClient && (
             <div className="d-flex">
               <Link
                 to={`/cart-books/${item.id}/edit`}
@@ -83,12 +92,15 @@ export default function CartDetailPage() {
               >
                 Eliminar
               </button>
-            </div></div>
+            </div>)}</div>
         ))}
         <div className="d-flex">
-          <Link to={`/carts/${id}/add-book`} className="btn btn-success me-2">
+          {!isClient && (
+            <Link to={`/carts/${id}/add-book`} className="btn btn-success me-2">
             Agregar libro
           </Link>
+          )}
+          
 
           <Link to="/carts" className="btn btn-secondary">
             Volver

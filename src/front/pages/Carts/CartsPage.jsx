@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
 export default function CartsPage() {
   const [carts, setCarts] = useState([]);
+  const { store, dispatch } = useGlobalReducer();
 
   const fetchCarts = async () => {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/carts`);
@@ -38,11 +40,19 @@ export default function CartsPage() {
     fetchCarts();
   };
 
+  const role = store.user?.role;
+	const isAdmin = role === "admin";
+	const isProvider = role === "provider";
+	const isDelivery = role === "delivery";
+	const isClient = role === "client";
+
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between mb-4">
+      {!isClient && (
+        <>
+        <div className="d-flex justify-content-between mb-4">
         <h1>Carritos</h1>
-
+    
         <Link to="/carts/create" className="btn btn-success mb-3">
           Crear Carrito
         </Link>
@@ -75,13 +85,15 @@ export default function CartsPage() {
             </div>
           </div>
         ))}
-      </div>
-
+      </div></>
+)}
       <div className="text-center mt-4">
         <Link to="/" className="btn btn-secondary btn-lg">
           Volver a inicio
         </Link>
       </div>
+      
+      
     </div>
   );
 }

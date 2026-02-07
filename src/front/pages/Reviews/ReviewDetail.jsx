@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import useGlobalReducer from "../../hooks/useGlobalReducer.jsx";
 
 export const ReviewDetail = () => {
     const [review, setReview] = useState(null);
@@ -7,6 +8,16 @@ export const ReviewDetail = () => {
     const navigate = useNavigate();
 
     const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
+
+    const { store } = useGlobalReducer();
+    const user = store.user;
+    const role = store.user?.role;
+    const isAdmin = role === "admin";
+    const isProvider = role === "provider";
+    const isDelivery = role === "delivery";
+    const isClient = role === "client";
+
+    const isOwner = (review) => user && review.id_cliente === user.id;
 
     const getReview = async () => {
         try {
@@ -60,12 +71,15 @@ export const ReviewDetail = () => {
                     </p>
 
                     <div className="d-flex gap-2">
-                        <button
+                        {(isAdmin || isOwner(review)) && (
+                            <button
                             className="btn btn-primary"
                             onClick={() => navigate(`/reviews/${review.id}/edit`)}
                         >
                             Editar
                         </button>
+                        )}
+                        
                         <button className="btn btn-secondary" onClick={() => navigate("/reviews")}>
                             Cerrar
                         </button>

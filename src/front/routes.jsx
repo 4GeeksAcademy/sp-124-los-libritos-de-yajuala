@@ -48,6 +48,9 @@ import AddCategoriaLibro from "./pages/categorialibro/AddCategoriaLibro";
 import ViewCategoriaLibro from "./pages/categorialibro/ViewCategoriaLibro";
 import EditCategoriaLibro from "./pages/categorialibro/EditCategoriaLibro";
 
+import LoginPage from "./pages/loginClientes/LoginPage.jsx";
+import LoggedClientPage from "./pages/loginClientes/LoggedClientPage.jsx";
+import LoggedCartClientPage from "./pages/loginClientes/LoggedCartClientPage.jsx";
 
 
 export const router = createBrowserRouter(
@@ -105,6 +108,10 @@ export const router = createBrowserRouter(
       <Route path="/categorialibro/new" element={<AddCategoriaLibro />} />
       <Route path="/categorialibro/view/:categoriaId/:libroId" element={<ViewCategoriaLibro />} />
       <Route path="/categorialibro/edit/:categoriaId/:libroId" element={<EditCategoriaLibro />} />
+
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/user" element={<LoggedClientPage />} />
+      <Route path="/user/cart" element={<LoggedCartClientPage />} />
 
     </Route>
   )
