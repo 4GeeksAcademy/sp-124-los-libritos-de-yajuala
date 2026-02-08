@@ -860,3 +860,34 @@ def admin_users():
 
     usuarios = User.query.all()
     return jsonify([u.serialize() for u in usuarios]), 200
+
+# Login proveedores Layla abajo
+
+
+@api.route("/login/provider", methods=["POST"])
+def login_provider():
+    body = request.get_json() or {}
+
+    email = body.get("email")
+    password = body.get("password")
+
+    if not email or not password:
+        return jsonify({"msg": "Email y contraseña requeridos"}), 400
+
+    provider = Provider.query.filter_by(email=email).first()
+
+    if not provider or provider.password != password:
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+    access_token = create_access_token(
+        identity={
+            "id": provider.id,
+            "role": "provider"
+        }
+    )
+
+    return jsonify({
+        "msg": "Login correcto",
+        "token": access_token,
+        "user": provider.serialize()
+    }), 200

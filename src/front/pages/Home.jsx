@@ -81,6 +81,12 @@ export const Home = () => {
 				</Link>
 			)}
 
+			{!user && (
+				<Link to="/login/provider" className="btn btn-warning btn-lg m-2">
+					Login Proveedor
+				</Link>
+			)}
+
 
 		</div>
 	);
