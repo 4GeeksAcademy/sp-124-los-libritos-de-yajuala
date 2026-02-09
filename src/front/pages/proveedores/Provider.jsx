@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
+const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
 const Provider = () => {
   const [providers, setProviders] = useState([]);
@@ -61,7 +61,7 @@ const Provider = () => {
 
         <button
           className="btn btn-primary"
-          onClick={() => navigate("/providers/new")}
+          onClick={() => navigate("/provider/create")}
         >
           + Nuevo Proveedor
         </button>
@@ -107,7 +107,7 @@ const Provider = () => {
                   </button>
                   <button
                     className="btn btn-warning btn-sm me-2"
-                    onClick={() => navigate(`/provider/${provider.id}`)}
+                    onClick={() => navigate(`/provider/edit/${provider.id}`)}
                   >
                     Editar
                   </button>
