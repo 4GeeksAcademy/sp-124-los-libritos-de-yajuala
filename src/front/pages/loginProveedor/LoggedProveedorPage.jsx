@@ -16,6 +16,14 @@ export default function LoggedProveedorPage() {
       <p className="text-muted">Panel de Proveedor</p>
 
       <div className="mt-4">
+
+        <button
+          className="btn btn-primary me-3"
+          onClick={() => navigate("/books")}
+        >
+          Gestionar Libros
+        </button>
+
         <button
           className="btn btn-secondary"
           onClick={() => navigate("/")}
