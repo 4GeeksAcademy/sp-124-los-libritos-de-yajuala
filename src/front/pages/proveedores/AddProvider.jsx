@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
+const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
 const AddProvider = () => {
     const { providerId } = useParams(); // si existe => editar

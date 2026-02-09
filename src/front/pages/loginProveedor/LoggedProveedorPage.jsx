@@ -25,11 +25,12 @@ export default function LoggedProveedorPage() {
         </button>
 
         <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/")}
-        >
-          Volver al inicio
-        </button>
+        className="btn btn-secondary"
+        onClick={() => navigate("/provider/me")}
+      >
+        Volver al panel
+      </button>
+
       </div>
     </div>
   );

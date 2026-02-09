@@ -825,6 +825,13 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
+    # 🔴 Si el email pertenece a un PROVIDER
+    provider = Provider.query.filter_by(email=email).first()
+    if provider:
+        return jsonify({
+            "msg": "No tienes permiso para acceder al panel de cliente"
+        }), 403
+
     if not user or user.password != password:
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
@@ -840,9 +847,11 @@ def login():
     )
 
     return jsonify({
-        "msg": "Login correcto", "token": access_token,
+        "msg": "Login correcto",
+        "token": access_token,
         "user": user.serialize()
     }), 200
+
 
 
 @api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
@@ -874,6 +883,12 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
+    # Si ese email pertenece a un USER (cliente/admin), entonces NO es proveedor
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
+
+    # Si no existe como user, buscamos en providers
     provider = Provider.query.filter_by(email=email).first()
 
     if not provider or provider.password != password:
@@ -889,5 +904,6 @@ def login_provider():
     return jsonify({
         "msg": "Login correcto",
         "token": access_token,
-        "user": provider.serialize()
+        "user": {**provider.serialize(), "role": "provider"}  # 👈 añadimos role
     }), 200
+
