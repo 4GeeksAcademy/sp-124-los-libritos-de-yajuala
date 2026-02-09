@@ -52,6 +52,9 @@ import LoginPage from "./pages/loginClientes/LoginPage.jsx";
 import LoggedClientPage from "./pages/loginClientes/LoggedClientPage.jsx";
 import LoggedCartClientPage from "./pages/loginClientes/LoggedCartClientPage.jsx";
 
+import LoginProviderPage from "./pages/loginProveedor/LoginProviderPage.jsx";
+import LoggedProveedorPage from "./pages/loginProveedor/LoggedProveedorPage.jsx";
+
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -112,6 +115,9 @@ export const router = createBrowserRouter(
       <Route path="/login" element={<LoginPage />} />
       <Route path="/user" element={<LoggedClientPage />} />
       <Route path="/user/cart" element={<LoggedCartClientPage />} />
+
+      <Route path="/login/provider" element={<LoginProviderPage />} />
+      <Route path="/provider/me" element={<LoggedProveedorPage />} />
 
     </Route>
   )

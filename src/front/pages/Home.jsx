@@ -77,7 +77,13 @@ export const Home = () => {
 
 			{!user && (
 				<Link to="/login" className="btn btn-primary btn-lg m-2">
-					Login Admin
+					Login
+				</Link>
+			)}
+
+			{!user && (
+				<Link to="/login/provider" className="btn btn-warning btn-lg m-2">
+					Login Proveedor
 				</Link>
 			)}
 
