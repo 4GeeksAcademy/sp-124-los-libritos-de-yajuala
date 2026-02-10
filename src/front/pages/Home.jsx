@@ -81,6 +81,12 @@ export const Home = () => {
 				</Link>
 			)}
 
+			{!user && (
+				<Link to="/logindelivery" className="btn btn-primary btn-lg m-2">
+					Login Repartidor
+				</Link>
+			)}
+
 
 		</div>
 	);

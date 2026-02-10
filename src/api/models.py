@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 db = SQLAlchemy()
@@ -12,7 +13,8 @@ class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     lastname: Mapped[str] = mapped_column(String(120), nullable=False)
-    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(200), nullable=False)
 
     role: Mapped[str] = mapped_column(
@@ -21,15 +23,49 @@ class User(db.Model):
         server_default="client"
     )
 
-
-
-
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
             "lastname": self.lastname,
             "email": self.email,
+            "role": self.role,
+        }
+
+
+class Delivery(db.Model):
+    __tablename__ = "delivery"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    nombre: Mapped[str] = mapped_column(String(120), nullable=False)
+    apellido: Mapped[str] = mapped_column(String(120), nullable=False)
+
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False)
+    identificacion: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False)
+
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default="delivery"
+    )
+
+    def set_password(self, password: str):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        return check_password_hash(self.password_hash, password)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "email": self.email,
+            "identificacion": self.identificacion,
             "role": self.role,
         }
 
@@ -142,7 +178,8 @@ class Categoria_Libro(db.Model):
             "categoria_id": self.categoria_id,
             "libro_id": self.libro_id
         }
-    
+
+
 class Cart(db.Model):
     __tablename__ = "carts"
 

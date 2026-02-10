@@ -51,6 +51,8 @@ import EditCategoriaLibro from "./pages/categorialibro/EditCategoriaLibro";
 import LoginPage from "./pages/loginClientes/LoginPage.jsx";
 import LoggedClientPage from "./pages/loginClientes/LoggedClientPage.jsx";
 import LoggedCartClientPage from "./pages/loginClientes/LoggedCartClientPage.jsx";
+import LoginDelivery from "./pages/loginDelivery/LoginDelivery.jsx";
+import LoggedDelivery from "./pages/loginDelivery/LoggedDelivery.jsx";
 
 
 export const router = createBrowserRouter(
@@ -112,6 +114,10 @@ export const router = createBrowserRouter(
       <Route path="/login" element={<LoginPage />} />
       <Route path="/user" element={<LoggedClientPage />} />
       <Route path="/user/cart" element={<LoggedCartClientPage />} />
+
+      <Route path="/logindelivery" element={<LoginDelivery />} />
+      <Route path="/loggeddelivery" element={<LoggedDelivery />} />
+
 
     </Route>
   )
