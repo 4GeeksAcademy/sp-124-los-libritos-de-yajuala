@@ -13,17 +13,43 @@ export default function LoggedClientPage() {
   return (
     <div className="container mt-4">
       <h1>Bienvenido, {store.user.name}</h1>
+      <p className="text-muted">Panel de Usuario</p>
 
-      <div className="mt-4">
+      <div className="mt-4 d-flex flex-wrap gap-3">
         <button
-          className="btn btn-primary me-3"
-          onClick={() => navigate("/user/cart")}
+          className="btn btn-success"
+          onClick={() => navigate("/user/history")}
         >
           Ver historial de pedidos
         </button>
 
         <button
-          className="btn btn-secondary"
+          className="btn btn-primary"
+          onClick={() => navigate("/reviews/new")}
+        >
+          Crear review
+        </button>
+
+        <button
+          className="btn btn-warning"
+          onClick={() => navigate("/books")}
+        >
+          Ver libros
+        </button>
+
+    
+
+      <button
+        className="btn btn-success me-3"
+        onClick={() => navigate("/user/cart")}
+      >
+        Ver carrito
+      </button>
+
+
+
+        <button
+          className="btn btn-outline-secondary"
           onClick={() => navigate("/")}
         >
           Volver al inicio

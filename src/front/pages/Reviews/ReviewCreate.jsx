@@ -4,55 +4,37 @@ import useGlobalReducer from "../../hooks/useGlobalReducer.jsx";
 
 export const ReviewCreate = () => {
   const navigate = useNavigate();
-
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 
   const { store } = useGlobalReducer();
-  const user = store.user;
 
   const [form, setForm] = useState({
     id_libro: "",
     puntuacion: "",
     comentario: "",
-    id_cliente: ""
   });
 
-  const [clientes, setClientes] = useState([]);
   const [libros, setLibros] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargar clientes y libros
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchBooks = async () => {
       try {
-        const [clientsRes, booksRes] = await Promise.all([
-          fetch(backendUrl + "/api/clients", { credentials: "include" }),
-          fetch(backendUrl + "/api/books", { credentials: "include" }),
-        ]);
-
-        if (!clientsRes.ok) throw new Error("Error al cargar clientes");
-        if (!booksRes.ok) throw new Error("Error al cargar libros");
-
-        const clientsData = await clientsRes.json();
-        const booksData = await booksRes.json();
-
-        setClientes(clientsData);
-        setLibros(booksData);
-      } catch (error) {
-        console.error(error);
+        const res = await fetch(`${backendUrl}/api/books`);
+        if (!res.ok) throw new Error("Error al cargar libros");
+        const data = await res.json();
+        setLibros(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchData();
+    fetchBooks();
   }, [backendUrl]);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
@@ -69,62 +51,35 @@ export const ReviewCreate = () => {
       comentario: form.comentario || null,
     };
 
-    if (!user) {
-      if (!form.id_cliente) {
-        alert("Debes seleccionar un cliente");
-        return;
-      }
-      body.id_cliente = Number(form.id_cliente);
-    }
-
     try {
-      const resp = await fetch(backendUrl + "/api/reviews", {
+      const resp = await fetch(`${backendUrl}/api/reviews`, {
         method: "POST",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${store.token}`,
         },
         body: JSON.stringify(body),
       });
 
       const data = await resp.json();
-
       if (!resp.ok) {
         alert(data.msg || "Error creando review");
         return;
       }
 
       navigate("/reviews");
-    } catch (error) {
+    } catch {
       alert("Error de red");
     }
   };
 
-  if (loading) return <p>Cargando clientes y libros...</p>;
+  if (loading) return <p>Cargando libros...</p>;
 
   return (
     <div className="container mt-5">
       <h1 className="mb-4">Crear Review</h1>
 
       <form onSubmit={handleSubmit} className="card p-4">
-        <div className="mb-3">
-          <label className="form-label">Cliente</label>
-          <select
-            name="id_cliente"
-            className="form-select"
-            value={form.id_cliente}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Selecciona cliente --</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre || c.email}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div className="mb-3">
           <label className="form-label">Libro</label>
           <select

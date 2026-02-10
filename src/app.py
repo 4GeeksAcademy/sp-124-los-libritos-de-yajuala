@@ -27,6 +27,7 @@ app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False 
 
 jwt = JWTManager(app)
+app.config["JWT_IDENTITY_CLAIM"] = "identity"
 # ✅ CORS (para que el front pueda llamar al backend desde otro puerto/origen)
 app.config["CORS_HEADERS"] = "Content-Type"
 CORS(

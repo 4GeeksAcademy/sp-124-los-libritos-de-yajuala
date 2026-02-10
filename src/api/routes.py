@@ -15,7 +15,8 @@ from api.models_reviews import Review
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
-CORS(api)
+# CORS(api)
+CORS(api, supports_credentials=True)
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -727,26 +728,14 @@ def get_review(review_id):
 def create_review():
     body = request.get_json(silent=True) or {}
 
-    user_id = get_jwt_identity()
-    user = User.query.get(int(user_id))
+    identity = get_jwt_identity()
+    user = User.query.get(identity["id"])
 
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
 
-    if user.role == "client":
-        body["id_cliente"] = user.id
-
-    if user.role == "admin" and body.get("id_cliente") is None:
-        return jsonify({"msg": "Falta id_cliente"}), 400
-
-    required = ["id_cliente", "id_libro", "puntuacion"]
-    for f in required:
-        if body.get(f) is None:
-            return jsonify({"msg": f"Falta {f}"}), 400
-
-    cliente = User.query.get(body["id_cliente"])
-    if not cliente:
-        return jsonify({"msg": "Cliente no encontrado"}), 404
+    if body.get("id_libro") is None or body.get("puntuacion") is None:
+        return jsonify({"msg": "Faltan campos obligatorios"}), 400
 
     libro = Book.query.get(body["id_libro"])
     if not libro:
@@ -761,7 +750,7 @@ def create_review():
         return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
 
     review = Review(
-        id_cliente=body["id_cliente"],
+        id_cliente=user.id,          # ← usuario logueado
         id_libro=body["id_libro"],
         puntuacion=puntuacion,
         comentario=body.get("comentario")
@@ -836,6 +825,13 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
+    # 🔴 Si el email pertenece a un PROVIDER
+    provider = Provider.query.filter_by(email=email).first()
+    if provider:
+        return jsonify({
+            "msg": "No tienes permiso para acceder al panel de cliente"
+        }), 403
+
     if not user or user.password != password:
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
@@ -851,9 +847,11 @@ def login():
     )
 
     return jsonify({
-        "msg": "Login correcto", "token": access_token,
+        "msg": "Login correcto",
+        "token": access_token,
         "user": user.serialize()
     }), 200
+
 
 
 @api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
@@ -876,6 +874,12 @@ def admin_users():
 @api.route("/delivery/login", methods=["POST"])
 def delivery_login():
     body = request.get_json(silent=True) or {}
+# Login proveedores Layla abajo
+
+
+@api.route("/login/provider", methods=["POST"])
+def login_provider():
+    body = request.get_json() or {}
 
     email = body.get("email")
     password = body.get("password")
@@ -907,3 +911,27 @@ def delivery_pedidos():
         return jsonify({"msg": "No autorizado"}), 403
     # Aquí iría la lógica para obtener los pedidos asignados al repartidor
     return jsonify({"msg": "Pedidos del repartidor"}), 200
+    # Si ese email pertenece a un USER (cliente/admin), entonces NO es proveedor
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
+
+    # Si no existe como user, buscamos en providers
+    provider = Provider.query.filter_by(email=email).first()
+
+    if not provider or provider.password != password:
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+    access_token = create_access_token(
+        identity={
+            "id": provider.id,
+            "role": "provider"
+        }
+    )
+
+    return jsonify({
+        "msg": "Login correcto",
+        "token": access_token,
+        "user": {**provider.serialize(), "role": "provider"}  # 👈 añadimos role
+    }), 200
+

@@ -16,6 +16,8 @@ import ClientsPage from "./pages/clients/ClientsPage";
 import ClientDetailPage from "./pages/clients/ClientDetailPage";
 import AddNewClient from "./pages/clients/AddNewClient";
 import EditClientPage from "./pages/clients/EditClientPage";
+import LoggedActiveCartClientPage from "./pages/loginClientes/LoggedActiveCartClientPage.jsx";
+
 
 import { Books } from "./pages/Books/Books";
 import { BookCreate } from "./pages/Books/BookCreate";
@@ -54,6 +56,12 @@ import LoggedCartClientPage from "./pages/loginClientes/LoggedCartClientPage.jsx
 import LoginDelivery from "./pages/loginDelivery/LoginDelivery.jsx";
 import LoggedDelivery from "./pages/loginDelivery/LoggedDelivery.jsx";
 
+import LoginProviderPage from "./pages/loginProveedor/LoginProviderPage.jsx";
+import LoggedProveedorPage from "./pages/loginProveedor/LoggedProveedorPage.jsx";
+
+import LoginAdminPage from "./pages/loginAdmin/LoginAdminPage.jsx";
+import LoggedAdminPage from "./pages/loginAdmin/LoggedAdminPage.jsx";
+
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -71,12 +79,17 @@ export const router = createBrowserRouter(
       <Route path="/single/:theId" element={<Single />} />  {/* Dynamic route for single items */}
       <Route path="/demo" element={<Demo />} />
       <Route path="/provider" element={<Provider />} />
-      <Route path="/provider/:providerId" element={<AddProvider />} />
-      <Route path="/providers/new" element={<AddProvider />} />
+
+      <Route path="/provider/create" element={<AddProvider />} />
+      <Route path="/provider/edit/:providerId" element={<AddProvider />} />
+
+
       <Route path="/clients" element={<ClientsPage />} />
       <Route path="/clients/:id" element={<ClientDetailPage />} />
       <Route path="/clients/create" element={<AddNewClient />} />
       <Route path="/clients/:id/edit" element={<EditClientPage />} />
+
+      
       <Route path="/demo" element={<Demo />} />
       <Route path="/provider/view/:providerId" element={<ViewProvider />} />
 
@@ -113,7 +126,16 @@ export const router = createBrowserRouter(
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/user" element={<LoggedClientPage />} />
-      <Route path="/user/cart" element={<LoggedCartClientPage />} />
+      {/* NUEVO: carrito activo real */}
+      <Route path="/user/cart" element={<LoggedActiveCartClientPage />} />
+      <Route path="/user/history" element={<LoggedCartClientPage />} />
+
+
+      <Route path="/login/provider" element={<LoginProviderPage />} />
+      <Route path="/provider/me" element={<LoggedProveedorPage />} />
+
+      <Route path="/login/admin" element={<LoginAdminPage />} />
+      <Route path="/admin/me" element={<LoggedAdminPage />} />
 
       <Route path="/logindelivery" element={<LoginDelivery />} />
       <Route path="/loggeddelivery" element={<LoggedDelivery />} />

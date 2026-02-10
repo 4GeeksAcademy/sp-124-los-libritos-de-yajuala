@@ -10,6 +10,11 @@ from api.models import Delivery
 from api.models_reviews import Review
 
 
+class ReviewAdmin(ModelView):
+    column_list = ("id", "id_cliente", "id_libro", "puntuacion", "comentario")
+    form_columns = ("id_cliente", "id_libro", "puntuacion", "comentario")
+
+
 def setup_admin(app):
     app.secret_key = os.environ.get('FLASK_APP_KEY', 'sample key')
     admin = Admin(app, name='4Geeks Admin',
@@ -23,3 +28,7 @@ def setup_admin(app):
 
     admin.add_view(ModelView(Book, db.session))
     admin.add_view(ModelView(Review, db.session))
+    admin.add_view(ModelView(Delivery, db.session))
+    admin.add_view(ReviewAdmin(Review, db.session))
+
+

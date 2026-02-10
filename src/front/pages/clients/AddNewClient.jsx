@@ -19,7 +19,7 @@ export default function AddNewClient() {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
+      body: JSON.stringify({...form, role: "client"})
     });
 
     if (res.ok) {

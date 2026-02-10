@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 
-export default function LoginPage() {
+export default function LoginAdminPage() {
   const navigate = useNavigate();
-  const { store, actions } = useGlobalReducer();
+  const { actions } = useGlobalReducer();
 
   const [form, setForm] = useState({
     email: "",
@@ -22,22 +22,26 @@ export default function LoginPage() {
 
     const data = await resp.json();
 
-
     if (!resp.ok) {
       alert(data.msg || "Credenciales incorrectas");
+      return;
+    }
+
+    // Validar que sea admin
+    if (data.user.role !== "admin") {
+      alert("No tienes permiso para acceder al panel de administrador");
       return;
     }
 
     actions.setUser(data.user);
     actions.setToken(data.token);
 
-
-    navigate("/user");
+    navigate("/admin/me");
   };
 
   return (
     <div className="container mt-5">
-      <h1>Iniciar sesión</h1>
+      <h1>Login Administrador</h1>
 
       <div className="card p-4 mt-3">
         <label>Email</label>
@@ -55,8 +59,8 @@ export default function LoginPage() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
         <div className="d-flex">
-          <button className="btn btn-primary" onClick={handleSubmit}>
-            Entrar
+          <button className="btn btn-secondary" onClick={handleSubmit}>
+            Entrar como Admin
           </button>
           <button
             className="btn btn-secondary ms-2"

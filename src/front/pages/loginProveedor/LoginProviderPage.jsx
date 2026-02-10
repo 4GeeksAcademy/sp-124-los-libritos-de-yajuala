@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 
-export default function LoginPage() {
+export default function LoginProviderPage() {
   const navigate = useNavigate();
-  const { store, actions } = useGlobalReducer();
+  const { actions } = useGlobalReducer();
 
   const [form, setForm] = useState({
     email: "",
@@ -14,14 +14,13 @@ export default function LoginPage() {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const handleSubmit = async () => {
-    const resp = await fetch(`${backendUrl}/api/login`, {
+    const resp = await fetch(`${backendUrl}/api/login/provider`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
     });
 
     const data = await resp.json();
-
 
     if (!resp.ok) {
       alert(data.msg || "Credenciales incorrectas");
@@ -31,13 +30,12 @@ export default function LoginPage() {
     actions.setUser(data.user);
     actions.setToken(data.token);
 
-
-    navigate("/user");
+    navigate("/provider/me");
   };
 
   return (
     <div className="container mt-5">
-      <h1>Iniciar sesión</h1>
+      <h1>Iniciar sesión - Proveedor</h1>
 
       <div className="card p-4 mt-3">
         <label>Email</label>
@@ -54,6 +52,7 @@ export default function LoginPage() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
+        
         <div className="d-flex">
           <button className="btn btn-primary" onClick={handleSubmit}>
             Entrar
