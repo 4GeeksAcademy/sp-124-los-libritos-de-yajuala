@@ -40,8 +40,6 @@ export default function LoginDelivery() {
             actions.setToken(data.token);
             actions.setUser(data.user);
 
-
-
             // Redirigir a zona exclusiva de repartidores
             navigate("/loggeddelivery");
 
