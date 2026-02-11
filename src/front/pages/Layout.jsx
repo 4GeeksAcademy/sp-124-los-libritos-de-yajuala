@@ -12,10 +12,13 @@ export const Layout = () => {
 
     useEffect(() => { 
         const savedToken = localStorage.getItem("token"); 
+        console.log("TOKEN EN LAYOUT:", savedToken);
+
         if (savedToken) { 
             actions.validateToken(savedToken); 
         } 
     }, []);
+
 
     return (
         <ScrollToTop>

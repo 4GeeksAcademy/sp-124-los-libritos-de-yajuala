@@ -27,7 +27,7 @@ export default function LoginProviderPage() {
       return;
     }
 
-    actions.setUser(data.user);
+    actions.setUser({ ...data.user, role: "provider" });
     actions.setToken(data.token);
 
     navigate("/provider/me");

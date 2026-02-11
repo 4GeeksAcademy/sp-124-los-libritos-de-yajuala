@@ -1,4 +1,4 @@
-import { useContext, useReducer, createContext } from "react";
+import { useContext, useReducer, createContext, useEffect } from "react";
 import storeReducer, { initialStore } from "../store.js";
 
 const StoreContext = createContext();
@@ -6,12 +6,23 @@ const StoreContext = createContext();
 export function StoreProvider({ children }) {
     const [store, dispatch] = useReducer(storeReducer, initialStore());
 
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            dispatch({ type: "set_token", payload: token });
+        }
+    }, []);
+
+
+
     return (
         <StoreContext.Provider value={{ store, dispatch }}>
             {children}
         </StoreContext.Provider>
     );
 }
+
+
 
 export default function useGlobalReducer() {
     const { dispatch, store } = useContext(StoreContext);
