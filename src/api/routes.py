@@ -974,16 +974,46 @@ def delivery_pedidos():
         "user": {**provider.serialize(), "role": "provider"}  # 👈 añadimos role
     }), 200
 
+# @api.route("/validate", methods=["GET"]) 
+# @jwt_required() 
+# def validate(): 
+#     identity = get_jwt_identity()
+#     
+#     user = User.query.get(identity["id"]) 
+#     if not user: 
+#         return jsonify({"msg": "Usuario no encontrado"}), 404 
+#     
+#     return jsonify({ 
+#         "user": user.serialize(), 
+#         "role": user.role 
+#     }), 200
+
 @api.route("/validate", methods=["GET"]) 
 @jwt_required() 
 def validate(): 
     identity = get_jwt_identity()
-    
+    role = identity.get("role")
+
+    if role == "provider":
+        entity = Provider.query.get(identity["id"])
+        if not entity:
+            return jsonify({"msg": "Proveedor no encontrado"}), 404
+        return jsonify({
+            "user": {**entity.serialize(), "role": "provider"}
+        }), 200
+
+    if role == "delivery":
+        entity = Delivery.query.get(identity["id"])
+        if not entity:
+            return jsonify({"msg": "Repartidor no encontrado"}), 404
+        return jsonify({
+            "user": {**entity.serialize(), "role": "delivery"}
+        }), 200
+
     user = User.query.get(identity["id"]) 
     if not user: 
         return jsonify({"msg": "Usuario no encontrado"}), 404 
     
     return jsonify({ 
-        "user": user.serialize(), 
-        "role": user.role 
+        "user": user.serialize()
     }), 200

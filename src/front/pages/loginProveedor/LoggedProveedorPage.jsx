@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { useNavigate } from "react-router-dom";
 
@@ -5,12 +6,18 @@ export default function LoggedProveedorPage() {
   const { store } = useGlobalReducer();
   const navigate = useNavigate();
 
-  const role = store.user?.role;
-  const isProvider = role === "provider";
+  useEffect(() => {
+    if (!store.token) {
+      navigate("/login/provider");
+      return;
+    }
+    if (store.user && store.user.role !== "provider") {
+      navigate("/login/provider");
+    }
+  }, [store.token, store.user]);
 
-  if (!store.user || !isProvider) {
-    navigate("/login/provider");
-    return null;
+  if (!store.token || !store.user) {
+    return <div>Cargando...</div>;
   }
 
   return (

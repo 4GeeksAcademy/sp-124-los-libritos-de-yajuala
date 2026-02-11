@@ -1,10 +1,9 @@
-
 export const initialStore = () => {
   return {
     message: null,
     todos: [],
-    user: null,
-    token: null 
+    user: JSON.parse(localStorage.getItem("user")) || null,
+    token: localStorage.getItem("token") || null
   };
 };
 
@@ -24,12 +23,14 @@ export default function storeReducer(store, action = {}) {
       };
 
     case "set_user":
+      localStorage.setItem("user", JSON.stringify(action.payload));
       return {
         ...store,
         user: action.payload
       };
 
     case "set_token":
+      localStorage.setItem("token", action.payload);
       return {
         ...store,
         token: action.payload
