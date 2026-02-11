@@ -935,3 +935,16 @@ def delivery_pedidos():
         "user": {**provider.serialize(), "role": "provider"}  # 👈 añadimos role
     }), 200
 
+@api.route("/validate", methods=["GET"]) 
+@jwt_required() 
+def validate(): 
+    identity = get_jwt_identity()
+    
+    user = User.query.get(identity["id"]) 
+    if not user: 
+        return jsonify({"msg": "Usuario no encontrado"}), 404 
+    
+    return jsonify({ 
+        "user": user.serialize(), 
+        "role": user.role 
+    }), 200
