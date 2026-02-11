@@ -1,33 +1,38 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useGlobalReducer from "../../hooks/useGlobalReducer";
+import { Delivery } from "../Delivery/DeliveryList";
 
 const LoggedDelivery = () => {
-  const { store } = useGlobalReducer();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Esperar a que el store esté listo
-    if (!store.token || !store.user) return;
+    const token = localStorage.getItem("token");
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    // Bloqueo por rol
-    if (store.user.role !== "delivery") {
+    if (!token || !storedUser.id) {
+      navigate("/delivery/login");
+      return;
+    }
+
+    if (storedUser.role !== "delivery") {
       navigate("/");
       return;
     }
 
-    // Todo OK → mostrar vista
+    setUser(storedUser);
     setLoading(false);
-  }, [store.token, store.user, navigate]);
-
+  }, [navigate]);
 
   if (loading) return <p>Cargando...</p>;
 
   return (
     <div className="container mt-5">
       <h1>Panel de Repartidor 🚴‍♂️</h1>
-      <p>Bienvenido, {store.user.nombre}</p>
+      <p>Bienvenido, {user.nombre}</p>
+
+      <Delivery />
     </div>
   );
 };
