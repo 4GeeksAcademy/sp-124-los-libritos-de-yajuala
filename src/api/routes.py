@@ -825,7 +825,7 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
-    # 🔴 Si el email pertenece a un PROVIDER
+    #  Si el email pertenece a un PROVIDER
     provider = Provider.query.filter_by(email=email).first()
     if provider:
         return jsonify({
