@@ -91,23 +91,28 @@ export const Home = () => {
           Login Admin
         </Link>
       )}
+      {!user && (
+        <Link to="/logindelivery" className="btn btn-primary btn-lg m-2">
+          Login Repartidor
+        </Link>
+      )}
 
-{/*  Botones registro */}
-			<hr className="my-4" />
+      {/*  Botones registro */}
+      <hr className="my-4" />
 
-<div className="d-flex justify-content-center mb-2">
-  <h5>Registro</h5>
-</div>
+      <div className="d-flex justify-content-center mb-2">
+        <h5>Registro</h5>
+      </div>
 
-<div className="d-flex justify-content-center">
-  <Link to="/clients/create" className="btn btn-primary btn-lg m-2">
-    Registro Cliente
-  </Link>
+      <div className="d-flex justify-content-center">
+        <Link to="/clients/create" className="btn btn-primary btn-lg m-2">
+          Registro Cliente
+        </Link>
 
-  <Link to="/provider/create" className="btn btn-warning btn-lg m-2">
-    Registro Proveedor
-  </Link>
-</div>
+        <Link to="/provider/create" className="btn btn-warning btn-lg m-2">
+          Registro Proveedor
+        </Link>
+      </div>
 
 
 
@@ -124,6 +129,7 @@ export const Home = () => {
         <button className="btn btn-info btn-lg m-2" onClick={() => navigate("/delivery")}>Repartidores</button>
         <button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}>Ir a Libros</button>
         <button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}>Reviews</button>
+
       </div>
     </div>
   );

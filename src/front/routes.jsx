@@ -53,6 +53,8 @@ import EditCategoriaLibro from "./pages/categorialibro/EditCategoriaLibro";
 import LoginPage from "./pages/loginClientes/LoginPage.jsx";
 import LoggedClientPage from "./pages/loginClientes/LoggedClientPage.jsx";
 import LoggedCartClientPage from "./pages/loginClientes/LoggedCartClientPage.jsx";
+import LoginDelivery from "./pages/loginDelivery/LoginDelivery.jsx";
+import LoggedDelivery from "./pages/loginDelivery/LoggedDelivery.jsx";
 
 import LoginProviderPage from "./pages/loginProveedor/LoginProviderPage.jsx";
 import LoggedProveedorPage from "./pages/loginProveedor/LoggedProveedorPage.jsx";
@@ -134,6 +136,10 @@ export const router = createBrowserRouter(
 
       <Route path="/login/admin" element={<LoginAdminPage />} />
       <Route path="/admin/me" element={<LoggedAdminPage />} />
+
+      <Route path="/logindelivery" element={<LoginDelivery />} />
+      <Route path="/loggeddelivery" element={<LoggedDelivery />} />
+
 
     </Route>
   )

@@ -2,15 +2,13 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook
+from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery
 from api.models_books import Book
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 
 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-
-from api.models_delivery import Delivery
 from api.models_reviews import Review
 
 
@@ -654,8 +652,10 @@ def create_delivery():
         apellido=body["apellido"],
         email=body["email"],
         identificacion=body["identificacion"],
-        password_hash="temp"
+        password_hash="temp",
+        role="delivery"   # ← CLAVE
     )
+
     d.set_password(body["password"])
 
     db.session.add(d)
@@ -870,6 +870,10 @@ def admin_users():
     usuarios = User.query.all()
     return jsonify([u.serialize() for u in usuarios]), 200
 
+
+@api.route("/delivery/login", methods=["POST"])
+def delivery_login():
+    body = request.get_json(silent=True) or {}
 # Login proveedores Layla abajo
 
 
@@ -883,6 +887,30 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
+    delivery = Delivery.query.filter_by(email=email).first()
+
+    if not delivery or not delivery.check_password(password):
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+    access_token = create_access_token(identity={
+        "id": delivery.id,
+        "role": delivery.role
+    })
+
+    return jsonify({
+        "token": access_token,
+        "user": delivery.serialize()
+    }), 200
+
+
+@api.route("/delivery/pedidos", methods=["GET"])
+@jwt_required()
+def delivery_pedidos():
+    user = get_jwt_identity()
+    if user["role"] != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+    # Aquí iría la lógica para obtener los pedidos asignados al repartidor
+    return jsonify({"msg": "Pedidos del repartidor"}), 200
     # Si ese email pertenece a un USER (cliente/admin), entonces NO es proveedor
     user = User.query.filter_by(email=email).first()
     if user:
