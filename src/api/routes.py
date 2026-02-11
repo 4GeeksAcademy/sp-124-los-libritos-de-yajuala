@@ -615,11 +615,16 @@ def delete_cart_book(item_id):
 
     return jsonify({"msg": "Item eliminado"}), 200
 
-# CRUD Delivery Layla
 
 
 @api.route("/delivery", methods=["GET"])
+@jwt_required()
 def get_delivery_list():
+    identity = get_jwt_identity()
+
+    if identity["role"] != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
     items = Delivery.query.all()
     return jsonify([d.serialize() for d in items]), 200
 
@@ -653,7 +658,7 @@ def create_delivery():
         email=body["email"],
         identificacion=body["identificacion"],
         password_hash="temp",
-        role="delivery"   # ← CLAVE
+        role="delivery"   
     )
 
     d.set_password(body["password"])
@@ -704,9 +709,9 @@ def delete_delivery(delivery_id):
     db.session.commit()
     return jsonify({"msg": "Repartidor eliminado"}), 200
 
-# Fin Crud Delivery Layla
 
-# CRUD Reviews Layla ---------------------------------
+
+
 
 
 @api.route("/reviews", methods=["GET"])
@@ -810,7 +815,7 @@ def delete_review(review_id):
     db.session.commit()
     return jsonify({"msg": "Review eliminada"}), 200
 
-# Fin CRUD Reviews Layla
+
 
 
 @api.route("/login", methods=["POST"])
@@ -825,7 +830,7 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
-    # 🔴 Si el email pertenece a un PROVIDER
+    #  Si el email pertenece a un PROVIDER
     provider = Provider.query.filter_by(email=email).first()
     if provider:
         return jsonify({
@@ -853,7 +858,6 @@ def login():
     }), 200
 
 
-
 @api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
 def get_carritos_usuario(user_id):
     carritos = Cart.query.filter_by(id_cliente=user_id).all()
@@ -873,13 +877,44 @@ def admin_users():
 
 @api.route("/delivery/login", methods=["POST"])
 def delivery_login():
-    body = request.get_json(silent=True) or {}
+    try:
+        body = request.get_json(silent=True) or {}
+        print("BODY:", body)
+
+        email = body.get("email")
+        password = body.get("password")
+
+        if not email or not password:
+            return jsonify({"msg": "Email y contraseña requeridos"}), 400
+
+        delivery = Delivery.query.filter_by(email=email).first()
+        print("DELIVERY:", delivery)
+
+        if not delivery or not delivery.check_password(password):
+            return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+        access_token = create_access_token(identity={
+            "id": delivery.id,
+            "role": delivery.role
+        })
+
+        print("TOKEN CREADO")
+
+        return jsonify({
+            "token": access_token,
+            "user": delivery.serialize()
+        }), 200
+
+    except Exception as e:
+        print("ERROR INTERNO:", e)
+        return jsonify({"msg": "Error interno"}), 500
+
 # Login proveedores Layla abajo
 
 
 @api.route("/login/provider", methods=["POST"])
 def login_provider():
-    body = request.get_json() or {}
+    body = request.get_json(silent=True) or {}
 
     email = body.get("email")
     password = body.get("password")
@@ -887,20 +922,26 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
-    delivery = Delivery.query.filter_by(email=email).first()
+    # Si ese email pertenece a un USER (cliente/admin), no es proveedor
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
 
-    if not delivery or not delivery.check_password(password):
+    provider = Provider.query.filter_by(email=email).first()
+    if not provider or provider.password != password:
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
     access_token = create_access_token(identity={
-        "id": delivery.id,
-        "role": delivery.role
+        "id": provider.id,
+        "role": "provider"
     })
 
     return jsonify({
+        "msg": "Login correcto",
         "token": access_token,
-        "user": delivery.serialize()
+        "user": {**provider.serialize(), "role": "provider"}
     }), 200
+
 
 
 @api.route("/delivery/pedidos", methods=["GET"])
@@ -909,9 +950,7 @@ def delivery_pedidos():
     user = get_jwt_identity()
     if user["role"] != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-    # Aquí iría la lógica para obtener los pedidos asignados al repartidor
     return jsonify({"msg": "Pedidos del repartidor"}), 200
-    # Si ese email pertenece a un USER (cliente/admin), entonces NO es proveedor
     user = User.query.filter_by(email=email).first()
     if user:
         return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403

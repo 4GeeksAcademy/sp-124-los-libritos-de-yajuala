@@ -5,7 +5,10 @@ export default function LoggedProveedorPage() {
   const { store } = useGlobalReducer();
   const navigate = useNavigate();
 
-  if (!store.user) {
+  const role = store.user?.role;
+  const isProvider = role === "provider";
+
+  if (!store.user || !isProvider) {
     navigate("/login/provider");
     return null;
   }
@@ -16,7 +19,6 @@ export default function LoggedProveedorPage() {
       <p className="text-muted">Panel de Proveedor</p>
 
       <div className="mt-4">
-
         <button
           className="btn btn-primary me-3"
           onClick={() => navigate("/books")}
@@ -25,12 +27,11 @@ export default function LoggedProveedorPage() {
         </button>
 
         <button
-        className="btn btn-secondary"
-        onClick={() => navigate("/provider/me")}
-      >
-        Volver al panel
-      </button>
-
+          className="btn btn-secondary"
+          onClick={() => navigate("/provider/me")}
+        >
+          Volver al panel
+        </button>
       </div>
     </div>
   );
