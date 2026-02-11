@@ -879,7 +879,7 @@ def delivery_login():
 
 @api.route("/login/provider", methods=["POST"])
 def login_provider():
-    body = request.get_json() or {}
+    body = request.get_json(silent=True) or {}
 
     email = body.get("email")
     password = body.get("password")
@@ -887,20 +887,26 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
-    delivery = Delivery.query.filter_by(email=email).first()
+    # Si ese email pertenece a un USER (cliente/admin), no es proveedor
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
 
-    if not delivery or not delivery.check_password(password):
+    provider = Provider.query.filter_by(email=email).first()
+    if not provider or provider.password != password:
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
     access_token = create_access_token(identity={
-        "id": delivery.id,
-        "role": delivery.role
+        "id": provider.id,
+        "role": "provider"
     })
 
     return jsonify({
+        "msg": "Login correcto",
         "token": access_token,
-        "user": delivery.serialize()
+        "user": {**provider.serialize(), "role": "provider"}
     }), 200
+
 
 
 @api.route("/delivery/pedidos", methods=["GET"])
