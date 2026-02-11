@@ -62,6 +62,10 @@ import LoggedProveedorPage from "./pages/loginProveedor/LoggedProveedorPage.jsx"
 import LoginAdminPage from "./pages/loginAdmin/LoginAdminPage.jsx";
 import LoggedAdminPage from "./pages/loginAdmin/LoggedAdminPage.jsx";
 
+import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
+import {AdminRoute}  from "./components/AdminRoute.jsx";
+
+
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -78,20 +82,20 @@ export const router = createBrowserRouter(
       <Route path="/" element={<Home />} />
       <Route path="/single/:theId" element={<Single />} />  {/* Dynamic route for single items */}
       <Route path="/demo" element={<Demo />} />
-      <Route path="/provider" element={<Provider />} />
 
-      <Route path="/provider/create" element={<AddProvider />} />
-      <Route path="/provider/edit/:providerId" element={<AddProvider />} />
+      <Route path="/provider" element={<AdminRoute><Provider /></AdminRoute>} />
+      <Route path="/provider/create" element={<AdminRoute><AddProvider /></AdminRoute>} />
+      <Route path="/provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
+      <Route path="/provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
 
-
-      <Route path="/clients" element={<ClientsPage />} />
-      <Route path="/clients/:id" element={<ClientDetailPage />} />
+      <Route path="/clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
+      <Route path="/clients/:id" element={<AdminRoute><ClientDetailPage /></AdminRoute>} />
       <Route path="/clients/create" element={<AddNewClient />} />
       <Route path="/clients/:id/edit" element={<EditClientPage />} />
 
-      
+
       <Route path="/demo" element={<Demo />} />
-      <Route path="/provider/view/:providerId" element={<ViewProvider />} />
+
 
       <Route path="books" element={<Books />} />
       <Route path="books/new" element={<BookCreate />} />
@@ -101,19 +105,19 @@ export const router = createBrowserRouter(
       <Route path="carts" element={<CartsPage />} />
       <Route path="carts/create" element={<AddCartPage />} />
       <Route path="carts/:id" element={<CartDetailPage />} />
-      <Route path="carts/:id/edit" element={<EditCartPage />} />
+      <Route path="carts/:id/edit" element={<AdminRoute><EditCartPage /></AdminRoute>} />
       <Route path="carts/:id/add-book" element={<AddBookToCartPage />} />
       <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
 
-      <Route path="delivery" element={<Delivery />} />
-      <Route path="delivery/new" element={<DeliveryCreate />} />
+      <Route path="delivery" element={<AdminRoute><Delivery /></AdminRoute>} />
+      <Route path="delivery/new" element={<AdminRoute><DeliveryCreate /></AdminRoute>} />
       <Route path="delivery/:id" element={<DeliveryDetail />} />
-      <Route path="delivery/:id/edit" element={<DeliveryEdit />} />
+      <Route path="delivery/:id/edit" element={<AdminRoute><DeliveryEdit /></AdminRoute>} />
 
       <Route path="reviews" element={<Reviews />} />
-      <Route path="reviews/new" element={<ReviewCreate />} />
+      <Route path="reviews/new" element={<ProtectedRoute><ReviewCreate /></ProtectedRoute>} />
       <Route path="reviews/:id" element={<ReviewDetail />} />
-      <Route path="reviews/:id/edit" element={<ReviewEdit />} />
+      <Route path="reviews/:id/edit" element={<ProtectedRoute><ReviewEdit /></ProtectedRoute>} />
 
       <Route path="/categorias" element={<Categorias />} />
       <Route path="/categorias/new" element={<AddCategorias />} />
@@ -125,21 +129,20 @@ export const router = createBrowserRouter(
       <Route path="/categorialibro/edit/:categoriaId/:libroId" element={<EditCategoriaLibro />} />
 
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/user" element={<LoggedClientPage />} />
+      <Route path="/user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
       {/* NUEVO: carrito activo real */}
-      <Route path="/user/cart" element={<LoggedActiveCartClientPage />} />
-      <Route path="/user/history" element={<LoggedCartClientPage />} />
+      <Route path="/user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
+      <Route path="/user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
 
 
       <Route path="/login/provider" element={<LoginProviderPage />} />
       <Route path="/provider/me" element={<LoggedProveedorPage />} />
 
       <Route path="/login/admin" element={<LoginAdminPage />} />
-      <Route path="/admin/me" element={<LoggedAdminPage />} />
+      <Route path="/admin/me" element={<AdminRoute><LoggedAdminPage /></AdminRoute>} />
 
       <Route path="/logindelivery" element={<LoginDelivery />} />
       <Route path="/loggeddelivery" element={<LoggedDelivery />} />
-
 
     </Route>
   )
