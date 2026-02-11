@@ -26,8 +26,5 @@ def setup_admin(app):
         if inspect.isclass(obj) and issubclass(obj, db.Model):
             admin.add_view(ModelView(obj, db.session))
 
-
     # admin.add_view(ModelView(Delivery, db.session))
     admin.add_view(ReviewAdmin(Review, db.session))
-
-
