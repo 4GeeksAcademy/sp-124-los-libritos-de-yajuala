@@ -615,7 +615,7 @@ def delete_cart_book(item_id):
 
     return jsonify({"msg": "Item eliminado"}), 200
 
-# CRUD Delivery Layla
+
 
 @api.route("/delivery", methods=["GET"])
 @jwt_required()
@@ -658,7 +658,7 @@ def create_delivery():
         email=body["email"],
         identificacion=body["identificacion"],
         password_hash="temp",
-        role="delivery"   # ← CLAVE
+        role="delivery"   
     )
 
     d.set_password(body["password"])
@@ -709,9 +709,9 @@ def delete_delivery(delivery_id):
     db.session.commit()
     return jsonify({"msg": "Repartidor eliminado"}), 200
 
-# Fin Crud Delivery Layla
 
-# CRUD Reviews Layla ---------------------------------
+
+
 
 
 @api.route("/reviews", methods=["GET"])
@@ -815,7 +815,7 @@ def delete_review(review_id):
     db.session.commit()
     return jsonify({"msg": "Review eliminada"}), 200
 
-# Fin CRUD Reviews Layla
+
 
 
 @api.route("/login", methods=["POST"])
