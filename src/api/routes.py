@@ -617,9 +617,14 @@ def delete_cart_book(item_id):
 
 # CRUD Delivery Layla
 
-
 @api.route("/delivery", methods=["GET"])
+@jwt_required()
 def get_delivery_list():
+    identity = get_jwt_identity()
+
+    if identity["role"] != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
     items = Delivery.query.all()
     return jsonify([d.serialize() for d in items]), 200
 
