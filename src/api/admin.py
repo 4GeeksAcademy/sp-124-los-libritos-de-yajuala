@@ -6,7 +6,7 @@ from .models import db
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
 from .models_books import Book
-from api.models import Delivery
+# from api.models import Delivery
 from api.models_reviews import Review
 
 
@@ -26,9 +26,8 @@ def setup_admin(app):
         if inspect.isclass(obj) and issubclass(obj, db.Model):
             admin.add_view(ModelView(obj, db.session))
 
-    admin.add_view(ModelView(Book, db.session))
-    admin.add_view(ModelView(Review, db.session))
-    admin.add_view(ModelView(Delivery, db.session))
+
+    # admin.add_view(ModelView(Delivery, db.session))
     admin.add_view(ReviewAdmin(Review, db.session))
 
 
