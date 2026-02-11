@@ -36,28 +36,19 @@ class User(db.Model):
 class Delivery(db.Model):
     __tablename__ = "delivery"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False)
+    apellido = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    identificacion = db.Column(db.String(50), unique=True, nullable=False)
+    role = db.Column(db.String(20), nullable=False, default="delivery")
+    password = db.Column(db.String(200), nullable=False)
 
-    nombre: Mapped[str] = mapped_column(String(120), nullable=False)
-    apellido: Mapped[str] = mapped_column(String(120), nullable=False)
+    def set_password(self, password):
+        self.password = password
 
-    email: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False)
-    identificacion: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False)
-
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-        server_default="delivery"
-    )
-
-    def set_password(self, password: str):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password: str) -> bool:
-        return check_password_hash(self.password_hash, password)
+    def check_password(self, password):
+        return self.password == password
 
     def serialize(self):
         return {
@@ -66,8 +57,10 @@ class Delivery(db.Model):
             "apellido": self.apellido,
             "email": self.email,
             "identificacion": self.identificacion,
-            "role": self.role,
+            "role": self.role
         }
+
+
 
 
 class Provider(db.Model):

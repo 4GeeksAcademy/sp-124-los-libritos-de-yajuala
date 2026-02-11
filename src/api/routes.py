@@ -636,6 +636,24 @@ def get_delivery_detail(delivery_id):
         return jsonify({"msg": "Repartidor no encontrado"}), 404
     return jsonify(item.serialize()), 200
 
+@api.route('/delivery/login', methods=['POST']) 
+def delivery_login(): 
+    data = request.json 
+    email = data.get("email") 
+    password = data.get("password") 
+    
+    delivery = Delivery.query.filter_by(email=email).first() 
+    
+    if not delivery or not delivery.check_password(password): 
+        return jsonify({"msg": "Credenciales incorrectas"}), 401 
+    
+    token = create_access_token(identity=delivery.id) 
+    
+    return jsonify({ 
+        "token": token, 
+        "user": delivery.serialize() 
+    }), 200
+
 
 @api.route("/delivery", methods=["POST"])
 def create_delivery():
@@ -657,8 +675,7 @@ def create_delivery():
         apellido=body["apellido"],
         email=body["email"],
         identificacion=body["identificacion"],
-        password_hash="temp",
-        role="delivery"   
+        role="delivery"
     )
 
     d.set_password(body["password"])
@@ -667,6 +684,8 @@ def create_delivery():
     db.session.commit()
 
     return jsonify(d.serialize()), 201
+
+
 
 
 @api.route("/delivery/<int:delivery_id>", methods=["PUT"])
@@ -875,39 +894,7 @@ def admin_users():
     return jsonify([u.serialize() for u in usuarios]), 200
 
 
-@api.route("/delivery/login", methods=["POST"])
-def delivery_login():
-    try:
-        body = request.get_json(silent=True) or {}
-        print("BODY:", body)
 
-        email = body.get("email")
-        password = body.get("password")
-
-        if not email or not password:
-            return jsonify({"msg": "Email y contraseña requeridos"}), 400
-
-        delivery = Delivery.query.filter_by(email=email).first()
-        print("DELIVERY:", delivery)
-
-        if not delivery or not delivery.check_password(password):
-            return jsonify({"msg": "Credenciales incorrectas"}), 401
-
-        access_token = create_access_token(identity={
-            "id": delivery.id,
-            "role": delivery.role
-        })
-
-        print("TOKEN CREADO")
-
-        return jsonify({
-            "token": access_token,
-            "user": delivery.serialize()
-        }), 200
-
-    except Exception as e:
-        print("ERROR INTERNO:", e)
-        return jsonify({"msg": "Error interno"}), 500
 
 # Login proveedores Layla abajo
 
@@ -1017,3 +1004,4 @@ def validate():
     return jsonify({ 
         "user": user.serialize()
     }), 200
+
