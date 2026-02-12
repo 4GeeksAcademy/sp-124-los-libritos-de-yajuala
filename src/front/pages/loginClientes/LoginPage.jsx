@@ -32,7 +32,7 @@ export default function LoginPage() {
     actions.setToken(data.token);
 
 
-    navigate("/user");
+    navigate("/home-client");
   };
 
   return (
