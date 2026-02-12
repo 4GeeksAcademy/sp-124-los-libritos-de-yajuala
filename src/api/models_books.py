@@ -11,6 +11,7 @@ class Book(db.Model):
     autor: Mapped[str] = mapped_column(String(255), nullable=False)
     precio: Mapped[float] = mapped_column(db.Float, nullable=False)
     isbn: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    cantidad: Mapped[int] = mapped_column(db.Integer, nullable=False, default=0)
 
     def serialize(self):
         return {
@@ -18,5 +19,6 @@ class Book(db.Model):
             "titulo": self.titulo,
             "autor": self.autor,
             "precio": self.precio,
-            "isbn": self.isbn
+            "isbn": self.isbn,
+            "cantidad": self.cantidad
         }
