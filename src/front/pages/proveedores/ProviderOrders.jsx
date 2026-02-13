@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+
 
 export const ProviderOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -29,6 +31,7 @@ export const ProviderOrders = () => {
 
   return (
     <div className="container mt-5">
+      <ProviderPanelButtons />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Mis pedidos</h1>
         <button className="btn btn-secondary" onClick={() => navigate("/provider/me")}>Volver</button>

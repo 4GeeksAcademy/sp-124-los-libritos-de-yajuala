@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+
 
 export const ProviderBookCreate = () => {
   const [form, setForm] = useState({
@@ -55,6 +57,7 @@ export const ProviderBookCreate = () => {
 
   return (
     <div className="container mt-5">
+      <ProviderPanelButtons />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Crear Libro (Proveedor)</h1>
         <button className="btn btn-secondary" onClick={() => navigate("/provider/books")}>

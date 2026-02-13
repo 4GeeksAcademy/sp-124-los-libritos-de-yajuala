@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+
 
 export const ProviderBookDetail = () => {
   const [row, setRow] = useState(null); // row = provider_book {id, cantidad, libro:{...}}
@@ -56,6 +58,7 @@ export const ProviderBookDetail = () => {
 
   return (
     <div className="container mt-5">
+      <ProviderPanelButtons />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Ficha del libro (Proveedor)</h1>
         <button className="btn btn-secondary" onClick={() => navigate("/provider/books")}>

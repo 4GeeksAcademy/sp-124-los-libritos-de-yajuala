@@ -93,7 +93,7 @@ export const router = createBrowserRouter(
       <Route path="/demo" element={<Demo />} />
 
       <Route path="/provider" element={<AdminRoute><Provider /></AdminRoute>} />
-      <Route path="/provider/create" element={<AdminRoute><AddProvider /></AdminRoute>} />
+      <Route path="/provider/create" element={<AddProvider />} />
       <Route path="/provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
       <Route path="/provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
 

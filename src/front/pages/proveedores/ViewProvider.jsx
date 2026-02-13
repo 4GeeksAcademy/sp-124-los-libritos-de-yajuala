@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+
 
 const API_BASE = "https://legendary-eureka-q5gwp4q94f67vr-3001.app.github.dev";
 
@@ -31,6 +33,7 @@ const ViewProvider = () => {
 
     return (
         <div className="container mt-4">
+            <ProviderPanelButtons />
             <h1>Detalle del Proveedor</h1>
 
             <ul className="list-group mt-3">

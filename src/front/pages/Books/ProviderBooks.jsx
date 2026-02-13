@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+
 
 export const ProviderBooks = () => {
   const [items, setItems] = useState([]);
@@ -78,6 +80,7 @@ export const ProviderBooks = () => {
 
   return (
     <div className="container mt-5">
+      <ProviderPanelButtons />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Mis libros (Proveedor)</h1>
 
