@@ -32,7 +32,7 @@ export default function LoggedClientPage() {
 
         <button
           className="btn btn-warning"
-          onClick={() => navigate("/books")}
+          onClick={() => navigate("/home-client")}
         >
           Ver libros
         </button>
@@ -50,7 +50,7 @@ export default function LoggedClientPage() {
 
         <button
           className="btn btn-outline-secondary"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/home-client")}
         >
           Volver al inicio
         </button>

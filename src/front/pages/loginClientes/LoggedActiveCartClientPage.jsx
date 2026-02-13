@@ -22,7 +22,6 @@ export default function LoggedActiveCartClientPage() {
       try {
         setLoading(true);
 
-        // 1) carrito activo
         const res = await fetch(
           `${backendUrl}/api/clients/${store.user.id}/carts/active`
         );
@@ -39,7 +38,6 @@ export default function LoggedActiveCartClientPage() {
 
         setActiveCart(data.cart);
 
-        // 2) items del carrito
         const resItems = await fetch(
           `${backendUrl}/api/carts/${data.cart.id}/items`
         );
@@ -60,6 +58,56 @@ export default function LoggedActiveCartClientPage() {
     load();
   }, [store.user]);
 
+  const handleDeleteItem = async (itemId) => {
+    try {
+      const resp = await fetch(
+        `${backendUrl}/api/cart-books/${itemId}`,
+        { method: "DELETE" }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        alert(data.msg || "Error eliminando item");
+        return;
+      }
+
+      setItems(items.filter((i) => i.id !== itemId));
+
+    } catch (err) {
+      console.error(err);
+      alert("Error eliminando item");
+    }
+  };
+
+
+  const handlePay = async () => {
+    if (!activeCart) return;
+
+    try {
+      const resp = await fetch(
+        `${backendUrl}/api/carts/${activeCart.id}/pay`,
+        { method: "POST" }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        alert(data.msg || "Error al pagar");
+        return;
+      }
+
+      alert("Pago realizado con éxito");
+
+      navigate("/payment-success");
+
+    } catch (err) {
+      console.error(err);
+      alert("Error procesando el pago");
+    }
+  };
+
+
   if (loading) return <div className="container mt-4">Cargando carrito...</div>;
 
   return (
@@ -70,7 +118,7 @@ export default function LoggedActiveCartClientPage() {
         <>
           <p className="mt-3">No tienes un carrito activo ahora mismo.</p>
           <div className="d-flex gap-2 mt-3">
-            <button className="btn btn-primary" onClick={() => navigate("/books")}>
+            <button className="btn btn-primary" onClick={() => navigate("/home-client")}>
               Ver libros
             </button>
             <button className="btn btn-secondary" onClick={() => navigate("/user")}>
@@ -83,7 +131,11 @@ export default function LoggedActiveCartClientPage() {
           <div className="mt-3">
             <div><b>Carrito:</b> #{activeCart.id}</div>
             <div><b>Estado:</b> {activeCart.estado}</div>
-            <div><b>Total:</b> {activeCart.monto_total}€</div>
+            <div><b>Total:</b> {items.reduce((acc, item) => {
+              const precioConDescuento = item.precio * (1 - item.descuento);
+              return acc + precioConDescuento * item.cantidad;
+            }, 0).toFixed(2)} €</div>
+
           </div>
 
           <h4 className="mt-4">Items</h4>
@@ -105,18 +157,34 @@ export default function LoggedActiveCartClientPage() {
                       Cantidad: {it.cantidad} · Precio: {it.precio}€ · Descuento: {it.descuento}€
                     </div>
                   </div>
-                  <button
-                    className="btn btn-outline-primary"
-                    onClick={() => navigate(`/carts/${activeCart.id}`)}
-                  >
-                    Ver detalle
-                  </button>
+                  <div className="d-flex">
+                    <button
+                      className="btn btn-danger me-1"
+                      onClick={() => handleDeleteItem(it.id)}
+                    >
+                      Eliminar
+                    </button>
+
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => navigate(`/carts/${activeCart.id}`)}
+                    >
+                      Ver detalle
+                    </button></div>
                 </li>
               ))}
             </ul>
           )}
 
           <div className="d-flex gap-2 mt-4">
+            <button
+              className="btn btn-success"
+              onClick={() => navigate("/checkout/address")}
+
+            >
+              Pagar
+            </button>
+
             <button className="btn btn-secondary" onClick={() => navigate("/user")}>
               Volver a mi cuenta
             </button>

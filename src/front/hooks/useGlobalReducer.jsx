@@ -49,34 +49,31 @@ export default function useGlobalReducer() {
         },
 
         validateToken: async (token) => {
-            try {
-                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/validate`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: "Bearer " + token
-                    }
-                });
-
-                if (!resp.ok) {
-                    localStorage.removeItem("token");
-                    actions.setUser(null);
-                    actions.setToken(null);
-                    return;
-                }
-
-                const data = await resp.json();
-
-                actions.setUser(data.user);
-                actions.setToken(token);
-
-            } catch (error) {
-                console.error("Error validando token:", error);
-                localStorage.removeItem("token");
-                actions.setUser(null);
-                actions.setToken(null);
+    try {
+        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/validate`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
             }
+        });
+
+        if (!resp.ok) {
+            console.error("Token inválido");
+            return;
         }
+
+        const data = await resp.json();
+
+        actions.setUser(data.user);
+        actions.setToken(token);
+
+    } catch (error) {
+        console.error("Error validando token:", error);
+        return;
+    }
+}
+
     };
 
     return { dispatch, store, actions };

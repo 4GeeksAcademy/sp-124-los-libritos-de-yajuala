@@ -23,31 +23,41 @@ export const Navbar = () => {
           Home
         </span>
 
-        <div className="ms-auto"> 
-          {store.user ? ( 
-            <> 
-              <span className="me-3">Bienvenido, {store.user.name}</span> 
-              
-              {store.user.role !== "admin" && (
-  <button 
-    className="btn btn-outline-primary me-2" 
-    onClick={() => navigate("/user")}
-  >
-    Mi cuenta
-  </button>
-)}
+        <div className="ms-auto d-flex align-items-center">
+          {store.user ? (
+            <>
+              <span className="me-3">Bienvenido, {store.user.name}</span>
 
-              
-              <button 
-                className="btn btn-danger" 
-                onClick={handleLogout}> 
-                Logout 
-              </button> 
-            </> 
-          ) : ( 
-          <></> 
-        )} 
-      </div>
+              {store.user.role !== "admin" && (
+                <>
+
+                  <Link to="/user/cart" className="nav-link me-3">
+                    <i className="fas fa-shopping-cart fa-lg"></i>
+
+                  </Link>
+
+
+                  <button
+                    className="btn btn-outline-primary me-2"
+                    onClick={() => navigate("/user")}
+                  >
+                    Mi cuenta
+                  </button>
+
+                </>
+              )}
+
+
+              <button
+                className="btn btn-danger"
+                onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <></>
+          )}
+        </div>
       </nav></>
   );
 };
