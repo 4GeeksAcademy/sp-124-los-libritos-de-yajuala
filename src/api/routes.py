@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery
+from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, Address
 from api.models_books import Book
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 
@@ -96,6 +96,84 @@ def update_user(user_id):
     db.session.commit()
 
     return jsonify(user.serialize()), 200
+
+
+@api.route("/users/<int:user_id>/addresses", methods=["GET"])
+def get_addresses(user_id):
+    addresses = Address.query.filter_by(id_usuario=user_id).all()
+    return jsonify([a.serialize() for a in addresses]), 200
+
+
+@api.route("/users/<int:user_id>/addresses", methods=["POST"])
+def create_address(user_id):
+    data = request.json
+
+    new_address = Address(
+        id_usuario=user_id,
+        nombre=data.get("nombre"),
+        direccion=data.get("direccion"),
+        ciudad=data.get("ciudad"),
+        provincia=data.get("provincia"),
+        codigo_postal=data.get("codigo_postal"),
+        telefono=data.get("telefono")
+    )
+
+    db.session.add(new_address)
+    db.session.commit()
+
+    return jsonify(new_address.serialize()), 201
+
+
+@api.route("/addresses/<int:address_id>", methods=["PUT"])
+def update_address(address_id):
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+
+    data = request.json
+
+    address.nombre = data.get("nombre", address.nombre)
+    address.direccion = data.get("direccion", address.direccion)
+    address.ciudad = data.get("ciudad", address.ciudad)
+    address.provincia = data.get("provincia", address.provincia)
+    address.codigo_postal = data.get("codigo_postal", address.codigo_postal)
+    address.telefono = data.get("telefono", address.telefono)
+
+    db.session.commit()
+
+    return jsonify(address.serialize()), 200
+
+
+@api.route("/addresses/<int:address_id>", methods=["DELETE"])
+def delete_address(address_id):
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+
+    db.session.delete(address)
+    db.session.commit()
+
+    return jsonify({"msg": "Dirección eliminada"}), 200
+
+
+@api.route("/addresses/<int:address_id>", methods=["GET"])
+def get_address(address_id):
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+    return jsonify(address.serialize()), 200
+
+
+@api.route("/users/<int:user_id>/active-cart", methods=["GET"])
+def get_user_active_cart(user_id):
+    cart = Cart.query.filter_by(id_cliente=user_id, estado="pendiente").first()
+
+    if not cart:
+        cart = Cart(id_cliente=user_id, estado="pendiente", monto_total=0)
+        db.session.add(cart)
+        db.session.commit()
+
+    return jsonify({"cart": cart.serialize()}), 200
 
 
 @api.route("/clients/<int:client_id>/carts/active", methods=["GET"])
@@ -206,41 +284,21 @@ def get_book(id):
     return jsonify(book.serialize()), 200
 
 
-@api.route("/books", methods=["POST"])
+@api.route('/books', methods=['POST'])
 def create_book():
-    body = request.get_json(silent=True) or {}
+    data = request.json
 
-    titulo = body.get("titulo")
-    autor = body.get("autor")
-    isbn = body.get("isbn")
-    precio_raw = body.get("precio")
-
-    if not titulo or not autor or not isbn:
-        return jsonify({"msg": "Faltan campos: titulo, autor, isbn"}), 400
-
-    if precio_raw in (None, "", " "):
-        return jsonify({"msg": "El precio es obligatorio"}), 400
-
-    try:
-        precio = float(precio_raw)
-    except:
-        return jsonify({"msg": "El precio debe ser un número"}), 400
-
-    exists = Book.query.filter_by(isbn=isbn).first()
-    if exists:
-        return jsonify({"msg": "Ya existe un libro con ese isbn"}), 409
-
-    book = Book(
-        titulo=titulo,
-        autor=autor,
-        isbn=isbn,
-        precio=precio
+    nuevo = Book(
+        titulo=data.get("titulo"),
+        autor=data.get("autor"),
+        precio=data.get("precio"),
+        isbn=data.get("isbn")
     )
 
-    db.session.add(book)
+    db.session.add(nuevo)
     db.session.commit()
 
-    return jsonify(book.serialize()), 201
+    return jsonify(nuevo.serialize()), 201
 
 
 @api.route("/books/<int:id>", methods=["PUT"])
@@ -551,6 +609,42 @@ def delete_cart(cart_id):
     return jsonify({"msg": "Carrito eliminado"}), 200
 
 
+@api.route("/carts/<int:cart_id>/pay", methods=["POST"])
+def pay_cart(cart_id):
+    cart = Cart.query.get(cart_id)
+
+    if not cart:
+        return jsonify({"msg": "Carrito no encontrado"}), 404
+
+    if cart.estado != "pendiente":
+        return jsonify({"msg": "Este carrito no se puede pagar"}), 400
+
+    items = CartBook.query.filter_by(id_carrito=cart_id).all()
+
+    total = 0
+    for item in items:
+        precio_con_descuento = item.precio * (1 - item.descuento)
+        total += precio_con_descuento * item.cantidad
+
+    cart.monto_total = total
+    cart.estado = "pagado"
+    db.session.commit()
+
+    new_cart = Cart(
+        id_cliente=cart.id_cliente,
+        estado="pendiente",
+        monto_total=0
+    )
+    db.session.add(new_cart)
+    db.session.commit()
+
+    return jsonify({
+        "msg": "Pago realizado con éxito",
+        "cart_pagado": cart.serialize(),
+        "nuevo_carrito": new_cart.serialize()
+    }), 200
+
+
 @api.route("/cart-books", methods=["GET"])
 def get_cart_books():
     items = CartBook.query.all()
@@ -616,7 +710,6 @@ def delete_cart_book(item_id):
     return jsonify({"msg": "Item eliminado"}), 200
 
 
-
 @api.route("/delivery", methods=["GET"])
 @jwt_required()
 def get_delivery_list():
@@ -636,22 +729,23 @@ def get_delivery_detail(delivery_id):
         return jsonify({"msg": "Repartidor no encontrado"}), 404
     return jsonify(item.serialize()), 200
 
-@api.route('/delivery/login', methods=['POST']) 
-def delivery_login(): 
-    data = request.json 
-    email = data.get("email") 
-    password = data.get("password") 
-    
-    delivery = Delivery.query.filter_by(email=email).first() 
-    
-    if not delivery or not delivery.check_password(password): 
-        return jsonify({"msg": "Credenciales incorrectas"}), 401 
-    
-    token = create_access_token(identity=delivery.id) 
-    
-    return jsonify({ 
-        "token": token, 
-        "user": delivery.serialize() 
+
+@api.route('/delivery/login', methods=['POST'])
+def delivery_login():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
+
+    delivery = Delivery.query.filter_by(email=email).first()
+
+    if not delivery or not delivery.check_password(password):
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
+
+    token = create_access_token(identity=delivery.id)
+
+    return jsonify({
+        "token": token,
+        "user": delivery.serialize()
     }), 200
 
 
@@ -684,8 +778,6 @@ def create_delivery():
     db.session.commit()
 
     return jsonify(d.serialize()), 201
-
-
 
 
 @api.route("/delivery/<int:delivery_id>", methods=["PUT"])
@@ -727,10 +819,6 @@ def delete_delivery(delivery_id):
     db.session.delete(d)
     db.session.commit()
     return jsonify({"msg": "Repartidor eliminado"}), 200
-
-
-
-
 
 
 @api.route("/reviews", methods=["GET"])
@@ -835,8 +923,6 @@ def delete_review(review_id):
     return jsonify({"msg": "Review eliminada"}), 200
 
 
-
-
 @api.route("/login", methods=["POST"])
 def login():
     body = request.get_json() or {}
@@ -894,8 +980,6 @@ def admin_users():
     return jsonify([u.serialize() for u in usuarios]), 200
 
 
-
-
 # Login proveedores Layla abajo
 
 
@@ -930,7 +1014,6 @@ def login_provider():
     }), 200
 
 
-
 @api.route("/delivery/pedidos", methods=["GET"])
 @jwt_required()
 def delivery_pedidos():
@@ -961,23 +1044,24 @@ def delivery_pedidos():
         "user": {**provider.serialize(), "role": "provider"}  # 👈 añadimos role
     }), 200
 
-# @api.route("/validate", methods=["GET"]) 
-# @jwt_required() 
-# def validate(): 
+# @api.route("/validate", methods=["GET"])
+# @jwt_required()
+# def validate():
 #     identity = get_jwt_identity()
-#     
-#     user = User.query.get(identity["id"]) 
-#     if not user: 
-#         return jsonify({"msg": "Usuario no encontrado"}), 404 
-#     
-#     return jsonify({ 
-#         "user": user.serialize(), 
-#         "role": user.role 
+#
+#     user = User.query.get(identity["id"])
+#     if not user:
+#         return jsonify({"msg": "Usuario no encontrado"}), 404
+#
+#     return jsonify({
+#         "user": user.serialize(),
+#         "role": user.role
 #     }), 200
 
-@api.route("/validate", methods=["GET"]) 
-@jwt_required() 
-def validate(): 
+
+@api.route("/validate", methods=["GET"])
+@jwt_required()
+def validate():
     identity = get_jwt_identity()
     role = identity.get("role")
 
@@ -997,11 +1081,10 @@ def validate():
             "user": {**entity.serialize(), "role": "delivery"}
         }), 200
 
-    user = User.query.get(identity["id"]) 
-    if not user: 
-        return jsonify({"msg": "Usuario no encontrado"}), 404 
-    
-    return jsonify({ 
+    user = User.query.get(identity["id"])
+    if not user:
+        return jsonify({"msg": "Usuario no encontrado"}), 404
+
+    return jsonify({
         "user": user.serialize()
     }), 200
-

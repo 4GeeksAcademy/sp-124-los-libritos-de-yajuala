@@ -63,9 +63,16 @@ import LoginAdminPage from "./pages/loginAdmin/LoginAdminPage.jsx";
 import LoggedAdminPage from "./pages/loginAdmin/LoggedAdminPage.jsx";
 
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
-import {AdminRoute}  from "./components/AdminRoute.jsx";
+import { AdminRoute } from "./components/AdminRoute.jsx";
 
-
+import HomeClients from "./pages/homeClients/HomeClients.jsx";
+import PaymentSuccessPage from "./pages/Carts/PaymentSuccessPage.jsx";
+import CheckoutAddressPage from "./pages/Carts/CheckoutAddressPage.jsx";
+import CheckoutPaymentPage from "./pages/Carts/CheckoutPaymentPage.jsx";
+import AddressesPage from "./pages/clients/address/AddressesPage.jsx";
+import CreateAddressPage from "./pages/clients/address/CreateAddressPage.jsx";
+import EditAddressPage from "./pages/clients/address/EditAddressPage.jsx";
+import CheckoutPaymentMethodPage from "./pages/Carts/CheckoutPaymentMethodPage.jsx";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -132,6 +139,10 @@ export const router = createBrowserRouter(
       <Route path="/user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
       {/* NUEVO: carrito activo real */}
       <Route path="/user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
+      <Route path="/payment-success" element={<PaymentSuccessPage />} />
+      <Route path="/checkout/address" element={<CheckoutAddressPage />} />
+      <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
+      <Route  path="/checkout/payment-method" element={<CheckoutPaymentMethodPage />}/>
       <Route path="/user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
 
 
@@ -143,6 +154,13 @@ export const router = createBrowserRouter(
 
       <Route path="/logindelivery" element={<LoginDelivery />} />
       <Route path="/loggeddelivery" element={<LoggedDelivery />} />
+
+      <Route path="/home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
+      <Route  path="/addresses" element={<AddressesPage />}/>
+      <Route  path="/addresses/create" element={<CreateAddressPage />}/>
+      <Route  path="/addresses/:id/edit" element={<EditAddressPage />}/>
+
+
 
     </Route>
   )

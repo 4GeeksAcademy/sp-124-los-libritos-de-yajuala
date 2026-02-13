@@ -36,6 +36,11 @@ export default function storeReducer(store, action = {}) {
         token: action.payload
       };
 
+    case "set_active_cart":
+      return {
+        ...store,
+        activeCart: action.payload
+      };
 
     default:
       throw Error("Unknown action.");

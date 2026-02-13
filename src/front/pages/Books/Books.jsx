@@ -44,21 +44,21 @@ export const Books = () => {
   }, []);
 
   const role = store.user?.role;
-	const isAdmin = role === "admin";
-	const isProvider = role === "provider";
-	const isDelivery = role === "delivery";
-	const isClient = role === "client";
+  const isAdmin = role === "admin";
+  const isProvider = role === "provider";
+  const isDelivery = role === "delivery";
+  const isClient = role === "client";
 
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Libros</h1>
-      {!isClient && (
-        <button className="btn btn-warning" onClick={() => navigate("/books/new")}>
-          Crear libro
-        </button>
-      )}
-        
+        {!isClient && (
+          <button className="btn btn-warning" onClick={() => navigate("/books/new")}>
+            Crear libro
+          </button>
+        )}
+
       </div>
 
       <div className="row">
@@ -81,10 +81,10 @@ export const Books = () => {
                     <strong>Autor:</strong> {book.autor}
                   </p>
                   <p className="card-text">
-  <strong>Precio:</strong> {book.precio} €
-</p>
+                    <strong>Precio:</strong> {book.precio} €
+                  </p>
 
-                  
+
                   <p className="card-text">
                     <strong>ISBN:</strong> {book.isbn}
                   </p>
@@ -96,23 +96,23 @@ export const Books = () => {
                     >
                       Ver ficha
                     </button>
-                  {!isClient && (
-                    <>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => navigate(`/books/${book.id}/edit`)}
-                    >
-                      Editar
-                    </button>
+                    {!isClient && (
+                      <>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => navigate(`/books/${book.id}/edit`)}
+                        >
+                          Editar
+                        </button>
 
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => deleteBook(book.id)}
-                    >
-                      Eliminar
-                    </button></>
-                  )}
-                    
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => deleteBook(book.id)}
+                        >
+                          Eliminar
+                        </button></>
+                    )}
+
                   </div>
                 </div>
               </div>
