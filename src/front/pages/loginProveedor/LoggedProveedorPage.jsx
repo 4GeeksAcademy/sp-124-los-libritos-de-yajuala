@@ -28,9 +28,16 @@ export default function LoggedProveedorPage() {
       <div className="mt-4">
         <button
           className="btn btn-primary me-3"
-          onClick={() => navigate("/books")}
+          onClick={() => navigate("/provider/books")}
         >
           Gestionar Libros
+        </button>
+
+        <button
+          className="btn btn-success me-3"
+          onClick={() => navigate("/provider/orders")}
+        >
+          Ver Pedidos
         </button>
 
         <button

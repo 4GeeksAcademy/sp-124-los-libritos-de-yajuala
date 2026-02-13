@@ -65,6 +65,15 @@ import LoggedAdminPage from "./pages/loginAdmin/LoggedAdminPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import {AdminRoute}  from "./components/AdminRoute.jsx";
 
+import { ProviderBooks } from "./pages/Books/ProviderBooks.jsx";
+import { ProviderBookCreate } from "./pages/Books/ProviderBookCreate.jsx";
+import { ProviderBookDetail } from "./pages/Books/ProviderBookDetail.jsx";
+import { ProviderBookEdit } from "./pages/Books/ProviderBookEdit.jsx";
+import { ProviderOrders } from "./pages/proveedores/ProviderOrders.jsx";
+
+
+
+
 
 
 export const router = createBrowserRouter(
@@ -143,6 +152,16 @@ export const router = createBrowserRouter(
 
       <Route path="/logindelivery" element={<LoginDelivery />} />
       <Route path="/loggeddelivery" element={<LoggedDelivery />} />
+
+      <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
+      <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
+      <Route path="/provider/books/:id" element={<ProviderBookDetail />} />
+      <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
+      <Route path="/provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
+
+
+
+
 
     </Route>
   )

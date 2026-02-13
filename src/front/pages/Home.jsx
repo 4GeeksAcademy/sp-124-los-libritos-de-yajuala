@@ -129,6 +129,8 @@ export const Home = () => {
         <button className="btn btn-info btn-lg m-2" onClick={() => navigate("/delivery")}>Repartidores</button>
         <button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}>Ir a Libros</button>
         <button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}>Reviews</button>
+        <button className="btn btn-warning btn-lg m-2" onClick={() => navigate("/provider/books")}>Libros Proveedor</button>
+
 
       </div>
     </div>
