@@ -56,10 +56,19 @@ export default function CheckoutPaymentPage() {
 
       const data = await resp.json();
 
+      console.log("RESPUESTA PAY:", data);
+
+
       if (!resp.ok) {
         alert(data.msg || "Error al pagar");
         return;
       }
+
+      dispatch({
+        type: "SET_ACTIVE_CART",
+        payload: data.nuevo_carrito
+      });
+
 
       navigate("/payment-success");
     } catch (err) {

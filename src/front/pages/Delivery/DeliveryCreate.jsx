@@ -41,7 +41,7 @@ export const DeliveryCreate = () => {
         password: "",
         identificacion: "",
       });
-      navigate("/delivery");
+      navigate("/logindelivery");
     } catch (error) {
       alert("Error de red");
     }

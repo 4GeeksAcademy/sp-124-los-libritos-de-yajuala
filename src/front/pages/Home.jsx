@@ -97,6 +97,7 @@ export const Home = () => {
         </Link>
       )}
 
+
       {/*  Botones registro */}
       <hr className="my-4" />
 
@@ -113,6 +114,13 @@ export const Home = () => {
           Registro Proveedor
         </Link>
       </div>
+
+      {!user && (
+        <Link to="/delivery/register" className="btn btn-info btn-lg m-2">
+          Registro Repartidor
+        </Link>
+      )}
+
 
 
 

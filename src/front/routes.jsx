@@ -125,7 +125,8 @@ export const router = createBrowserRouter(
       <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
 
       <Route path="delivery" element={<AdminRoute><Delivery /></AdminRoute>} />
-      <Route path="delivery/new" element={<AdminRoute><DeliveryCreate /></AdminRoute>} />
+      <Route path="delivery/register" element={<DeliveryCreate />} />
+
       <Route path="delivery/:id" element={<DeliveryDetail />} />
       <Route path="delivery/:id/edit" element={<AdminRoute><DeliveryEdit /></AdminRoute>} />
 
