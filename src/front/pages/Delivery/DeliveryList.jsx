@@ -15,13 +15,18 @@ export const Delivery = () => {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchJson = async (url, options = {}) => {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      ...(options.headers || {}),
+    };
+
+    if (options.body && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const resp = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...(options.headers || {}),
-      },
+      headers,
     });
 
     const text = await resp.text();
@@ -109,7 +114,6 @@ export const Delivery = () => {
       return;
     }
     loadOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return <p className="mt-3">Cargando pedidos...</p>;
@@ -124,7 +128,6 @@ export const Delivery = () => {
       </div>
 
       <div className="row">
-        {/* DISPONIBLES */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
@@ -169,7 +172,6 @@ export const Delivery = () => {
           </div>
         </div>
 
-        {/* MIS PEDIDOS + DETALLE */}
         <div className="col-12 col-lg-6 mb-4">
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
@@ -228,7 +230,6 @@ export const Delivery = () => {
             </div>
           </div>
 
-          {/* DETALLE */}
           {selectedCartId && (
             <div className="card mt-3">
               <div className="card-header d-flex justify-content-between align-items-center">

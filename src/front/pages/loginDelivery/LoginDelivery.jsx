@@ -11,7 +11,7 @@ export default function LoginDelivery() {
     password: ""
   });
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -333,3 +333,53 @@ class ProviderBook(db.Model):
             "cantidad": self.cantidad,
             "libro": self.libro.serialize() if self.libro else None
         }
+
+# Shipment - para delivery layla
+
+class Shipment(db.Model):
+    __tablename__ = "shipments"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    cart_id = db.Column(
+        db.Integer,
+        db.ForeignKey("carts.id"),
+        nullable=False,
+        unique=True
+    )
+
+    address_id = db.Column(
+        db.Integer,
+        db.ForeignKey("addresses.id"),
+        nullable=False
+    )
+
+    delivery_id = db.Column(
+        db.Integer,
+        db.ForeignKey("delivery.id"),
+        nullable=True
+    )
+
+    status = db.Column(
+        db.String(30),
+        nullable=False,
+        default="unassigned"
+    )
+
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
+
+    cart = db.relationship("Cart")
+    address = db.relationship("Address")
+    delivery = db.relationship("Delivery")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "cart_id": self.cart_id,
+            "address_id": self.address_id,
+            "delivery_id": self.delivery_id,
+            "status": self.status,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }

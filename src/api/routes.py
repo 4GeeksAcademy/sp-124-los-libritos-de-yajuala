@@ -10,6 +10,7 @@ from sqlalchemy import and_
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models_reviews import Review
+from api.models import Shipment
 
 api = Blueprint('api', __name__)
 
@@ -660,6 +661,17 @@ def delete_cart(cart_id):
 # Pay Cart
 @api.route("/carts/<int:cart_id>/pay", methods=["POST"])
 def pay_cart(cart_id):
+
+    print("ENTRANDO A PAY_CART PARA:", cart_id)
+
+
+    body = request.get_json(silent=True) or {}
+    address_id = body.get("address_id")
+    
+    # Validar que se envió una dirección
+    if not address_id:
+        return jsonify({"msg": "Falta address_id para crear el envío"}), 400
+    
     cart = Cart.query.get(cart_id)
 
     if not cart:
@@ -668,6 +680,15 @@ def pay_cart(cart_id):
     if cart.estado != "pendiente":
         return jsonify({"msg": "Este carrito no se puede pagar"}), 400
 
+    # Verificar que la dirección existe y pertenece al cliente
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+    
+    if address.id_usuario != cart.id_cliente:
+        return jsonify({"msg": "Esa dirección no pertenece al cliente"}), 403
+
+    # Calcular total
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
     total = 0
@@ -678,7 +699,26 @@ def pay_cart(cart_id):
     cart.monto_total = total
     cart.estado = "pagado"
     db.session.commit()
+    # provisional test layla aqui abjo:
+    print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
+
+    # 🚚 CREAR SHIPMENT AUTOMÁTICAMENTE
+    # Verificar que no exista ya un shipment para este cart
+    existing_shipment = Shipment.query.filter_by(cart_id=cart.id).first()
+    if not existing_shipment:
+        shipment = Shipment(
+            cart_id=cart.id,
+            address_id=address_id,
+            status="unassigned",
+            delivery_id=None
+        )
+        db.session.add(shipment)
+        db.session.commit()
+    else:
+        shipment = existing_shipment
+
+    # Crear nuevo carrito vacío para el cliente
     new_cart = Cart(
         id_cliente=cart.id_cliente,
         estado="pendiente",
@@ -688,8 +728,14 @@ def pay_cart(cart_id):
     db.session.commit()
 
     return jsonify({
-        "msg": "Pago realizado con éxito",
+        "msg": "Pago realizado con éxito. Pedido creado.",
         "cart_pagado": cart.serialize(),
+        "shipment": shipment.serialize() if hasattr(shipment, 'serialize') else {
+            "id": shipment.id,
+            "cart_id": shipment.cart_id,
+            "address_id": shipment.address_id,
+            "status": shipment.status
+        },
         "nuevo_carrito": new_cart.serialize()
     }), 200
 
@@ -1283,7 +1329,7 @@ def get_provider_orders():
 
 #Delivery Layla
 
-from api.models import Shipment  # asegúrate de importar Shipment arriba
+
 
 @api.route("/delivery/orders/available", methods=["GET"])
 @jwt_required()
@@ -1293,11 +1339,11 @@ def delivery_orders_available():
     if identity.get("role") != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
 
-    # Shipments disponibles = unassigned + carrito pagado
     rows = (
         db.session.query(Shipment, Cart)
         .join(Cart, Cart.id == Shipment.cart_id)
         .filter(Shipment.status == "unassigned")
+        .filter(Shipment.delivery_id.is_(None))
         .filter(Cart.estado == "pagado")
         .order_by(Shipment.id.desc())
         .all()
@@ -1312,5 +1358,213 @@ def delivery_orders_available():
         })
 
     return jsonify(orders), 200
+
+
+@api.route("/delivery/orders", methods=["GET"])
+@jwt_required()
+def delivery_orders_mine():
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    delivery_id = identity["id"]
+
+    rows = (
+        db.session.query(Shipment, Cart)
+        .join(Cart, Cart.id == Shipment.cart_id)
+        .filter(Shipment.delivery_id == delivery_id)
+        .order_by(Shipment.id.desc())
+        .all()
+    )
+
+    orders = []
+    for shipment, cart in rows:
+        orders.append({
+            "cart_id": cart.id,
+            "monto_total": cart.monto_total,
+            "status": shipment.status
+        })
+
+    return jsonify(orders), 200
+
+# endpoint para claim 
+@api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
+@jwt_required()
+def delivery_claim_order(cart_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    delivery_id = identity["id"]
+
+    # Buscar el shipment asociado a este cart
+    shipment = Shipment.query.filter_by(cart_id=cart_id).first()
+    
+    if not shipment:
+        return jsonify({"msg": "Pedido no encontrado"}), 404
+
+    # Verificar que no esté ya asignado
+    if shipment.delivery_id is not None:
+        return jsonify({"msg": "Este pedido ya está asignado a otro repartidor"}), 400
+
+    # Verificar que el cart esté pagado
+    cart = Cart.query.get(cart_id)
+    if not cart or cart.estado != "pagado":
+        return jsonify({"msg": "El pedido no está disponible"}), 400
+
+    # Asignar el repartidor
+    shipment.delivery_id = delivery_id
+    shipment.status = "assigned"
+    
+    db.session.commit()
+
+    return jsonify({
+        "msg": "Pedido asignado correctamente",
+        "cart_id": cart_id,
+        "status": shipment.status
+    }), 200
+
+@api.route("/delivery/orders/<int:cart_id>/delivered", methods=["PUT"])
+@jwt_required()
+def delivery_mark_delivered(cart_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    delivery_id = identity["id"]
+
+    shipment = Shipment.query.filter_by(cart_id=cart_id).first()
+    if not shipment:
+        return jsonify({"msg": "Pedido no encontrado"}), 404
+
+    # solo el asignado puede marcar entregado
+    if shipment.delivery_id != delivery_id:
+        return jsonify({"msg": "No puedes modificar este pedido"}), 403
+
+    shipment.status = "delivered"
+    db.session.commit()
+
+    return jsonify({
+        "msg": "Pedido entregado",
+        "cart_id": cart_id,
+        "status": shipment.status
+    }), 200
+
+@api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
+@jwt_required()
+def delivery_order_detail(cart_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    delivery_id = identity["id"]
+
+    shipment = Shipment.query.filter_by(cart_id=cart_id).first()
+    if not shipment:
+        return jsonify({"msg": "Pedido no encontrado"}), 404
+
+    # solo el repartidor asignado puede ver el detalle
+    if shipment.delivery_id != delivery_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    cart = Cart.query.get(cart_id)
+    if not cart:
+        return jsonify({"msg": "Carrito no encontrado"}), 404
+
+    address = Address.query.get(shipment.address_id)
+    items = CartBook.query.filter_by(id_carrito=cart_id).all()
+
+    return jsonify({
+        "cart_id": cart.id,
+        "status": shipment.status,
+        "monto_total": cart.monto_total,
+        "address": address.serialize() if address else None,
+        "items": [
+            {
+                "id": it.id,
+                "cantidad": it.cantidad,
+                "precio": it.precio,
+                "descuento": it.descuento,
+                "titulo": it.libro.titulo if it.libro else None
+            }
+            for it in items
+        ]
+    }), 200
+
+
+
+@api.route("/shipments/from-cart/<int:cart_id>", methods=["POST"])
+@jwt_required()
+def create_shipment_from_paid_cart(cart_id):
+    identity = get_jwt_identity()
+
+    # Solo cliente/admin (no provider/delivery)
+    if identity.get("role") in ("provider", "delivery"):
+        return jsonify({"msg": "No autorizado"}), 403
+
+    body = request.get_json(silent=True) or {}
+    address_id = body.get("address_id")
+
+    if not address_id:
+        return jsonify({"msg": "Falta address_id"}), 400
+
+    cart = Cart.query.get(cart_id)
+    if not cart:
+        return jsonify({"msg": "Carrito no encontrado"}), 404
+
+    # El carrito debe ser del usuario logueado
+    if cart.id_cliente != identity.get("id"):
+        return jsonify({"msg": "No autorizado"}), 403
+
+    # Solo se crea shipment si el carrito ya está pagado
+    if cart.estado != "pagado":
+        return jsonify({"msg": "El carrito no está pagado"}), 400
+
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+
+    # La address debe pertenecer al usuario
+    if address.id_usuario != identity.get("id"):
+        return jsonify({"msg": "Esa dirección no es tuya"}), 403
+
+    # Idempotente: si ya existe, lo devolvemos
+    existing = Shipment.query.filter_by(cart_id=cart_id).first()
+    if existing:
+        return jsonify({
+            "msg": "Shipment ya existía",
+            "shipment": existing.serialize() if hasattr(existing, "serialize") else {
+                "id": existing.id,
+                "cart_id": existing.cart_id,
+                "address_id": existing.address_id,
+                "delivery_id": existing.delivery_id,
+                "status": existing.status
+            }
+        }), 200
+
+    shipment = Shipment(
+        cart_id=cart_id,
+        address_id=address_id,
+        status="unassigned",
+        delivery_id=None
+    )
+
+    db.session.add(shipment)
+    db.session.commit()
+
+    return jsonify({
+        "msg": "Shipment creado",
+        "shipment": shipment.serialize() if hasattr(shipment, "serialize") else {
+            "id": shipment.id,
+            "cart_id": shipment.cart_id,
+            "address_id": shipment.address_id,
+            "delivery_id": shipment.delivery_id,
+            "status": shipment.status
+        }
+    }), 201
 
 
