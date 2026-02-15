@@ -657,7 +657,7 @@ def delete_cart(cart_id):
     return jsonify({"msg": "Carrito eliminado"}), 200
 
 
-# === ENDPOINT PAY CART (de develop) ===
+# Pay Cart
 @api.route("/carts/<int:cart_id>/pay", methods=["POST"])
 def pay_cart(cart_id):
     cart = Cart.query.get(cart_id)
@@ -790,7 +790,11 @@ def delivery_login():
     if not delivery or not delivery.check_password(password):
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    token = create_access_token(identity=delivery.id)
+    token = create_access_token(identity={
+    "id": delivery.id,
+    "role": "delivery"
+    })
+
 
     return jsonify({
         "token": token,
@@ -1103,7 +1107,7 @@ def validate():
     }), 200
 
 
-# === ENDPOINTS PROVIDER BOOKS (TU TRABAJO) ===
+# ENDPOINTS PROVIDER BOOKS
 
 @api.route("/provider/books", methods=["GET"])
 @jwt_required()
@@ -1276,3 +1280,37 @@ def get_provider_orders():
         })
 
     return jsonify(list(orders.values())), 200
+
+#Delivery Layla
+
+from api.models import Shipment  # asegúrate de importar Shipment arriba
+
+@api.route("/delivery/orders/available", methods=["GET"])
+@jwt_required()
+def delivery_orders_available():
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    # Shipments disponibles = unassigned + carrito pagado
+    rows = (
+        db.session.query(Shipment, Cart)
+        .join(Cart, Cart.id == Shipment.cart_id)
+        .filter(Shipment.status == "unassigned")
+        .filter(Cart.estado == "pagado")
+        .order_by(Shipment.id.desc())
+        .all()
+    )
+
+    orders = []
+    for shipment, cart in rows:
+        orders.append({
+            "cart_id": cart.id,
+            "monto_total": cart.monto_total,
+            "status": shipment.status
+        })
+
+    return jsonify(orders), 200
+
+
