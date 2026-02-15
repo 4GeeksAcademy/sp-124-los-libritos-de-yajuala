@@ -48,7 +48,7 @@ export default function CartsPage() {
 
   return (
     <div className="container mt-4">
-      {!isClient && (
+      {(isClient || isAdmin) && (
         <>
         <div className="d-flex justify-content-between mb-4">
         <h1>Carritos</h1>

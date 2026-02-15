@@ -20,3 +20,6 @@ class Book(db.Model):
             "precio": self.precio,
             "isbn": self.isbn
         }
+
+    def __repr__(self):
+        return f'{self.titulo}'

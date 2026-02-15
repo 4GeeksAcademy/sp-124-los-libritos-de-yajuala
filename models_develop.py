@@ -61,6 +61,8 @@ class Delivery(db.Model):
         }
 
 
+
+
 class Provider(db.Model):
     __tablename__ = "providers"
 
@@ -108,9 +110,6 @@ class Provider(db.Model):
             "password": self.password,
             "documento": self.documento
         }
-
-    def __repr__(self):
-        return f'{self.nombre}'
 
 
 class Categorias(db.Model):
@@ -263,8 +262,6 @@ class CartBook(db.Model):
             "libro": self.libro.serialize() if self.libro else None
         }
 
-
-# === MODELO ADDRESS (de develop - tu compañero) ===
 class Address(db.Model):
     __tablename__ = "addresses"
 
@@ -295,41 +292,4 @@ class Address(db.Model):
             "provincia": self.provincia,
             "codigo_postal": self.codigo_postal,
             "telefono": self.telefono
-        }
-
-
-# === MODELO PROVIDERBOOK (tuyo - Layla) ===
-class ProviderBook(db.Model):
-    __tablename__ = "provider_book"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    id_proveedor = db.Column(
-        db.Integer,
-        db.ForeignKey("providers.id"),
-        nullable=False
-    )
-
-    id_libro = db.Column(
-        db.Integer,
-        db.ForeignKey("book.id"),
-        nullable=False
-    )
-
-    cantidad = db.Column(
-        db.Integer,
-        nullable=False,
-        default=0
-    )
-
-    proveedor = db.relationship("Provider", backref="libros_proveedor")
-    libro = db.relationship("Book", backref="proveedores")
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "id_proveedor": self.id_proveedor,
-            "id_libro": self.id_libro,
-            "cantidad": self.cantidad,
-            "libro": self.libro.serialize() if self.libro else None
         }

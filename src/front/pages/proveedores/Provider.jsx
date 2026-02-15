@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
@@ -56,6 +58,7 @@ const Provider = () => {
 
   return (
     <div className="container mt-4">
+      <ProviderPanelButtons />
       <div className="d-flex justify-content-between align-items-center">
         <h1>Listado de Proveedores</h1>
 

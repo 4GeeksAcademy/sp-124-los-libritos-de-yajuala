@@ -18,7 +18,7 @@ const AddProvider = () => {
 
     const isEdit = Boolean(providerId);
 
-    //Cargar datos del proveedor si es edición
+  
     useEffect(() => {
         if (!isEdit) return;
 
@@ -45,13 +45,13 @@ const AddProvider = () => {
             });
     }, [providerId, isEdit]);
 
-    //Manejar cambios en inputs
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setProvider({ ...provider, [name]: value });
     };
 
-    //Crear o actualizar
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -71,7 +71,16 @@ const AddProvider = () => {
 
             if (!res.ok) throw new Error("Error al guardar proveedor");
 
+            // si se está registrando (no admin), llévalo a su bienvenida
+            if (!isEdit) {
+            navigate("/provider/me");
+            return;
+            }
+
+            // si es edición (admin), vuelve al listado
             navigate("/provider");
+
+
         } catch (err) {
             console.error(err);
             alert("Error al guardar el proveedor");
@@ -82,6 +91,7 @@ const AddProvider = () => {
 
     return (
         <div className="container mt-4">
+            <ProviderPanelButtons />
             <h1>{isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}</h1>
 
             <form onSubmit={handleSubmit} className="mt-3">

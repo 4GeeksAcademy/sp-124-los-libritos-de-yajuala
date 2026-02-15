@@ -1,0 +1,109 @@
+def get_addresses(user_id):
+    addresses = Address.query.filter_by(id_usuario=user_id).all()
+    return jsonify([a.serialize() for a in addresses]), 200
+
+
+@api.route("/users/<int:user_id>/addresses", methods=["POST"])
+def create_address(user_id):
+    data = request.json
+
+    new_address = Address(
+        id_usuario=user_id,
+        nombre=data.get("nombre"),
+        direccion=data.get("direccion"),
+        ciudad=data.get("ciudad"),
+        provincia=data.get("provincia"),
+        codigo_postal=data.get("codigo_postal"),
+        telefono=data.get("telefono")
+    )
+
+    db.session.add(new_address)
+    db.session.commit()
+
+    return jsonify(new_address.serialize()), 201
+
+
+@api.route("/addresses/<int:address_id>", methods=["PUT"])
+def update_address(address_id):
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+
+    data = request.json
+
+    address.nombre = data.get("nombre", address.nombre)
+    address.direccion = data.get("direccion", address.direccion)
+    address.ciudad = data.get("ciudad", address.ciudad)
+    address.provincia = data.get("provincia", address.provincia)
+    address.codigo_postal = data.get("codigo_postal", address.codigo_postal)
+    address.telefono = data.get("telefono", address.telefono)
+
+    db.session.commit()
+
+    return jsonify(address.serialize()), 200
+
+
+@api.route("/addresses/<int:address_id>", methods=["DELETE"])
+def delete_address(address_id):
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+
+    db.session.delete(address)
+    db.session.commit()
+
+    return jsonify({"msg": "Dirección eliminada"}), 200
+
+
+@api.route("/addresses/<int:address_id>", methods=["GET"])
+def get_address(address_id):
+    address = Address.query.get(address_id)
+    if not address:
+        return jsonify({"msg": "Dirección no encontrada"}), 404
+    return jsonify(address.serialize()), 200
+
+
+@api.route("/users/<int:user_id>/active-cart", methods=["GET"])
+def get_user_active_cart(user_id):
+    cart = Cart.query.filter_by(id_cliente=user_id, estado="pendiente").first()
+
+    if not cart:
+        cart = Cart(id_cliente=user_id, estado="pendiente", monto_total=0)
+        db.session.add(cart)
+        db.session.commit()
+
+    return jsonify({"cart": cart.serialize()}), 200
+
+
+@api.route("/clients/<int:client_id>/carts/active", methods=["GET"])
+def get_active_cart(client_id):
+    cart = Cart.query.filter(
+        Cart.id_cliente == client_id,
+        Cart.estado.in_(["pendiente", "pagado", "cancelado"])
+    ).order_by(Cart.fecha.desc()).first()
+
+    if not cart:
+        return jsonify({"active": False}), 200
+
+--
+def pay_cart(cart_id):
+    cart = Cart.query.get(cart_id)
+
+    if not cart:
+        return jsonify({"msg": "Carrito no encontrado"}), 404
+
+    if cart.estado != "pendiente":
+        return jsonify({"msg": "Este carrito no se puede pagar"}), 400
+
+    items = CartBook.query.filter_by(id_carrito=cart_id).all()
+
+    total = 0
+    for item in items:
+        precio_con_descuento = item.precio * (1 - item.descuento)
+        total += precio_con_descuento * item.cantidad
+
+    cart.monto_total = total
+    cart.estado = "pagado"
+    db.session.commit()
+
+    new_cart = Cart(
