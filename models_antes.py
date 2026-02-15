@@ -61,6 +61,8 @@ class Delivery(db.Model):
         }
 
 
+
+
 class Provider(db.Model):
     __tablename__ = "providers"
 
@@ -108,10 +110,8 @@ class Provider(db.Model):
             "password": self.password,
             "documento": self.documento
         }
-
     def __repr__(self):
         return f'{self.nombre}'
-
 
 class Categorias(db.Model):
     __tablename__ = "categorias"
@@ -263,42 +263,7 @@ class CartBook(db.Model):
             "libro": self.libro.serialize() if self.libro else None
         }
 
-
-# === MODELO ADDRESS (de develop - tu compañero) ===
-class Address(db.Model):
-    __tablename__ = "addresses"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    id_usuario = db.Column(
-        db.Integer,
-        db.ForeignKey("user.id"),
-        nullable=False
-    )
-
-    nombre = db.Column(db.String(120), nullable=False)  # Ej: "Casa", "Trabajo"
-    direccion = db.Column(db.String(255), nullable=False)
-    ciudad = db.Column(db.String(120), nullable=False)
-    provincia = db.Column(db.String(120), nullable=False)
-    codigo_postal = db.Column(db.String(20), nullable=False)
-    telefono = db.Column(db.String(20), nullable=True)
-
-    usuario = db.relationship("User", backref="direcciones")
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "id_usuario": self.id_usuario,
-            "nombre": self.nombre,
-            "direccion": self.direccion,
-            "ciudad": self.ciudad,
-            "provincia": self.provincia,
-            "codigo_postal": self.codigo_postal,
-            "telefono": self.telefono
-        }
-
-
-# === MODELO PROVIDERBOOK (tuyo - Layla) ===
+# Tabla nueva layla - relacion proveedor-libros
 class ProviderBook(db.Model):
     __tablename__ = "provider_book"
 
@@ -322,6 +287,7 @@ class ProviderBook(db.Model):
         default=0
     )
 
+
     proveedor = db.relationship("Provider", backref="libros_proveedor")
     libro = db.relationship("Book", backref="proveedores")
 
@@ -333,3 +299,5 @@ class ProviderBook(db.Model):
             "cantidad": self.cantidad,
             "libro": self.libro.serialize() if self.libro else None
         }
+
+    
