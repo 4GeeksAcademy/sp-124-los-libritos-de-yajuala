@@ -31,7 +31,7 @@ export default function AddBookToCartPage() {
 
       setForm({
         ...form,
-        id_libro: parseInt(value),        // <-- convertir a número
+        id_libro: parseInt(value),       
         precio: selectedBook ? selectedBook.precio : 0
       });
       return;

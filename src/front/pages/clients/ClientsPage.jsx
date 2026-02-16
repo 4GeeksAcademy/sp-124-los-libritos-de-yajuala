@@ -28,7 +28,7 @@ export default function ClientsPage() {
                 return;
             }
 
-            // Vuelves a pedir la lista
+           
             fetchClientes();
         } catch (error) {
             console.error("Error en deleteCliente:", error);

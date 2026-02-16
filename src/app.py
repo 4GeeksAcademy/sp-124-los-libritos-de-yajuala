@@ -28,7 +28,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
 
 jwt = JWTManager(app)
 app.config["JWT_IDENTITY_CLAIM"] = "identity"
-# ✅ CORS (para que el front pueda llamar al backend desde otro puerto/origen)
+# CORS 
 app.config["CORS_HEADERS"] = "Content-Type"
 CORS(
     app,
@@ -48,6 +48,7 @@ else:
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 MIGRATE = Migrate(app, db, compare_type=True)
+
 db.init_app(app)
 
 # add the admin

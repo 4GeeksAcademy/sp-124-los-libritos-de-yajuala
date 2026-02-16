@@ -34,7 +34,7 @@ export const DeliveryEdit = () => {
         apellido: data.apellido,
         email: data.email,
         identificacion: data.identificacion,
-        password: "", // vacío → no se cambia
+        password: "", 
       });
     } catch (error) {
       alert("Error de red");
@@ -48,7 +48,7 @@ export const DeliveryEdit = () => {
         return;
       }
 
-      // si el password está vacío, no lo mandamos
+      
       const payload = { ...form };
       if (!payload.password) delete payload.password;
 

@@ -65,14 +65,14 @@ import LoggedAdminPage from "./pages/loginAdmin/LoggedAdminPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import { AdminRoute } from "./components/AdminRoute.jsx";
 
-// === IMPORTS DE PROVIDER (tuyo - Layla) ===
+
 import { ProviderBooks } from "./pages/Books/ProviderBooks.jsx";
 import { ProviderBookCreate } from "./pages/Books/ProviderBookCreate.jsx";
 import { ProviderBookDetail } from "./pages/Books/ProviderBookDetail.jsx";
 import { ProviderBookEdit } from "./pages/Books/ProviderBookEdit.jsx";
 import { ProviderOrders } from "./pages/proveedores/ProviderOrders.jsx";
 
-// === IMPORTS DE CHECKOUT/ADDRESSES (de develop - tu compañero) ===
+
 import HomeClients from "./pages/homeClients/HomeClients.jsx";
 import PaymentSuccessPage from "./pages/Carts/PaymentSuccessPage.jsx";
 import CheckoutAddressPage from "./pages/Carts/CheckoutAddressPage.jsx";

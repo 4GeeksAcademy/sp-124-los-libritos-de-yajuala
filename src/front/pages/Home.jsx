@@ -106,6 +106,17 @@ export const Home = () => {
           Registro Proveedor
         </Link>
       </div>
+
+      {!user && (
+        <Link to="/delivery/register" className="btn btn-info btn-lg m-2">
+          Registro Repartidor
+        </Link>
+      )}
+
+
+
+
+      {/*  Accesos rapidos SIEMPRE visibles (para pruebas) */}
       <hr className="my-4" />
       <h4 className="mb-3">Accesos rápidos (DEV)</h4>
 

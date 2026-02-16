@@ -13,7 +13,7 @@ const Categorias = () => {
 
     const navigate = useNavigate();
 
-    // Cargar categorías
+    
     useEffect(() => {
         fetch(API_BASE + "/api/categorias")
             .then(res => {
@@ -30,7 +30,7 @@ const Categorias = () => {
             });
     }, []);
 
-    // Eliminar categoría
+    
     const deleteCategoria = async (id) => {
         const confirmDelete = confirm("¿Seguro que quieres eliminar esta categoría?");
         if (!confirmDelete) return;
@@ -48,7 +48,7 @@ const Categorias = () => {
         }
     };
 
-    // Filtrado por buscador
+    
     const filteredCategorias = categorias.filter(categoria =>
         categoria.nombre.toLowerCase().includes(search.toLowerCase())
     );

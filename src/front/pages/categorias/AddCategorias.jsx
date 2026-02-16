@@ -16,7 +16,7 @@ const AddCategoria = () => {
         descripcion: ""
     });
 
-    // Cargar categoría si es edición
+    
     useEffect(() => {
         if (!isEdit) return;
 

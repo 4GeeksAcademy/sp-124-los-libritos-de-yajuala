@@ -14,9 +14,9 @@ const ViewCategorias = () => {
         descripcion: ""
     });
     const [loading, setLoading] = useState(true);
-    const [editing, setEditing] = useState(false); // Estado para editar
+    const [editing, setEditing] = useState(false); 
 
-    // Cargar categoría
+    
     useEffect(() => {
         if (!categoriaId) return;
 
@@ -51,13 +51,13 @@ const ViewCategorias = () => {
         fetchCategoria();
     }, [categoriaId]);
 
-    // Manejar cambios de inputs
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setCategoria(prev => ({ ...prev, [name]: value }));
     };
 
-    // Guardar cambios (PUT)
+    
     const handleUpdate = async (e) => {
         e.preventDefault();
 
