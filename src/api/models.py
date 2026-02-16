@@ -243,7 +243,7 @@ class CartBook(db.Model):
         }
 
 
-# MODELO ADDRESS 
+# MODELO ADDRESS
 class Address(db.Model):
     __tablename__ = "addresses"
 
@@ -280,7 +280,7 @@ class Address(db.Model):
         }
 
 
-# MODELO PROVIDERBOOK 
+# MODELO PROVIDERBOOK
 class ProviderBook(db.Model):
     __tablename__ = "provider_book"
 
@@ -328,6 +328,7 @@ class Book(db.Model):
     autor = db.Column(db.String(120), nullable=False)
     isbn = db.Column(db.String(120), unique=True, nullable=False)
     precio = db.Column(db.Float, nullable=False)
+
     def serialize(self):
         return {
             "id": self.id,
@@ -343,7 +344,9 @@ class Book(db.Model):
                 }
                 for pb in self.proveedores
             ]
+}
 # Shipment - para delivery layla
+
 
 class Shipment(db.Model):
     __tablename__ = "shipments"
@@ -368,7 +371,7 @@ class Shipment(db.Model):
         db.ForeignKey("delivery.id"),
         nullable=True
     )
- 
+
     status = db.Column(
         db.String(30),
         nullable=False,
@@ -376,14 +379,16 @@ class Shipment(db.Model):
     )
 
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
-    updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())
+    updated_at = db.Column(db.DateTime, nullable=False,
+                           default=db.func.now(), onupdate=db.func.now())
 
     cart = db.relationship("Cart")
     address = db.relationship("Address")
     delivery = db.relationship("Delivery")
 
-    
-           
+    def serialize(self):
+        return {
+            "id": self.id,
             "cart_id": self.cart_id,
             "address_id": self.address_id,
             "delivery_id": self.delivery_id,
