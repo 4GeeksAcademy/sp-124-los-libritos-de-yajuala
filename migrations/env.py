@@ -2,6 +2,7 @@ import logging
 from logging.config import fileConfig
 
 from flask import current_app
+from werkzeug.local import LocalProxy
 
 from alembic import context
 
@@ -19,9 +20,16 @@ def get_engine():
     try:
         # this works with Flask-SQLAlchemy<3 and Alchemical
         return current_app.extensions['migrate'].db.get_engine()
-    except (TypeError, AttributeError):
+    except (TypeError, AttributeError, RuntimeError):
         # this works with Flask-SQLAlchemy>=3
-        return current_app.extensions['migrate'].db.engine
+        # RuntimeError is raised when there's no application context
+        try:
+            return current_app.extensions['migrate'].db.engine
+        except RuntimeError:
+            # No application context, create an engine from alembic.ini
+            from sqlalchemy import create_engine
+            url = config.get_main_option("sqlalchemy.url")
+            return create_engine(url)
 
 
 def get_engine_url():
@@ -36,8 +44,12 @@ def get_engine_url():
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-config.set_main_option('sqlalchemy.url', get_engine_url())
-target_db = current_app.extensions['migrate'].db
+try:
+    config.set_main_option('sqlalchemy.url', get_engine_url())
+    target_db = current_app.extensions['migrate'].db
+except RuntimeError:
+    # No application context available, use the URL from alembic.ini
+    target_db = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -46,9 +58,11 @@ target_db = current_app.extensions['migrate'].db
 
 
 def get_metadata():
-    if hasattr(target_db, 'metadatas'):
-        return target_db.metadatas[None]
-    return target_db.metadata
+    if target_db is not None:
+        if hasattr(target_db, 'metadatas'):
+            return target_db.metadatas[None]
+        return target_db.metadata
+    return None
 
 
 def run_migrations_offline():
@@ -90,8 +104,13 @@ def run_migrations_online():
                 directives[:] = []
                 logger.info('No changes in schema detected.')
 
-    conf_args = current_app.extensions['migrate'].configure_args
-    if conf_args.get("process_revision_directives") is None:
+    try:
+        conf_args = current_app.extensions['migrate'].configure_args
+        if conf_args.get("process_revision_directives") is None:
+            conf_args["process_revision_directives"] = process_revision_directives
+    except RuntimeError:
+        # No application context, use default configure args
+        conf_args = {"compare_type": True}
         conf_args["process_revision_directives"] = process_revision_directives
 
     connectable = get_engine()

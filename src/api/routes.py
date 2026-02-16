@@ -2,21 +2,21 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address
-from api.models_books import Book
+from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import and_
 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models_reviews import Review
+from datetime import datetime, timedelta
 from api.models import Shipment
 
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
 # CORS(api)
-CORS(api, supports_credentials=True)
+CORS(api, supports_credentials=True, origins="*")
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -42,31 +42,31 @@ def get_user(user_id):
     return jsonify(user.serialize()), 200
 
 
-@api.route('/user', methods=['POST'])
-def add_user():
-    data = request.json
+@api.route("/user", methods=["POST"])
+def create_user():
+    body = request.get_json()
 
-    required_fields = ["name", "lastname", "email", "password", "role"]
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"msg": f"Missing field: {field}"}), 400
+    if not body:
+        return jsonify({"msg": "Body vacío"}), 400
 
-    existing_user = User.query.filter_by(email=data["email"]).first()
-    if existing_user:
-        return jsonify({"msg": "Email already registered"}), 400
+    if "email" not in body or "password" not in body:
+        return jsonify({"msg": "Email y password son obligatorios"}), 400
 
-    new_user = User(
-        name=data["name"],
-        lastname=data["lastname"],
-        email=data["email"],
-        password=data["password"],
-        role=data["role"]
+    if User.query.filter_by(email=body["email"]).first():
+        return jsonify({"msg": "El email ya existe"}), 400
+
+    user = User(
+        name=body["name"],
+        lastname=body["lastname"],
+        email=body["email"],
+        password=body["password"],
+        role=body.get("role", "client")
     )
 
-    db.session.add(new_user)
+    db.session.add(user)
     db.session.commit()
 
-    return jsonify(new_user.serialize()), 201
+    return jsonify(user.serialize()), 201
 
 
 @api.route('/user/<int:user_id>', methods=['DELETE'])
@@ -195,6 +195,16 @@ def get_active_cart(client_id):
     }), 200
 
 
+@api.route("/clients/<int:client_id>/carts", methods=["GET"])
+def get_client_carts(client_id):
+    carts = Cart.query.filter(
+        Cart.id_cliente == client_id,
+        Cart.estado != "pendiente"
+    ).order_by(Cart.fecha.desc()).all()
+
+    return jsonify([c.serialize() for c in carts]), 200
+
+
 @api.route("/provider", methods=["GET"])
 def get_providers():
     providers = Provider.query.all()
@@ -216,10 +226,21 @@ def create_provider():
     body = request.get_json()
 
     if body is None:
-        raise APIException("Request body is empty", status_code=400)
+        return jsonify({"msg": "Request body is empty"}), 400
 
     if "nombre" not in body:
-        raise APIException("Field 'nombre' is required", status_code=400)
+        return jsonify({"msg": "Field 'nombre' is required"}), 400
+
+    if body.get("email"):
+        existing = Provider.query.filter_by(email=body["email"]).first()
+        if existing:
+            return jsonify({"msg": "El email ya está registrado"}), 400
+
+    if body.get("documento"):
+        existing_doc = Provider.query.filter_by(
+            documento=body["documento"]).first()
+        if existing_doc:
+            return jsonify({"msg": "El documento ya está registrado"}), 400
 
     provider = Provider(
         nombre=body["nombre"],
@@ -292,7 +313,9 @@ def get_book(id):
 @jwt_required()
 def create_book():
     identity = get_jwt_identity()
-    if identity.get("role") != "provider":
+    role = identity.get("role")
+
+    if role not in ["provider", "admin"]:
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
@@ -304,6 +327,15 @@ def create_book():
     isbn = body.get("isbn")
     precio_raw = body.get("precio")
     cantidad_raw = body.get("cantidad", 0)
+
+    if role == "provider":
+        provider_id = identity["id"]
+
+    if role == "admin":
+        provider_id = body.get("provider_id")
+
+    if not provider_id:
+        return jsonify({"msg": "provider_id es obligatorio para admin"}), 400
 
     if not titulo or not autor or not isbn:
         return jsonify({"msg": "Faltan campos: titulo, autor, isbn"}), 400
@@ -324,6 +356,7 @@ def create_book():
         return jsonify({"msg": "La cantidad debe ser un número entero"}), 400
 
     exists = Book.query.filter_by(isbn=isbn).first()
+
     if exists:
         return jsonify({"msg": "Ya existe un libro con ese isbn"}), 409
 
@@ -342,6 +375,7 @@ def create_book():
         id_libro=book.id,
         cantidad=cantidad
     )
+
     db.session.add(link)
     db.session.commit()
 
@@ -352,8 +386,12 @@ def create_book():
 
 
 @api.route("/books/<int:id>", methods=["PUT"])
+@jwt_required()
 def update_book(id):
-    data = request.json
+    identity = get_jwt_identity()
+    role = identity.get("role")
+
+    data = request.get_json() or {}
     book = Book.query.get(id)
 
     if not book:
@@ -362,9 +400,37 @@ def update_book(id):
     book.titulo = data.get("titulo", book.titulo)
     book.autor = data.get("autor", book.autor)
     book.isbn = data.get("isbn", book.isbn)
-    book.precio = float(data.get("precio", book.precio))
+
+    if "precio" in data:
+        try:
+            book.precio = float(data["precio"])
+        except:
+            return jsonify({"msg": "El precio debe ser un número"}), 400
+
+    if role == "admin":
+        provider_id = data.get("provider_id")
+        if not provider_id:
+            return jsonify({"msg": "provider_id es obligatorio para admin"}), 400
+
+        link = ProviderBook.query.filter_by(id_libro=id).first()
+
+        if link:
+            link.id_proveedor = provider_id
+        else:
+            new_link = ProviderBook(
+                id_proveedor=provider_id,
+                id_libro=id,
+                cantidad=0
+            )
+            db.session.add(new_link)
+
+    elif role == "provider":
+        link = ProviderBook.query.filter_by(id_libro=id).first()
+        if not link or link.id_proveedor != identity["id"]:
+            return jsonify({"msg": "No autorizado"}), 403
 
     db.session.commit()
+
     return jsonify(book.serialize()), 200
 
 
@@ -374,14 +440,12 @@ def delete_book(book_id):
     if not book:
         return jsonify({"msg": "Libro no encontrado"}), 404
 
-    if CartBook.query.filter_by(id_libro=id).first():
+    if CartBook.query.filter_by(id_libro=book_id).first():
         return jsonify({"msg": "No se puede borrar un libro que está en carritos"}), 400
 
     db.session.delete(book)
     db.session.commit()
     return jsonify({"msg": "Libro eliminado"}), 200
-
-# Fin CruD Libros Layla
 
 
 @api.route("/categorialibro", methods=["POST"])
@@ -574,6 +638,32 @@ def delete_categoria(id):
     db.session.commit()
 
     return jsonify({"msg": "Categoría eliminada"}), 200
+
+
+@api.route("/libros/<int:libro_id>/categorias", methods=["GET"])
+def get_categorias_libro(libro_id):
+    relaciones = Categoria_Libro.query.filter_by(libro_id=libro_id).all()
+    categorias = [rel.categoria.serialize() for rel in relaciones]
+    return jsonify(categorias), 200
+
+
+@api.route("/libros/<int:libro_id>/categorias", methods=["POST"])
+def set_categorias_libro(libro_id):
+    data = request.get_json() or {}
+    categorias_ids = data.get("categorias", [])
+
+    Categoria_Libro.query.filter_by(libro_id=libro_id).delete()
+
+    for cat_id in categorias_ids:
+        nueva_relacion = Categoria_Libro(
+            libro_id=libro_id,
+            categoria_id=cat_id
+        )
+        db.session.add(nueva_relacion)
+
+    db.session.commit()
+
+    return jsonify({"msg": "Categorías actualizadas"}), 200
 
 
 @api.route("/carts", methods=["GET"])
@@ -808,6 +898,18 @@ def delete_cart_book(item_id):
     return jsonify({"msg": "Item eliminado"}), 200
 
 
+@api.route("/carts/abandoned", methods=["GET"])
+def get_abandoned_carts():
+    limite = datetime.utcnow() - timedelta(hours=48)
+
+    carts = Cart.query.filter(
+        Cart.estado == "pendiente",
+        Cart.fecha < limite
+    ).all()
+
+    return jsonify([c.serialize() for c in carts]),
+
+
 @api.route("/delivery", methods=["GET"])
 @jwt_required()
 def get_delivery_list():
@@ -914,6 +1016,115 @@ def update_delivery(delivery_id):
 
 @api.route("/delivery/<int:delivery_id>", methods=["DELETE"])
 def delete_delivery(delivery_id):
+    d = Delivery.query.get(delivery_id)
+    if not d:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    db.session.delete(d)
+    db.session.commit()
+    return jsonify({"msg": "Repartidor eliminado"}), 200
+
+
+@api.route("/delivery/all", methods=["GET"])
+def get_all_deliveries_admin():
+    deliveries = Delivery.query.all()
+    return jsonify([d.serialize() for d in deliveries]), 200
+
+
+@api.route("/admin/delivery/<int:delivery_id>", methods=["GET"])
+@jwt_required()
+def admin_get_delivery_detail(delivery_id):
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    item = Delivery.query.get(delivery_id)
+    if not item:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    return jsonify(item.serialize()), 200
+
+
+@api.route("/admin/delivery", methods=["POST"])
+@jwt_required()
+def admin_create_delivery():
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    body = request.get_json(silent=True) or {}
+
+    required = ["nombre", "apellido", "email", "password", "identificacion"]
+    for f in required:
+        if not body.get(f):
+            return jsonify({"msg": f"Falta {f}"}), 400
+
+    if Delivery.query.filter_by(email=body["email"]).first():
+        return jsonify({"msg": "Email ya existe"}), 409
+
+    if Delivery.query.filter_by(identificacion=body["identificacion"]).first():
+        return jsonify({"msg": "Identificacion ya existe"}), 409
+
+    d = Delivery(
+        nombre=body["nombre"],
+        apellido=body["apellido"],
+        email=body["email"],
+        identificacion=body["identificacion"],
+        role="delivery"
+    )
+
+    d.set_password(body["password"])
+
+    db.session.add(d)
+    db.session.commit()
+
+    return jsonify(d.serialize()), 201
+
+
+@api.route("/admin/delivery/<int:delivery_id>", methods=["PUT"])
+@jwt_required()
+def admin_update_delivery(delivery_id):
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    d = Delivery.query.get(delivery_id)
+    if not d:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    body = request.get_json(silent=True) or {}
+
+    if "email" in body and body["email"] != d.email:
+        if Delivery.query.filter_by(email=body["email"]).first():
+            return jsonify({"msg": "Email ya existe"}), 409
+        d.email = body["email"]
+
+    if "identificacion" in body and body["identificacion"] != d.identificacion:
+        if Delivery.query.filter_by(identificacion=body["identificacion"]).first():
+            return jsonify({"msg": "Identificacion ya existe"}), 409
+        d.identificacion = body["identificacion"]
+
+    d.nombre = body.get("nombre", d.nombre)
+    d.apellido = body.get("apellido", d.apellido)
+
+    if body.get("password"):
+        d.set_password(body["password"])
+
+    db.session.commit()
+    return jsonify(d.serialize()), 200
+
+
+@api.route("/admin/delivery/<int:delivery_id>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_delivery(delivery_id):
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
     d = Delivery.query.get(delivery_id)
     if not d:
         return jsonify({"msg": "Repartidor no encontrado"}), 404
@@ -1289,7 +1500,6 @@ def get_provider_orders():
 
     provider_id = identity["id"]
 
-    # Trae SOLO  CartBook que correspondan a libros de este proveedor
     rows = (
         db.session.query(Cart, CartBook, Book)
         .join(CartBook, CartBook.id_carrito == Cart.id)
@@ -1303,10 +1513,8 @@ def get_provider_orders():
         .all()
     )
     print("ROWS len:", len(rows))
-    rows:print("ROWS first:", rows[0] if rows else None)
+    rows: print("ROWS first:", rows[0] if rows else None)
 
-
-    # Agrupar por carrito
     orders = {}
     for cart, cartbook, book in rows:
         if cart.id not in orders:

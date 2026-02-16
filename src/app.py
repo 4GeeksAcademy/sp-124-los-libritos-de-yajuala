@@ -22,9 +22,9 @@ static_file_dir = os.path.join(os.path.dirname(
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-app.config["JWT_SECRET_KEY"] = "super-secret-key"  
-app.config["JWT_TOKEN_LOCATION"] = ["headers"] 
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False 
+app.config["JWT_SECRET_KEY"] = "super-secret-key"
+app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
 
 jwt = JWTManager(app)
 app.config["JWT_IDENTITY_CLAIM"] = "identity"
@@ -32,10 +32,11 @@ app.config["JWT_IDENTITY_CLAIM"] = "identity"
 app.config["CORS_HEADERS"] = "Content-Type"
 CORS(
     app,
-    resources={r"/api/*": {"origins": "*"}},
+    resources={r"/*": {"origins": "*"}},
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
+
 
 # database condiguration
 db_url = os.getenv("DATABASE_URL")

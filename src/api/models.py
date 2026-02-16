@@ -18,10 +18,7 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(String(200), nullable=False)
 
     role: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-        server_default="client"
-    )
+        String(20), nullable=False, server_default="client")
 
     def serialize(self):
         return {
@@ -29,7 +26,7 @@ class User(db.Model):
             "name": self.name,
             "lastname": self.lastname,
             "email": self.email,
-            "role": self.role,
+            "role": self.role
         }
 
 
@@ -62,7 +59,7 @@ class Delivery(db.Model):
 
 
 class Provider(db.Model):
-    __tablename__ = "providers"
+    __tablename__ = "provider"
 
     id = db.Column(
         db.Integer,
@@ -181,29 +178,24 @@ class Cart(db.Model):
 
     id_cliente = db.Column(
         db.Integer,
-        db.ForeignKey("user.id"),
+        db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False
     )
 
-    fecha = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=db.func.now()
+    fecha = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    monto_total = db.Column(db.Float, nullable=False, default=0.0)
+    estado = db.Column(db.String(50), nullable=False, default="pendiente")
+
+    cliente = db.relationship(
+        "User",
+        backref=db.backref("carritos", cascade="all, delete")
     )
 
-    monto_total = db.Column(
-        db.Float,
-        nullable=False,
-        default=0.0
+    items = db.relationship(
+        "CartBook",
+        backref=db.backref("carrito", cascade="all, delete"),
+        cascade="all, delete"
     )
-
-    estado = db.Column(
-        db.String(50),
-        nullable=False,
-        default="pendiente"
-    )
-
-    cliente = db.relationship("User", backref="carritos")
 
     def serialize(self):
         return {
@@ -211,7 +203,8 @@ class Cart(db.Model):
             "id_cliente": self.id_cliente,
             "fecha": self.fecha.isoformat(),
             "monto_total": self.monto_total,
-            "estado": self.estado
+            "estado": self.estado,
+            "items": [item.serialize() for item in self.items]
         }
 
 
@@ -222,7 +215,7 @@ class CartBook(db.Model):
 
     id_carrito = db.Column(
         db.Integer,
-        db.ForeignKey("carts.id"),
+        db.ForeignKey("carts.id", ondelete="CASCADE"),
         nullable=False
     )
 
@@ -232,24 +225,10 @@ class CartBook(db.Model):
         nullable=False
     )
 
-    cantidad = db.Column(
-        db.Integer,
-        nullable=False,
-        default=1
-    )
+    cantidad = db.Column(db.Integer, nullable=False, default=1)
+    precio = db.Column(db.Float, nullable=False)
+    descuento = db.Column(db.Float, nullable=False, default=0.0)
 
-    precio = db.Column(
-        db.Float,
-        nullable=False
-    )
-
-    descuento = db.Column(
-        db.Float,
-        nullable=False,
-        default=0.0
-    )
-
-    carrito = db.relationship("Cart", backref="items")
     libro = db.relationship("Book")
 
     def serialize(self):
@@ -272,7 +251,7 @@ class Address(db.Model):
 
     id_usuario = db.Column(
         db.Integer,
-        db.ForeignKey("user.id"),
+        db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False
     )
 
@@ -283,7 +262,10 @@ class Address(db.Model):
     codigo_postal = db.Column(db.String(20), nullable=False)
     telefono = db.Column(db.String(20), nullable=True)
 
-    usuario = db.relationship("User", backref="direcciones")
+    usuario = db.relationship(
+        "User",
+        backref=db.backref("direcciones", cascade="all, delete")
+    )
 
     def serialize(self):
         return {
@@ -306,7 +288,7 @@ class ProviderBook(db.Model):
 
     id_proveedor = db.Column(
         db.Integer,
-        db.ForeignKey("providers.id"),
+        db.ForeignKey("provider.id"),
         nullable=False
     )
 
@@ -322,8 +304,11 @@ class ProviderBook(db.Model):
         default=0
     )
 
-    proveedor = db.relationship("Provider", backref="libros_proveedor")
-    libro = db.relationship("Book", backref="proveedores")
+    proveedor = db.relationship("Provider")
+    libro = db.relationship(
+        "Book",
+        backref=db.backref("proveedores", cascade="all, delete-orphan")
+    )
 
     def serialize(self):
         return {
@@ -334,6 +319,30 @@ class ProviderBook(db.Model):
             "libro": self.libro.serialize() if self.libro else None
         }
 
+
+class Book(db.Model):
+    __tablename__ = "book"
+
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(120), nullable=False)
+    autor = db.Column(db.String(120), nullable=False)
+    isbn = db.Column(db.String(120), unique=True, nullable=False)
+    precio = db.Column(db.Float, nullable=False)
+    def serialize(self):
+        return {
+            "id": self.id,
+           "titulo": self.titulo,
+            "autor": self.autor,
+            "isbn": self.isbn,
+            "precio": self.precio,
+            "proveedores": [
+                {
+                    "id": pb.proveedor.id,
+                    "nombre": pb.proveedor.nombre,
+                    "email": pb.proveedor.email
+                }
+                for pb in self.proveedores
+            ]
 # Shipment - para delivery layla
 
 class Shipment(db.Model):
@@ -359,7 +368,7 @@ class Shipment(db.Model):
         db.ForeignKey("delivery.id"),
         nullable=True
     )
-
+ 
     status = db.Column(
         db.String(30),
         nullable=False,
@@ -373,9 +382,8 @@ class Shipment(db.Model):
     address = db.relationship("Address")
     delivery = db.relationship("Delivery")
 
-    def serialize(self):
-        return {
-            "id": self.id,
+    
+           
             "cart_id": self.cart_id,
             "address_id": self.address_id,
             "delivery_id": self.delivery_id,
