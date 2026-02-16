@@ -15,11 +15,14 @@ export default function LoggedCartClientPage() {
             return;
         }
 
-        fetch(`${backendUrl}/api/usuarios/${store.user.id}/carritos`)
+        fetch(`${backendUrl}/api/clients/${store.user.id}/carts`)
             .then((res) => res.json())
             .then((data) => setCarritos(data))
             .catch((err) => console.error(err));
     }, [store.user]);
+
+
+
 
     return (
         <div className="container mt-4">

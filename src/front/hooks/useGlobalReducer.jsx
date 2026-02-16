@@ -13,7 +13,11 @@ export function StoreProvider({ children }) {
         }
     }, []);
 
-
+    useEffect(() => {
+        if (store.cart) {
+            localStorage.setItem("cart", JSON.stringify(store.cart));
+        }
+    }, [store.cart]);
 
     return (
         <StoreContext.Provider value={{ store, dispatch }}>
@@ -21,8 +25,6 @@ export function StoreProvider({ children }) {
         </StoreContext.Provider>
     );
 }
-
-
 
 export default function useGlobalReducer() {
     const { dispatch, store } = useContext(StoreContext);
@@ -49,33 +51,56 @@ export default function useGlobalReducer() {
         },
 
         validateToken: async (token) => {
-    try {
-        const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/validate`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + token
+            try {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/validate`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + token
+                    }
+                });
+
+                if (!resp.ok) {
+                    console.error("Token inválido");
+                    return;
+                }
+
+                const data = await resp.json();
+
+                actions.setUser(data.user);
+                actions.setToken(token);
+
+            } catch (error) {
+                console.error("Error validando token:", error);
+                return;
             }
-        });
+        },
 
-        if (!resp.ok) {
-            console.error("Token inválido");
-            return;
+        addToCart: (book) => {
+            dispatch({
+                type: "add_to_cart",
+                payload: book
+            });
+        },
+
+        removeFromCart: (id) => {
+            dispatch({
+                type: "remove_from_cart",
+                payload: id
+            });
+        },
+
+        updateCartQty: (id, cantidad) => {
+            dispatch({
+                type: "update_cart_qty",
+                payload: { id, cantidad }
+            });
+        },
+
+        clearCart: () => {
+            dispatch({ type: "clear_cart" });
         }
-
-        const data = await resp.json();
-
-        actions.setUser(data.user);
-        actions.setToken(token);
-
-    } catch (error) {
-        console.error("Error validando token:", error);
-        return;
-    }
-}
-
     };
 
     return { dispatch, store, actions };
 }
-
