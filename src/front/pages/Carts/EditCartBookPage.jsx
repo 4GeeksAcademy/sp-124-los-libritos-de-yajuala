@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function EditCartBookPage() {
-    const { id } = useParams(); // id del item cart_book
+    const { id } = useParams(); 
     const navigate = useNavigate();
 
     const [item, setItem] = useState(null);

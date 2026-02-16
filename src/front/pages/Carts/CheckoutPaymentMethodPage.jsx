@@ -22,8 +22,15 @@ export default function CheckoutPaymentMethodPage() {
       return;
     }
 
-    navigate("/payment-success");
+    if (!addressId) {
+      alert("No hay dirección seleccionada");
+      return;
+    }
 
+    // ir a la pantalla que hace el POST /pay
+    navigate("/checkout/payment", {
+      state: { addressId, paymentMethod: selectedMethod }
+    });
   };
 
   return (

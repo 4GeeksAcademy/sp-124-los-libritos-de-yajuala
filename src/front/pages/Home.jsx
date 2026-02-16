@@ -124,7 +124,7 @@ export const Home = () => {
 
 
 
-      {/*  Accesos rápidos SIEMPRE visibles (para pruebas) */}
+      {/*  Accesos rapidos SIEMPRE visibles (para pruebas) */}
       <hr className="my-4" />
       <h4 className="mb-3">Accesos rápidos (DEV)</h4>
 

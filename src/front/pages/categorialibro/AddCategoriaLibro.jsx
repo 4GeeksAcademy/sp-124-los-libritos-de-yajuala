@@ -13,7 +13,7 @@ const AddCategoriaLibro = () => {
     const [selectedLibro, setSelectedLibro] = useState("");
     const [loading, setLoading] = useState(true);
 
-    // Cargar categorías y libros disponibles
+    
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -40,7 +40,7 @@ const AddCategoriaLibro = () => {
         fetchData();
     }, []);
 
-    // Manejar envío del formulario
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -62,7 +62,7 @@ const AddCategoriaLibro = () => {
             });
 
             if (!res.ok) {
-                const text = await res.text(); // por seguridad
+                const text = await res.text(); 
                 let msg = "Error al crear la relación";
 
                 try {

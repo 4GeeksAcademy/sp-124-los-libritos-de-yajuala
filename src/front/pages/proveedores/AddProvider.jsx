@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
 const AddProvider = () => {
-    const { providerId } = useParams(); // si existe => editar
+    const { providerId } = useParams(); 
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const AddProvider = () => {
                     email: data.email || "",
                     telefono: data.telefono || "",
                     documento: data.documento || "",
-                    password: "" //No precargar passwords
+                    password: "" 
                 });
                 setLoading(false);
             })
@@ -71,13 +71,13 @@ const AddProvider = () => {
 
             if (!res.ok) throw new Error("Error al guardar proveedor");
 
-            // si se está registrando (no admin), llévalo a su bienvenida
+            
             if (!isEdit) {
             navigate("/provider/me");
             return;
             }
 
-            // si es edición (admin), vuelve al listado
+            
             navigate("/provider");
 
 

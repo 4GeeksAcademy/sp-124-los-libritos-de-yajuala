@@ -29,7 +29,7 @@ const CategoriasLibro = () => {
             });
     }, []);
 
-    // Eliminar relación categoría-libro
+    
     const deleteRelacion = async (categoria_id, libro_id) => {
         const confirmDelete = confirm("¿Seguro que quieres eliminar esta relación?");
         if (!confirmDelete) return;
@@ -49,7 +49,7 @@ const CategoriasLibro = () => {
         }
     };
 
-    // Filtrado por buscador (por nombre de categoría o título del libro)
+    
     const filteredCategoriasLibro = categoriasLibro.filter(cl =>
         cl.categoria?.nombre.toLowerCase().includes(search.toLowerCase()) ||
         cl.libro?.titulo.toLowerCase().includes(search.toLowerCase())
