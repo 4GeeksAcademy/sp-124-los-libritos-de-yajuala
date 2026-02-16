@@ -5,7 +5,7 @@ import useGlobalReducer from "../../hooks/useGlobalReducer";
 const API_BASE = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
 
 const ViewCategoriaLibro = () => {
-    const { categoriaId, libroId } = useParams(); // Recibimos ambos IDs
+    const { categoriaId, libroId } = useParams(); 
     const navigate = useNavigate();
     const { store, dispatch } = useGlobalReducer();
 

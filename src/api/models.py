@@ -264,7 +264,7 @@ class CartBook(db.Model):
         }
 
 
-# === MODELO ADDRESS (de develop - tu compañero) ===
+# MODELO ADDRESS 
 class Address(db.Model):
     __tablename__ = "addresses"
 
@@ -298,7 +298,7 @@ class Address(db.Model):
         }
 
 
-# === MODELO PROVIDERBOOK (tuyo - Layla) ===
+# MODELO PROVIDERBOOK 
 class ProviderBook(db.Model):
     __tablename__ = "provider_book"
 

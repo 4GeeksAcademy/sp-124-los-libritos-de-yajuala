@@ -98,7 +98,8 @@ def update_user(user_id):
     return jsonify(user.serialize()), 200
 
 
-# === ENDPOINTS DE ADDRESS (de develop) ===
+# ENDPOINTS DE ADDRESS
+
 @api.route("/users/<int:user_id>/addresses", methods=["GET"])
 def get_addresses(user_id):
     addresses = Address.query.filter_by(id_usuario=user_id).all()
@@ -165,7 +166,7 @@ def get_address(address_id):
     return jsonify(address.serialize()), 200
 
 
-# === ENDPOINT ACTIVE CART (de develop) ===
+# ENDPOINT ACTIVE CART
 @api.route("/users/<int:user_id>/active-cart", methods=["GET"])
 def get_user_active_cart(user_id):
     cart = Cart.query.filter_by(id_cliente=user_id, estado="pendiente").first()
@@ -668,7 +669,8 @@ def pay_cart(cart_id):
     body = request.get_json(silent=True) or {}
     address_id = body.get("address_id")
     
-    # Validar que se envió una dirección
+    # Validar que envio direccion
+
     if not address_id:
         return jsonify({"msg": "Falta address_id para crear el envío"}), 400
     
@@ -680,7 +682,7 @@ def pay_cart(cart_id):
     if cart.estado != "pendiente":
         return jsonify({"msg": "Este carrito no se puede pagar"}), 400
 
-    # Verificar que la dirección existe y pertenece al cliente
+    # Verificar que la dir existe y pertenece al cliente
     address = Address.query.get(address_id)
     if not address:
         return jsonify({"msg": "Dirección no encontrada"}), 404
@@ -699,11 +701,12 @@ def pay_cart(cart_id):
     cart.monto_total = total
     cart.estado = "pagado"
     db.session.commit()
+
     # provisional test layla aqui abjo:
     print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
 
-    # 🚚 CREAR SHIPMENT AUTOMÁTICAMENTE
+    
     # Verificar que no exista ya un shipment para este cart
     existing_shipment = Shipment.query.filter_by(cart_id=cart.id).first()
     if not existing_shipment:
@@ -718,7 +721,7 @@ def pay_cart(cart_id):
     else:
         shipment = existing_shipment
 
-    # Crear nuevo carrito vacío para el cliente
+    # Crear nuevo carrito vacio para el cliente
     new_cart = Cart(
         id_cliente=cart.id_cliente,
         estado="pendiente",
@@ -1092,7 +1095,7 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
-    # Si ese email pertenece a un USER (cliente/admin), no es proveedor
+    # Si ese email pertenece a un USER  no es proveedor
     user = User.query.filter_by(email=email).first()
     if user:
         return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
@@ -1215,7 +1218,7 @@ def update_provider_book(provider_book_id):
     if not link:
         return jsonify({"msg": "No encontrado"}), 404
 
-    # 🔐 Seguridad: solo su propio libro
+    #  solo su propio libro
     if link.id_proveedor != provider_id:
         return jsonify({"msg": "No autorizado"}), 403
 
@@ -1286,7 +1289,7 @@ def get_provider_orders():
 
     provider_id = identity["id"]
 
-    # Trae SOLO líneas de carrito (CartBook) que correspondan a libros de este proveedor
+    # Trae SOLO  CartBook que correspondan a libros de este proveedor
     rows = (
         db.session.query(Cart, CartBook, Book)
         .join(CartBook, CartBook.id_carrito == Cart.id)
@@ -1409,7 +1412,7 @@ def delivery_claim_order(cart_id):
     if shipment.delivery_id is not None:
         return jsonify({"msg": "Este pedido ya está asignado a otro repartidor"}), 400
 
-    # Verificar que el cart esté pagado
+    # Verificar el cart  pagado
     cart = Cart.query.get(cart_id)
     if not cart or cart.estado != "pagado":
         return jsonify({"msg": "El pedido no está disponible"}), 400
@@ -1532,7 +1535,7 @@ def create_shipment_from_paid_cart(cart_id):
     if address.id_usuario != identity.get("id"):
         return jsonify({"msg": "Esa dirección no es tuya"}), 403
 
-    # Idempotente: si ya existe, lo devolvemos
+    # si ya existe lo devolvemos
     existing = Shipment.query.filter_by(cart_id=cart_id).first()
     if existing:
         return jsonify({

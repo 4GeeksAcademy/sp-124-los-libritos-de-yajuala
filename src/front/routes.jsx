@@ -65,14 +65,14 @@ import LoggedAdminPage from "./pages/loginAdmin/LoggedAdminPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import { AdminRoute } from "./components/AdminRoute.jsx";
 
-// === IMPORTS DE PROVIDER (tuyo - Layla) ===
+
 import { ProviderBooks } from "./pages/Books/ProviderBooks.jsx";
 import { ProviderBookCreate } from "./pages/Books/ProviderBookCreate.jsx";
 import { ProviderBookDetail } from "./pages/Books/ProviderBookDetail.jsx";
 import { ProviderBookEdit } from "./pages/Books/ProviderBookEdit.jsx";
 import { ProviderOrders } from "./pages/proveedores/ProviderOrders.jsx";
 
-// === IMPORTS DE CHECKOUT/ADDRESSES (de develop - tu compañero) ===
+
 import HomeClients from "./pages/homeClients/HomeClients.jsx";
 import PaymentSuccessPage from "./pages/Carts/PaymentSuccessPage.jsx";
 import CheckoutAddressPage from "./pages/Carts/CheckoutAddressPage.jsx";
@@ -149,7 +149,7 @@ export const router = createBrowserRouter(
       {/* NUEVO: carrito activo real */}
       <Route path="/user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
 
-      {/* === RUTAS DE CHECKOUT (de develop - tu compañero) === */}
+      
       <Route path="/payment-success" element={<PaymentSuccessPage />} />
       <Route path="/checkout/address" element={<CheckoutAddressPage />} />
       <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
@@ -167,14 +167,14 @@ export const router = createBrowserRouter(
       <Route path="/logindelivery" element={<LoginDelivery />} />
       <Route path="/loggeddelivery" element={<LoggedDelivery />} />
 
-      {/* === RUTAS DE PROVIDER BOOKS (tuyas - Layla) === */}
+    
       <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
       <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
       <Route path="/provider/books/:id" element={<ProviderBookDetail />} />
       <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
       <Route path="/provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
 
-      {/* === RUTAS DE HOME/ADDRESSES (de develop - tu compañero) === */}
+     
       <Route path="/home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
       <Route path="/addresses" element={<AddressesPage />} />
       <Route path="/addresses/create" element={<CreateAddressPage />} />

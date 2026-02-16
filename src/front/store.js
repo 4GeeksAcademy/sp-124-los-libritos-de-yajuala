@@ -4,7 +4,7 @@ export const initialStore = () => {
     todos: [],
     user: JSON.parse(localStorage.getItem("user")) || null,
     token: localStorage.getItem("token") || null,
-    // CCambiado añadimos activeCart 
+    // CCambiado por layla añadimos activeCart 
     activeCart: null
   };
 };
@@ -37,7 +37,7 @@ export default function storeReducer(store, action = {}) {
         token: action.payload
       };
 
-    // Cambiado para soportar ambos action types 
+    // Cambiado por layla para soportar ambos action types 
     case "SET_ACTIVE_CART":
     case "set_active_cart":
       return {
@@ -45,7 +45,7 @@ export default function storeReducer(store, action = {}) {
         activeCart: action.payload
       };
 
-    // Cambiado para no romper la app si llega una action desconocida
+    // Cambiado por layla para no romper la app si llega una action desconocida
     default:
       console.warn("Unknown action:", action);
       return store;

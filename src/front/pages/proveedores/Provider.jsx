@@ -12,7 +12,7 @@ const Provider = () => {
 
   const navigate = useNavigate();
 
-  // Cargar proveedores
+  
   useEffect(() => {
     fetch(API_BASE + "/api/provider")
       .then(res => {
@@ -29,7 +29,7 @@ const Provider = () => {
       });
   }, []);
 
-  // Eliminar proveedor
+  
   const deleteProvider = async (id) => {
     const confirmDelete = confirm("¿Seguro que quieres eliminar este proveedor?");
     if (!confirmDelete) return;
@@ -47,7 +47,7 @@ const Provider = () => {
     }
   };
 
-  // Filtrado por buscador
+  
   const filteredProviders = providers.filter(provider =>
     provider.nombre.toLowerCase().includes(search.toLowerCase()) ||
     provider.email?.toLowerCase().includes(search.toLowerCase()) ||
