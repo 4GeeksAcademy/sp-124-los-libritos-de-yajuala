@@ -22,7 +22,7 @@ export default function LoggedProveedorPage() {
 
   return (
     <div className="container mt-4">
-      <h1>Bienvenido, {store.user.nombre}</h1>
+      <h1>Bienvenido, {store.user.name}</h1>
       <p className="text-muted">Panel de Proveedor</p>
 
       <div className="mt-4">

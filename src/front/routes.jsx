@@ -131,7 +131,7 @@ export const router = createBrowserRouter(
         <Route path="/demo" element={<Demo />} />
 
         <Route path="/provider" element={<AdminRoute><Provider /></AdminRoute>} />
-        <Route path="/provider/create" element={<AdminRoute><AddProvider /></AdminRoute>} />
+        <Route path="/provider/create" element={<AddProvider />} />
         <Route path="/provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
         <Route path="/provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
 
@@ -157,7 +157,7 @@ export const router = createBrowserRouter(
         <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
 
         <Route path="delivery" element={<AdminRoute><Delivery /></AdminRoute>} />
-        <Route path="delivery/new" element={<AdminRoute><DeliveryCreate /></AdminRoute>} />
+        <Route path="/delivery/new" element={<DeliveryCreate />} />
         <Route path="delivery/:id" element={<DeliveryDetail />} />
         <Route path="delivery/:id/edit" element={<AdminRoute><DeliveryEdit /></AdminRoute>} />
 

@@ -15,11 +15,13 @@ from api.admin import setup_admin
 from api.commands import setup_commands
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
-static_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../dist/")
+static_file_dir = os.path.join(os.path.dirname(
+    os.path.realpath(__file__)), "../dist/")
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "super-secret-key-change-this")
+app.config["SECRET_KEY"] = os.getenv(
+    "SECRET_KEY", "super-secret-key-change-this")
 
 app.url_map.strict_slashes = False
 
@@ -34,13 +36,16 @@ app.config["CORS_HEADERS"] = "Content-Type"
 CORS(
     app,
     resources={r"/*": {"origins": "*"}},
-    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    supports_credentials=True,
+    allow_headers="*",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 )
+
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url.replace("postgres://", "postgresql://")
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url.replace(
+        "postgres://", "postgresql://")
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/test.db"
 
@@ -55,15 +60,18 @@ setup_commands(app)
 
 app.register_blueprint(api, url_prefix="/api")
 
+
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
+
 
 @app.route("/")
 def sitemap():
     if ENV == "development":
         return generate_sitemap(app)
     return send_from_directory(static_file_dir, "index.html")
+
 
 @app.route('/<path:path>', methods=['GET'])
 def serve_any_other_file(path):
@@ -72,6 +80,7 @@ def serve_any_other_file(path):
     response = send_from_directory(static_file_dir, path)
     response.cache_control.max_age = 0
     return response
+
 
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 3001))

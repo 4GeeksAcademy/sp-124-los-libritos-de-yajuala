@@ -108,7 +108,7 @@ export const Home = () => {
       </div>
 
       {!user && (
-        <Link to="/delivery/register" className="btn btn-info btn-lg m-2">
+        <Link to="/delivery/new" className="btn btn-info btn-lg m-2">
           Registro Repartidor
         </Link>
       )}
