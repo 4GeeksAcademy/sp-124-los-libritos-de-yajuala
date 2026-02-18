@@ -64,8 +64,13 @@ export default function CheckoutPaymentPage() {
         return;
       }
 
+      // dispatch({
+      //  type: "SET_ACTIVE_CART",
+      //  payload: data.nuevo_carrito
+      // });
+
       dispatch({
-        type: "SET_ACTIVE_CART",
+        type: "set_active_cart",
         payload: data.nuevo_carrito
       });
 
