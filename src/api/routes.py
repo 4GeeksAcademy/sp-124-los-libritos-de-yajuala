@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import and_
+import requests
 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -17,7 +18,6 @@ api = Blueprint('api', __name__)
 # Allow CORS requests to this API
 # CORS(api)
 CORS(api, origins="*")
-
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -448,6 +448,63 @@ def delete_book(book_id):
     db.session.delete(book)
     db.session.commit()
     return jsonify({"msg": "Libro eliminado"}), 200
+
+
+@api.route("/books/search", methods=["GET"])
+def search_books():
+    query = request.args.get("q")
+    if not query:
+        return jsonify({"msg": "Falta parámetro q"}), 400
+
+    google_url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+    r = requests.get(google_url)
+    if r.status_code != 200:
+        return jsonify({"msg": "Error consultando Google Books"}), 500
+    data = r.json()
+    results = []
+    for item in data.get("items", []):
+        info = item.get("volumeInfo", {})
+        results.append({
+            "titulo": info.get("title"),
+            "autor": ", ".join(info.get("authors", [])),
+            "descripcion": info.get("description"),
+            "portada": info.get("imageLinks", {}).get("thumbnail"),
+            "categorias": ", ".join(info.get("categories", [])) if info.get("categories") else None,
+            "fecha_publicacion": info.get("publishedDate"),
+            "isbn": next((id["identifier"] for id in info.get("industryIdentifiers", []) if id["type"] in ["ISBN_13", "ISBN_10"]), None),
+            "precio": 0
+        })
+    return jsonify(results), 200
+
+
+@api.route("/books/import", methods=["POST"])
+def import_book():
+    body = request.get_json() or {}
+
+    required = ["titulo", "autor", "isbn"]
+    for field in required:
+        if not body.get(field):
+            return jsonify({"msg": f"Falta el campo {field}"}), 400
+
+    existing = Book.query.filter_by(isbn=body["isbn"]).first()
+
+    if existing:
+        book = existing
+    else:
+        book = Book(
+            titulo=body["titulo"],
+            autor=body["autor"],
+            isbn=body["isbn"],
+            descripcion=body.get("descripcion"),
+            portada=body.get("portada"),
+            categorias=body.get("categorias"),
+            fecha_publicacion=body.get("fecha_publicacion"),
+            precio=body.get("precio", 0)
+        )
+        db.session.add(book)
+        db.session.commit()
+
+    return jsonify(book.serialize()), 201
 
 
 @api.route("/categorialibro", methods=["POST"])
@@ -1324,7 +1381,6 @@ def login_provider():
     }), 200
 
 
-
 @api.route("/delivery/pedidos", methods=["GET"])
 @jwt_required()
 def delivery_pedidos():
@@ -1387,6 +1443,7 @@ def get_provider_books():
     ]), 200
 
 
+
 @api.route("/provider/books/<int:provider_book_id>", methods=["GET"])
 @jwt_required()
 def get_provider_book_detail(provider_book_id):
@@ -1411,6 +1468,7 @@ def get_provider_book_detail(provider_book_id):
     }), 200
 
 
+
 @api.route("/provider/books/<int:provider_book_id>", methods=["PUT"])
 @jwt_required()
 def update_provider_book(provider_book_id):
@@ -1427,16 +1485,18 @@ def update_provider_book(provider_book_id):
     if not link:
         return jsonify({"msg": "No encontrado"}), 404
 
-    #  solo su propio libro
     if link.id_proveedor != provider_id:
         return jsonify({"msg": "No autorizado"}), 403
 
     book = link.libro
 
-    # Editar libro
     book.titulo = body.get("titulo", book.titulo)
     book.autor = body.get("autor", book.autor)
     book.isbn = body.get("isbn", book.isbn)
+    book.descripcion = body.get("descripcion", book.descripcion)
+    book.portada = body.get("portada", book.portada)
+    book.categorias = body.get("categorias", book.categorias)
+    book.fecha_publicacion = body.get("fecha_publicacion", book.fecha_publicacion)
 
     if "precio" in body:
         try:
@@ -1444,7 +1504,6 @@ def update_provider_book(provider_book_id):
         except:
             return jsonify({"msg": "Precio inválido"}), 400
 
-    # Editar cantidad
     if "cantidad" in body:
         try:
             cantidad = int(body["cantidad"])
@@ -1463,6 +1522,82 @@ def update_provider_book(provider_book_id):
     }), 200
 
 
+
+@api.route("/provider/<int:provider_id>/add_book", methods=["POST"])
+@jwt_required()
+def provider_add_book(provider_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "provider" or identity["id"] != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    body = request.get_json() or {}
+
+    book_id = body.get("book_id")
+    cantidad = body.get("cantidad", 0)
+
+    if not book_id:
+        return jsonify({"msg": "Falta book_id"}), 400
+
+    provider = Provider.query.get(provider_id)
+    if not provider:
+        return jsonify({"msg": "Proveedor no encontrado"}), 404
+
+    book = Book.query.get(book_id)
+    if not book:
+        return jsonify({"msg": "Libro no encontrado"}), 404
+
+    existing = ProviderBook.query.filter_by(
+        id_proveedor=provider_id,
+        id_libro=book_id
+    ).first()
+
+    if existing:
+        existing.cantidad += cantidad
+    else:
+        relation = ProviderBook(
+            id_proveedor=provider_id,
+            id_libro=book_id,
+            cantidad=cantidad
+        )
+        db.session.add(relation)
+
+    db.session.commit()
+
+    return jsonify({"msg": "Libro asociado correctamente"}), 200
+
+
+
+@api.route("/provider/books/<int:provider_book_id>/cantidad", methods=["PUT"])
+@jwt_required()
+def update_provider_books_quantity(provider_book_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "provider":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    provider_id = identity["id"]
+    body = request.get_json() or {}
+    cantidad = body.get("cantidad")
+
+    if cantidad is None:
+        return jsonify({"msg": "Falta cantidad"}), 400
+
+    link = ProviderBook.query.get(provider_book_id)
+
+    if not link:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    if link.id_proveedor != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    link.cantidad = cantidad
+    db.session.commit()
+
+    return jsonify({"msg": "Cantidad actualizada"}), 200
+
+
+
 @api.route("/provider/books/<int:provider_book_id>", methods=["DELETE"])
 @jwt_required()
 def delete_provider_book(provider_book_id):
@@ -1472,21 +1607,67 @@ def delete_provider_book(provider_book_id):
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
-    provider_book = ProviderBook.query.get(provider_book_id)
+    link = ProviderBook.query.get(provider_book_id)
 
-    if not provider_book:
+    if not link:
         return jsonify({"msg": "No encontrado"}), 404
 
-    if provider_book.id_proveedor != provider_id:
-        return jsonify({"msg": "No puedes borrar este libro"}), 403
+    if link.id_proveedor != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
 
-    db.session.delete(provider_book)
+    book = link.libro
+
+    db.session.delete(link)
     db.session.commit()
 
-    return jsonify({"msg": "Libro eliminado de tu catálogo"}), 200
+    remaining_links = ProviderBook.query.filter_by(id_libro=book.id).count()
+
+    if remaining_links == 0:
+        db.session.delete(book)
+        db.session.commit()
+        return jsonify({"msg": "Relación eliminada y libro borrado (sin proveedores restantes)"}), 200
+
+    return jsonify({"msg": "Relación eliminada (el libro sigue asociado a otros proveedores)"}), 200
+
+
+
+@api.route("/provider/books/<int:provider_book_id>/edit", methods=["PUT"])
+@jwt_required()
+def edit_provider_book(provider_book_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "provider":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    provider_id = identity["id"]
+    body = request.get_json() or {}
+
+    link = ProviderBook.query.get(provider_book_id)
+
+    if not link:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    if link.id_proveedor != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    book = link.libro
+
+    book.titulo = body.get("titulo", book.titulo)
+    book.autor = body.get("autor", book.autor)
+    book.descripcion = body.get("descripcion", book.descripcion)
+    book.portada = body.get("portada", book.portada)
+    book.categorias = body.get("categorias", book.categorias)
+    book.fecha_publicacion = body.get(
+        "fecha_publicacion", book.fecha_publicacion)
+    book.precio = body.get("precio", book.precio)
+
+    db.session.commit()
+
+    return jsonify({"msg": "Libro actualizado"}), 200
 
 
 # Pedidos del proveedor
+
 
 @api.route("/provider/orders", methods=["GET"])
 @jwt_required()

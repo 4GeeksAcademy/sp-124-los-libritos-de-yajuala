@@ -111,6 +111,7 @@ import AdminDeliveryEdit from "./pages/admin/delivery/AdminDeliveryEdit.jsx"
 import AdminReviewList from "./pages/admin/reviews/AdminReviewList.jsx"
 import AdminReviewDetail from "./pages/admin/reviews/AdminReviewDetail.jsx"
 import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
+import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 
 
 export const router = createBrowserRouter(
@@ -134,6 +135,8 @@ export const router = createBrowserRouter(
         <Route path="/provider/create" element={<AddProvider />} />
         <Route path="/provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
         <Route path="/provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
+        <Route path="/provider/books/search" element={<ProviderBookSearch />} />
+
 
         <Route path="/clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
         <Route path="/clients/:id" element={<AdminRoute><ClientDetailPage /></AdminRoute>} />
