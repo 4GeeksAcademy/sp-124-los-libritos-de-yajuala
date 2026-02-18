@@ -13,18 +13,39 @@ export default function CheckoutPaymentPage() {
 
   const [address, setAddress] = useState(null);
 
+ // useEffect(() => {
+ //   if (!store.activeCart) {
+ //     fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
+ //       .then(res => res.json())
+ //       .then(data => {
+//       dispatch({
+//            type: "set_active_cart",
+//            payload: data.cart
+//          });
+//        });
+//    }
+//  }, []);
+
   useEffect(() => {
-    if (!store.activeCart) {
-      fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
-        .then(res => res.json())
-        .then(data => {
-          dispatch({
-            type: "set_active_cart",
-            payload: data.cart
-          });
+  if (!store.user?.id) return;
+
+  const needsCart =
+    !store.activeCart ||
+    store.activeCart.id_cliente !== store.user.id ||
+    store.activeCart.estado !== "pendiente";
+
+  if (needsCart) {
+    fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
+      .then((res) => res.json())
+      .then((data) => {
+        dispatch({
+          type: "set_active_cart",
+          payload: data.cart
         });
-    }
-  }, []);
+      });
+  }
+}, [store.user?.id]);
+
 
   useEffect(() => {
     if (!addressId) return;

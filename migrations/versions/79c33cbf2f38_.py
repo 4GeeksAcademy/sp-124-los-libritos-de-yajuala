@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 60ecf5e70c0d
+Revision ID: 79c33cbf2f38
 Revises: 
-Create Date: 2026-02-18 10:09:14.603109
+Create Date: 2026-02-18 11:03:08.083670
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '60ecf5e70c0d'
+revision = '79c33cbf2f38'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -39,8 +39,8 @@ def upgrade():
 
     op.create_table('delivery',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('nombre', sa.String(length=120), nullable=False),
-    sa.Column('apellido', sa.String(length=120), nullable=False),
+    sa.Column('name', sa.String(length=120), nullable=False),
+    sa.Column('lastname', sa.String(length=120), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('identificacion', sa.String(length=50), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
@@ -51,7 +51,7 @@ def upgrade():
     )
     op.create_table('provider',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('nombre', sa.String(length=150), nullable=False),
+    sa.Column('name', sa.String(length=150), nullable=False),
     sa.Column('email', sa.String(length=150), nullable=True),
     sa.Column('telefono', sa.String(length=20), nullable=True),
     sa.Column('password', sa.String(length=300), nullable=False),
@@ -61,7 +61,7 @@ def upgrade():
     with op.batch_alter_table('provider', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_provider_documento'), ['documento'], unique=True)
         batch_op.create_index(batch_op.f('ix_provider_email'), ['email'], unique=True)
-        batch_op.create_index(batch_op.f('ix_provider_nombre'), ['nombre'], unique=False)
+        batch_op.create_index(batch_op.f('ix_provider_name'), ['name'], unique=False)
 
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -159,7 +159,7 @@ def downgrade():
     op.drop_table('addresses')
     op.drop_table('user')
     with op.batch_alter_table('provider', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_provider_nombre'))
+        batch_op.drop_index(batch_op.f('ix_provider_name'))
         batch_op.drop_index(batch_op.f('ix_provider_email'))
         batch_op.drop_index(batch_op.f('ix_provider_documento'))
 
