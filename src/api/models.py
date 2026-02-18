@@ -230,17 +230,25 @@ class CartBook(db.Model):
         nullable=False
     )
 
+    provider_book_id = db.Column(
+        db.Integer,
+        db.ForeignKey("provider_book.id"),
+        nullable=False
+    )
+
     cantidad = db.Column(db.Integer, nullable=False, default=1)
     precio = db.Column(db.Float, nullable=False)
     descuento = db.Column(db.Float, nullable=False, default=0.0)
 
     libro = db.relationship("Book")
+    provider_book = db.relationship("ProviderBook")
 
     def serialize(self):
         return {
             "id": self.id,
             "id_carrito": self.id_carrito,
             "id_libro": self.id_libro,
+            "provider_book_id": self.provider_book_id,
             "cantidad": self.cantidad,
             "precio": self.precio,
             "descuento": self.descuento,
@@ -343,13 +351,17 @@ class Book(db.Model):
             "precio": self.precio,
             "proveedores": [
                 {
-                    "id": pb.proveedor.id,
+                    "provider_book_id": pb.id,
+                    "provider_id": pb.proveedor.id,
                     "name": pb.proveedor.name,
-                    "email": pb.proveedor.email
+                    "email": pb.proveedor.email,
+                    "cantidad": pb.cantidad
                 }
                 for pb in self.proveedores
             ]
         }
+
+
 # Shipment - para delivery layla
 
 

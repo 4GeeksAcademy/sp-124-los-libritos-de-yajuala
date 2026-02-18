@@ -784,6 +784,24 @@ def pay_cart(cart_id):
     # Calcular total
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
+    # ✅ Validar stock (primero validamos todo)
+    for item in items:
+        pb = ProviderBook.query.get(item.provider_book_id)
+        if not pb:
+            return jsonify({"msg": "Inventario del proveedor no encontrado"}), 400
+
+        if pb.cantidad < item.cantidad:
+            return jsonify({
+                "msg": f"Stock insuficiente para '{pb.libro.titulo}'. Disponible: {pb.cantidad}, pedido: {item.cantidad}"
+            }), 400
+
+    # ✅ Descontar stock (si todo está OK)
+    for item in items:
+        pb = ProviderBook.query.get(item.provider_book_id)
+        pb.cantidad -= item.cantidad
+
+    db.session.commit()
+
     total = 0
     for item in items:
         precio_con_descuento = item.precio * (1 - item.descuento)
@@ -832,6 +850,7 @@ def pay_cart(cart_id):
     }), 200
 
 
+
 @api.route("/cart-books", methods=["GET"])
 def get_cart_books():
     items = CartBook.query.all()
@@ -850,14 +869,19 @@ def get_cart_book(item_id):
 def create_cart_book():
     body = request.get_json(silent=True) or {}
 
-    required = ["id_carrito", "id_libro", "cantidad", "precio"]
+    required = ["id_carrito", "id_libro", "cantidad", "precio", "provider_book_id"]
     for field in required:
         if field not in body:
             return jsonify({"msg": f"Falta {field}"}), 400
 
+    pb = ProviderBook.query.get(body["provider_book_id"])
+    if not pb or pb.id_libro != body["id_libro"]:
+        return jsonify({"msg": "provider_book_id inválido para este libro"}), 400
+
     item = CartBook(
         id_carrito=body["id_carrito"],
         id_libro=body["id_libro"],
+        provider_book_id=body["provider_book_id"],
         cantidad=body["cantidad"],
         precio=body["precio"],
         descuento=body.get("descuento", 0.0)
