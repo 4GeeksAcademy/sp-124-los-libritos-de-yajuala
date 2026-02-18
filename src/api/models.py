@@ -34,8 +34,8 @@ class Delivery(db.Model):
     __tablename__ = "delivery"
 
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(120), nullable=False)
-    apellido = db.Column(db.String(120), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    lastname = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     identificacion = db.Column(db.String(50), unique=True, nullable=False)
     role = db.Column(db.String(20), nullable=False, default="delivery")
@@ -50,8 +50,8 @@ class Delivery(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "nombre": self.nombre,
-            "apellido": self.apellido,
+            "name": self.name,
+            "lastname": self.lastname,
             "email": self.email,
             "identificacion": self.identificacion,
             "role": self.role
@@ -66,7 +66,7 @@ class Provider(db.Model):
         primary_key=True
     )
 
-    nombre = db.Column(
+    name = db.Column(
         db.String(150),
         nullable=False,
         index=True
@@ -99,7 +99,7 @@ class Provider(db.Model):
     def serialize(self):
         return {
             "id": self.id,
-            "nombre": self.nombre,
+            "name": self.name,
             "email": self.email,
             "telefono": self.telefono,
             "password": self.password,
@@ -338,7 +338,7 @@ class Book(db.Model):
             "proveedores": [
                 {
                     "id": pb.proveedor.id,
-                    "nombre": pb.proveedor.nombre,
+                    "name": pb.proveedor.name,
                     "email": pb.proveedor.email
                 }
                 for pb in self.proveedores
