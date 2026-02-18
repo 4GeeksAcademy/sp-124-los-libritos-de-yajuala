@@ -5,11 +5,11 @@ export const initialStore = () => {
     user: JSON.parse(localStorage.getItem("user")) || null,
     token: localStorage.getItem("token") || null,
 
-    cart: JSON.parse(localStorage.getItem("cart")) || []
-    // CCambiado por layla añadimos activeCart 
+    cart: JSON.parse(localStorage.getItem("cart")) || [], 
     activeCart: null
   };
 };
+
 
 export default function storeReducer(store, action = {}) {
   switch (action.type) {

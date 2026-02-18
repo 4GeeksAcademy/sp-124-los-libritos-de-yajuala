@@ -19,7 +19,7 @@ export default function CheckoutPaymentPage() {
         .then(res => res.json())
         .then(data => {
           dispatch({
-            type: "SET_ACTIVE_CART",
+            type: "set_active_cart",
             payload: data.cart
           });
         });
