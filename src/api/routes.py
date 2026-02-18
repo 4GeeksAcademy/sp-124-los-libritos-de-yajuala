@@ -16,7 +16,8 @@ api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
 # CORS(api)
-CORS(api, supports_credentials=True, origins="*")
+CORS(api, origins="*")
+
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -228,8 +229,8 @@ def create_provider():
     if body is None:
         return jsonify({"msg": "Request body is empty"}), 400
 
-    if "nombre" not in body:
-        return jsonify({"msg": "Field 'nombre' is required"}), 400
+    if "name" not in body:
+        return jsonify({"msg": "Field 'name' is required"}), 400
 
     if body.get("email"):
         existing = Provider.query.filter_by(email=body["email"]).first()
@@ -243,12 +244,13 @@ def create_provider():
             return jsonify({"msg": "El documento ya está registrado"}), 400
 
     provider = Provider(
-        nombre=body["nombre"],
+        name=body["name"],
         email=body.get("email"),
         telefono=body.get("telefono"),
-        password=body.get("password"),
         documento=body.get("documento")
     )
+
+    provider.set_password(body["password"])
 
     db.session.add(provider)
     db.session.commit()
@@ -755,15 +757,14 @@ def pay_cart(cart_id):
 
     print("ENTRANDO A PAY_CART PARA:", cart_id)
 
-
     body = request.get_json(silent=True) or {}
     address_id = body.get("address_id")
-    
+
     # Validar que envio direccion
 
     if not address_id:
         return jsonify({"msg": "Falta address_id para crear el envío"}), 400
-    
+
     cart = Cart.query.get(cart_id)
 
     if not cart:
@@ -776,7 +777,7 @@ def pay_cart(cart_id):
     address = Address.query.get(address_id)
     if not address:
         return jsonify({"msg": "Dirección no encontrada"}), 404
-    
+
     if address.id_usuario != cart.id_cliente:
         return jsonify({"msg": "Esa dirección no pertenece al cliente"}), 403
 
@@ -795,8 +796,6 @@ def pay_cart(cart_id):
     # provisional test layla aqui abjo:
     print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
-
-    
     # Verificar que no exista ya un shipment para este cart
     existing_shipment = Shipment.query.filter_by(cart_id=cart.id).first()
     if not existing_shipment:
@@ -942,10 +941,9 @@ def delivery_login():
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
     token = create_access_token(identity={
-    "id": delivery.id,
-    "role": "delivery"
+        "id": delivery.id,
+        "role": "delivery"
     })
-
 
     return jsonify({
         "token": token,
@@ -957,7 +955,7 @@ def delivery_login():
 def create_delivery():
     body = request.get_json(silent=True) or {}
 
-    required = ["nombre", "apellido", "email", "password", "identificacion"]
+    required = ["name", "lastname", "email", "password", "identificacion"]
     for f in required:
         if not body.get(f):
             return jsonify({"msg": f"Falta {f}"}), 400
@@ -969,8 +967,8 @@ def create_delivery():
         return jsonify({"msg": "Identificacion ya existe"}), 409
 
     d = Delivery(
-        nombre=body["nombre"],
-        apellido=body["apellido"],
+        name=body["name"],
+        lastname=body["lastname"],
         email=body["email"],
         identificacion=body["identificacion"],
         role="delivery"
@@ -1306,13 +1304,12 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
-    # Si ese email pertenece a un USER  no es proveedor
     user = User.query.filter_by(email=email).first()
     if user:
         return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
 
     provider = Provider.query.filter_by(email=email).first()
-    if not provider or provider.password != password:
+    if not provider or not provider.check_password(password):
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
     access_token = create_access_token(identity={
@@ -1325,6 +1322,7 @@ def login_provider():
         "token": access_token,
         "user": {**provider.serialize(), "role": "provider"}
     }), 200
+
 
 
 @api.route("/delivery/pedidos", methods=["GET"])
@@ -1527,19 +1525,18 @@ def get_provider_orders():
             }
 
     orders[cart.id]["items"].append({
-            "cart_book_id": cartbook.id,
-            "id_libro": book.id,
-            "titulo": book.titulo,
-            "isbn": book.isbn,
-            "cantidad": cartbook.cantidad,
-            "precio": cartbook.precio,
-            "descuento": cartbook.descuento
-        })
+        "cart_book_id": cartbook.id,
+        "id_libro": book.id,
+        "titulo": book.titulo,
+        "isbn": book.isbn,
+        "cantidad": cartbook.cantidad,
+        "precio": cartbook.precio,
+        "descuento": cartbook.descuento
+    })
 
     return jsonify(list(orders.values())), 200
 
-#Delivery Layla
-
+# Delivery Layla
 
 
 @api.route("/delivery/orders/available", methods=["GET"])
@@ -1599,7 +1596,9 @@ def delivery_orders_mine():
 
     return jsonify(orders), 200
 
-# endpoint para claim 
+# endpoint para claim
+
+
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
 @jwt_required()
 def delivery_claim_order(cart_id):
@@ -1612,7 +1611,7 @@ def delivery_claim_order(cart_id):
 
     # Buscar el shipment asociado a este cart
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
-    
+
     if not shipment:
         return jsonify({"msg": "Pedido no encontrado"}), 404
 
@@ -1628,7 +1627,7 @@ def delivery_claim_order(cart_id):
     # Asignar el repartidor
     shipment.delivery_id = delivery_id
     shipment.status = "assigned"
-    
+
     db.session.commit()
 
     return jsonify({
@@ -1636,6 +1635,7 @@ def delivery_claim_order(cart_id):
         "cart_id": cart_id,
         "status": shipment.status
     }), 200
+
 
 @api.route("/delivery/orders/<int:cart_id>/delivered", methods=["PUT"])
 @jwt_required()
@@ -1713,7 +1713,6 @@ def delivery_order_detail(cart_id):
     }), 200
 
 
-
 @api.route("/shipments/from-cart/<int:cart_id>", methods=["POST"])
 @jwt_required()
 def create_shipment_from_paid_cart(cart_id):
@@ -1783,5 +1782,3 @@ def create_shipment_from_paid_cart(cart_id):
             "status": shipment.status
         }
     }), 201
-
-
