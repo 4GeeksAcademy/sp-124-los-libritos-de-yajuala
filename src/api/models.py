@@ -343,6 +343,7 @@ class Book(db.Model):
                 }
                 for pb in self.proveedores
             ]
+        }
 # Shipment - para delivery layla
 
 class Shipment(db.Model):
@@ -368,7 +369,7 @@ class Shipment(db.Model):
         db.ForeignKey("delivery.id"),
         nullable=True
     )
- 
+
     status = db.Column(
         db.String(30),
         nullable=False,
@@ -382,8 +383,9 @@ class Shipment(db.Model):
     address = db.relationship("Address")
     delivery = db.relationship("Delivery")
 
-    
-           
+    def serialize(self):
+        return {
+            "id": self.id,
             "cart_id": self.cart_id,
             "address_id": self.address_id,
             "delivery_id": self.delivery_id,

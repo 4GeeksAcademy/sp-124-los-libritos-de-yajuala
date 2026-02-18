@@ -183,7 +183,7 @@ def get_user_active_cart(user_id):
 def get_active_cart(client_id):
     cart = Cart.query.filter(
         Cart.id_cliente == client_id,
-        Cart.estado.in_(["pendiente", "pagado", "cancelado"])
+        Cart.estado.in_(["pendiente", "pagado", "cancelado", "entregado"])
     ).order_by(Cart.fecha.desc()).first()
 
     if not cart:
@@ -1651,18 +1651,24 @@ def delivery_mark_delivered(cart_id):
     if not shipment:
         return jsonify({"msg": "Pedido no encontrado"}), 404
 
-    # solo el asignado puede marcar entregado
     if shipment.delivery_id != delivery_id:
         return jsonify({"msg": "No puedes modificar este pedido"}), 403
 
     shipment.status = "delivered"
+
+    cart = Cart.query.get(cart_id)
+    if cart:
+        cart.estado = "entregado"
+
     db.session.commit()
 
     return jsonify({
         "msg": "Pedido entregado",
         "cart_id": cart_id,
-        "status": shipment.status
+        "status": shipment.status,
+        "cart_estado": cart.estado
     }), 200
+
 
 @api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
 @jwt_required()
