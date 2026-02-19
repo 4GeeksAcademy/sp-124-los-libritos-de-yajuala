@@ -41,6 +41,14 @@ export default function LoggedProveedorPage() {
         </button>
 
         <button
+          className="btn btn-primary me-3"
+          onClick={() => navigate("/provider/books/search")}
+        >
+          Buscar e importar libros
+        </button>
+
+
+        <button
           className="btn btn-secondary"
           onClick={() => navigate("/provider/me")}
         >

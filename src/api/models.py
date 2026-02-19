@@ -337,10 +337,14 @@ class Book(db.Model):
     __tablename__ = "book"
 
     id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(120), nullable=False)
-    autor = db.Column(db.String(120), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    autor = db.Column(db.String(200), nullable=False)
     isbn = db.Column(db.String(120), unique=True, nullable=False)
-    precio = db.Column(db.Float, nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    portada = db.Column(db.String(300), nullable=True)
+    categorias = db.Column(db.String(300), nullable=True)
+    fecha_publicacion = db.Column(db.String(20), nullable=True)
+    precio = db.Column(db.Float, nullable=False, default=0)
 
     def serialize(self):
         return {
@@ -348,6 +352,10 @@ class Book(db.Model):
             "titulo": self.titulo,
             "autor": self.autor,
             "isbn": self.isbn,
+            "descripcion": self.descripcion,
+            "portada": self.portada,
+            "categorias": self.categorias,
+            "fecha_publicacion": self.fecha_publicacion,
             "precio": self.precio,
             "proveedores": [
                 {
