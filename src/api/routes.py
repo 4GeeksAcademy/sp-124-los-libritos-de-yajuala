@@ -310,7 +310,7 @@ def get_book(id):
     return jsonify(book.serialize()), 200
 
 
-# POST /books para proveedores (TU código)
+# POST /books para proveedores 
 @api.route("/books", methods=["POST"])
 @jwt_required()
 def create_book():
@@ -841,7 +841,7 @@ def pay_cart(cart_id):
     # Calcular total
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
-    # ✅ Validar stock (primero validamos todo)
+    #  Validar stock 
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         if not pb:
@@ -852,7 +852,7 @@ def pay_cart(cart_id):
                 "msg": f"Stock insuficiente para '{pb.libro.titulo}'. Disponible: {pb.cantidad}, pedido: {item.cantidad}"
             }), 400
 
-    # ✅ Descontar stock (si todo está OK)
+    #  Descontar stock 
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         pb.cantidad -= item.cantidad
@@ -1254,7 +1254,7 @@ def create_review():
         return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
 
     review = Review(
-        id_cliente=user.id,          # ← usuario logueado
+        id_cliente=user.id,          
         id_libro=body["id_libro"],
         puntuacion=puntuacion,
         comentario=body.get("comentario")
@@ -1987,3 +1987,23 @@ def create_shipment_from_paid_cart(cart_id):
             "status": shipment.status
         }
     }), 201
+
+# Endpints Google Pay -layla
+@api.route("/payments/google/confirm", methods=["POST"])
+def google_pay_confirm():
+    body = request.get_json(silent=True) or {}
+
+    cart_id = body.get("cart_id")
+    address_id = body.get("address_id")
+
+    if not cart_id:
+        return jsonify({"msg": "Falta cart_id"}), 400
+
+    if not address_id:
+        return jsonify({"msg": "Falta address_id"}), 400
+
+   
+    print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
+
+  
+    return pay_cart(int(cart_id))

@@ -81,6 +81,8 @@ import AddressesPage from "./pages/clients/address/AddressesPage.jsx";
 import CreateAddressPage from "./pages/clients/address/CreateAddressPage.jsx";
 import EditAddressPage from "./pages/clients/address/EditAddressPage.jsx";
 import CheckoutPaymentMethodPage from "./pages/Carts/CheckoutPaymentMethodPage.jsx";
+import CheckoutGooglePayPage from "./pages/Carts/CheckoutGooglePayPage.jsx";
+
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx"
@@ -180,10 +182,10 @@ export const router = createBrowserRouter(
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
-        {/* NUEVO: carrito activo real */}
+      
         <Route path="/user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
 
-        {/* === RUTAS DE CHECKOUT (de develop - tu compañero) === */}
+       
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
         <Route path="/checkout/address" element={<CheckoutAddressPage />} />
         <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
@@ -201,21 +203,24 @@ export const router = createBrowserRouter(
         <Route path="/logindelivery" element={<LoginDelivery />} />
         <Route path="/loggeddelivery" element={<LoggedDelivery />} />
 
-        {/* === RUTAS DE PROVIDER BOOKS (tuyas - Layla) === */}
+        
         <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
         <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
         <Route path="/provider/books/:id" element={<ProviderBookDetail />} />
         <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
         <Route path="/provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
 
-        {/* === RUTAS DE HOME/ADDRESSES (de develop - tu compañero) === */}
+       
         <Route path="/home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
         <Route path="/addresses" element={<AddressesPage />} />
         <Route path="/addresses/create" element={<CreateAddressPage />} />
         <Route path="/addresses/:id/edit" element={<EditAddressPage />} />
+        <Route path="/checkout/google" element={<CheckoutGooglePayPage />} />
+
+
 
       </Route>
-      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminLayout />}>
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsersList />} />
         <Route path="users/create" element={<AdminUserCreate />} />
@@ -251,9 +256,10 @@ export const router = createBrowserRouter(
 
 
         <Route path="reviews" element={<AdminReviewList />} />
-<Route path="reviews/:id" element={<AdminReviewDetail />} />
+        <Route path="reviews/:id" element={<AdminReviewDetail />} />
 
       </Route>
     </>
   )
 );
+
