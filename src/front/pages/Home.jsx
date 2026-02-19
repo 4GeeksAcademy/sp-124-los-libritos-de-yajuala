@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
@@ -32,20 +32,19 @@ export const Home = () => {
   const isProvider = role === "provider";
   const isDelivery = role === "delivery";
   const isClient = role === "client";
+  useEffect(() => {
+    if (isAdmin) {
+      navigate("/admin/dashboard");
+    }
+  }, [isAdmin]);
 
   return (
     <div className="text-center mt-5">
+
       {isAdmin && (
-        <>
-          <Link to="/clients" className="btn btn-success btn-lg m-2">Clientes</Link>
-          <Link to="/provider" className="btn btn-warning btn-lg m-2">Proveedores</Link>
-          <Link to="/categorialibro" className="btn btn-info btn-lg m-2">Categorías Libros</Link>
-          <Link to="/categorias" className="btn btn-info btn-lg m-2">Categorías</Link>
-          <Link to="/carts" className="btn btn-danger btn-lg m-2">Ver Carritos</Link>
-          <button className="btn btn-info btn-lg m-2" onClick={() => navigate("/delivery")}> Repartidores </button>
-          <button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}> Ir a Libros </button>
-          <button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}> Reviews </button>
-        </>
+        <Link to="/admin/dashboard" className="btn btn-primary btn-lg m-2">
+          Ir al Panel Admin
+        </Link>
       )}
 
       {isProvider && (
@@ -73,32 +72,25 @@ export const Home = () => {
         </>
       )}
 
-      {/* Botones de login SOLO si no hay usuario */}
       {!user && (
-        <Link to="/login" className="btn btn-primary btn-lg m-2">
-          Login Cliente
-        </Link>
-      )}
+        <>
+          <Link to="/login" className="btn btn-primary btn-lg m-2">
+            Login Cliente
+          </Link>
 
-      {!user && (
-        <Link to="/login/provider" className="btn btn-warning btn-lg m-2">
-          Login Proveedor
-        </Link>
-      )}
+          <Link to="/login/provider" className="btn btn-warning btn-lg m-2">
+            Login Proveedor
+          </Link>
 
-      {!user && (
-        <Link to="/login/admin" className="btn btn-secondary btn-lg m-2">
-          Login Admin
-        </Link>
-      )}
-      {!user && (
-        <Link to="/logindelivery" className="btn btn-primary btn-lg m-2">
-          Login Repartidor
-        </Link>
-      )}
+          <Link to="/login/admin" className="btn btn-secondary btn-lg m-2">
+            Login Admin
+          </Link>
 
-
-      {/*  Botones registro */}
+          <Link to="/logindelivery" className="btn btn-primary btn-lg m-2">
+            Login Repartidor
+          </Link>
+        </>
+      )}
       <hr className="my-4" />
 
       <div className="d-flex justify-content-center mb-2">
@@ -116,7 +108,7 @@ export const Home = () => {
       </div>
 
       {!user && (
-        <Link to="/delivery/register" className="btn btn-info btn-lg m-2">
+        <Link to="/delivery/new" className="btn btn-info btn-lg m-2">
           Registro Repartidor
         </Link>
       )}
@@ -138,8 +130,6 @@ export const Home = () => {
         <button className="btn btn-primary btn-lg m-2" onClick={() => navigate("/books")}>Ir a Libros</button>
         <button className="btn btn-success btn-lg m-2" onClick={() => navigate("/reviews")}>Reviews</button>
         <button className="btn btn-warning btn-lg m-2" onClick={() => navigate("/provider/books")}>Libros Proveedor</button>
-
-
       </div>
     </div>
   );

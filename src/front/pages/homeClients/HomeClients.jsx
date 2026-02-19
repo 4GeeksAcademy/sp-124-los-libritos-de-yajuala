@@ -33,12 +33,21 @@ export default function HomeClients() {
                 cartId = dataCart.cart.id;
             }
 
+           
+            const provider_book_id = book?.proveedores?.[0]?.provider_book_id;
+
+            if (!provider_book_id) {
+                alert("Este libro no tiene inventario disponible");
+                return;
+            }
+
             const resAdd = await fetch(`${backendUrl}/api/cart-books`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     id_carrito: cartId,
                     id_libro: book.id,
+                    provider_book_id: provider_book_id, 
                     cantidad: 1,
                     precio: book.precio
                 })

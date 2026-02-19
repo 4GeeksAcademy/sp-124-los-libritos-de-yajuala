@@ -26,8 +26,6 @@ export default function LoginAdminPage() {
       alert(data.msg || "Credenciales incorrectas");
       return;
     }
-
-    // Validar que sea admin
     if (data.user.role !== "admin") {
       alert("No tienes permiso para acceder al panel de administrador");
       return;
@@ -36,7 +34,7 @@ export default function LoginAdminPage() {
     actions.setUser(data.user);
     actions.setToken(data.token);
 
-    navigate("/admin/me");
+    navigate("/admin/dashboard");
   };
 
   return (

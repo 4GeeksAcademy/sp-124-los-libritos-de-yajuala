@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ProviderPanelButtons } from "./ProviderPanelButtons";
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
@@ -9,7 +10,7 @@ const AddProvider = () => {
 
     const [loading, setLoading] = useState(false);
     const [provider, setProvider] = useState({
-        nombre: "",
+        name: "",
         email: "",
         telefono: "",
         documento: "",
@@ -18,7 +19,6 @@ const AddProvider = () => {
 
     const isEdit = Boolean(providerId);
 
-  
     useEffect(() => {
         if (!isEdit) return;
 
@@ -31,11 +31,11 @@ const AddProvider = () => {
             })
             .then(data => {
                 setProvider({
-                    nombre: data.nombre || "",
+                    name: data.name || "",
                     email: data.email || "",
                     telefono: data.telefono || "",
                     documento: data.documento || "",
-                    password: "" 
+                    password: ""
                 });
                 setLoading(false);
             })
@@ -45,13 +45,11 @@ const AddProvider = () => {
             });
     }, [providerId, isEdit]);
 
-    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setProvider({ ...provider, [name]: value });
     };
 
-    
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -71,15 +69,7 @@ const AddProvider = () => {
 
             if (!res.ok) throw new Error("Error al guardar proveedor");
 
-            
-            if (!isEdit) {
-            navigate("/provider/me");
-            return;
-            }
-
-            
-            navigate("/provider");
-
+            navigate("/");
 
         } catch (err) {
             console.error(err);
@@ -100,8 +90,8 @@ const AddProvider = () => {
                     <input
                         type="text"
                         className="form-control"
-                        name="nombre"
-                        value={provider.nombre}
+                        name="name"
+                        value={provider.name}
                         onChange={handleChange}
                         required
                     />
