@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 export const DeliveryCreate = () => {
   const [form, setForm] = useState({
-    nombre: "",
-    apellido: "",
+    name: "",
+    lastname: "",
     email: "",
     password: "",
     identificacion: "",
@@ -15,7 +15,7 @@ export const DeliveryCreate = () => {
 
   const createDelivery = async () => {
     try {
-      if (!form.nombre || !form.apellido || !form.email || !form.password || !form.identificacion) {
+      if (!form.name || !form.lastname || !form.email || !form.password || !form.identificacion) {
         alert("Completa nombre, apellido, email, password e identificacion");
         return;
       }
@@ -35,8 +35,8 @@ export const DeliveryCreate = () => {
       }
 
       setForm({
-        nombre: "",
-        apellido: "",
+        name: "",
+        lastname: "",
         email: "",
         password: "",
         identificacion: "",
@@ -61,15 +61,15 @@ export const DeliveryCreate = () => {
           <label className="form-label">Nombre</label>
           <input
             className="form-control mb-3"
-            value={form.nombre}
-            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
 
           <label className="form-label">Apellido</label>
           <input
             className="form-control mb-3"
-            value={form.apellido}
-            onChange={(e) => setForm({ ...form, apellido: e.target.value })}
+            value={form.lastname}
+            onChange={(e) => setForm({ ...form, lastname: e.target.value })}
           />
 
           <label className="form-label">Email</label>

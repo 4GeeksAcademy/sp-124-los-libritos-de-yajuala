@@ -7,21 +7,22 @@ from base64 import b64encode
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address
-from api.models_books import Book
+from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import and_
+import requests
 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from api.models_reviews import Review
+from datetime import datetime, timedelta
 from api.models import Shipment
 
 api = Blueprint('api', __name__)
 
 # Allow CORS requests to this API
 # CORS(api)
-CORS(api, supports_credentials=True)
+CORS(api, origins="*")
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -47,31 +48,31 @@ def get_user(user_id):
     return jsonify(user.serialize()), 200
 
 
-@api.route('/user', methods=['POST'])
-def add_user():
-    data = request.json
+@api.route("/user", methods=["POST"])
+def create_user():
+    body = request.get_json()
 
-    required_fields = ["name", "lastname", "email", "password", "role"]
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"msg": f"Missing field: {field}"}), 400
+    if not body:
+        return jsonify({"msg": "Body vacío"}), 400
 
-    existing_user = User.query.filter_by(email=data["email"]).first()
-    if existing_user:
-        return jsonify({"msg": "Email already registered"}), 400
+    if "email" not in body or "password" not in body:
+        return jsonify({"msg": "Email y password son obligatorios"}), 400
 
-    new_user = User(
-        name=data["name"],
-        lastname=data["lastname"],
-        email=data["email"],
-        password=data["password"],
-        role=data["role"]
+    if User.query.filter_by(email=body["email"]).first():
+        return jsonify({"msg": "El email ya existe"}), 400
+
+    user = User(
+        name=body["name"],
+        lastname=body["lastname"],
+        email=body["email"],
+        password=body["password"],
+        role=body.get("role", "client")
     )
 
-    db.session.add(new_user)
+    db.session.add(user)
     db.session.commit()
 
-    return jsonify(new_user.serialize()), 201
+    return jsonify(user.serialize()), 201
 
 
 @api.route('/user/<int:user_id>', methods=['DELETE'])
@@ -188,7 +189,7 @@ def get_user_active_cart(user_id):
 def get_active_cart(client_id):
     cart = Cart.query.filter(
         Cart.id_cliente == client_id,
-        Cart.estado.in_(["pendiente", "pagado", "cancelado"])
+        Cart.estado.in_(["pendiente", "pagado", "cancelado", "entregado"])
     ).order_by(Cart.fecha.desc()).first()
 
     if not cart:
@@ -198,6 +199,16 @@ def get_active_cart(client_id):
         "active": True,
         "cart": cart.serialize()
     }), 200
+
+
+@api.route("/clients/<int:client_id>/carts", methods=["GET"])
+def get_client_carts(client_id):
+    carts = Cart.query.filter(
+        Cart.id_cliente == client_id,
+        Cart.estado != "pendiente"
+    ).order_by(Cart.fecha.desc()).all()
+
+    return jsonify([c.serialize() for c in carts]), 200
 
 
 @api.route("/provider", methods=["GET"])
@@ -221,18 +232,30 @@ def create_provider():
     body = request.get_json()
 
     if body is None:
-        raise APIException("Request body is empty", status_code=400)
+        return jsonify({"msg": "Request body is empty"}), 400
 
-    if "nombre" not in body:
-        raise APIException("Field 'nombre' is required", status_code=400)
+    if "name" not in body:
+        return jsonify({"msg": "Field 'name' is required"}), 400
+
+    if body.get("email"):
+        existing = Provider.query.filter_by(email=body["email"]).first()
+        if existing:
+            return jsonify({"msg": "El email ya está registrado"}), 400
+
+    if body.get("documento"):
+        existing_doc = Provider.query.filter_by(
+            documento=body["documento"]).first()
+        if existing_doc:
+            return jsonify({"msg": "El documento ya está registrado"}), 400
 
     provider = Provider(
-        nombre=body["nombre"],
+        name=body["name"],
         email=body.get("email"),
         telefono=body.get("telefono"),
-        password=body.get("password"),
         documento=body.get("documento")
     )
+
+    provider.set_password(body["password"])
 
     db.session.add(provider)
     db.session.commit()
@@ -292,12 +315,14 @@ def get_book(id):
     return jsonify(book.serialize()), 200
 
 
-# POST /books para proveedores (TU código)
+# POST /books para proveedores 
 @api.route("/books", methods=["POST"])
 @jwt_required()
 def create_book():
     identity = get_jwt_identity()
-    if identity.get("role") != "provider":
+    role = identity.get("role")
+
+    if role not in ["provider", "admin"]:
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
@@ -309,6 +334,15 @@ def create_book():
     isbn = body.get("isbn")
     precio_raw = body.get("precio")
     cantidad_raw = body.get("cantidad", 0)
+
+    if role == "provider":
+        provider_id = identity["id"]
+
+    if role == "admin":
+        provider_id = body.get("provider_id")
+
+    if not provider_id:
+        return jsonify({"msg": "provider_id es obligatorio para admin"}), 400
 
     if not titulo or not autor or not isbn:
         return jsonify({"msg": "Faltan campos: titulo, autor, isbn"}), 400
@@ -329,6 +363,7 @@ def create_book():
         return jsonify({"msg": "La cantidad debe ser un número entero"}), 400
 
     exists = Book.query.filter_by(isbn=isbn).first()
+
     if exists:
         return jsonify({"msg": "Ya existe un libro con ese isbn"}), 409
 
@@ -347,6 +382,7 @@ def create_book():
         id_libro=book.id,
         cantidad=cantidad
     )
+
     db.session.add(link)
     db.session.commit()
 
@@ -357,8 +393,12 @@ def create_book():
 
 
 @api.route("/books/<int:id>", methods=["PUT"])
+@jwt_required()
 def update_book(id):
-    data = request.json
+    identity = get_jwt_identity()
+    role = identity.get("role")
+
+    data = request.get_json() or {}
     book = Book.query.get(id)
 
     if not book:
@@ -367,9 +407,37 @@ def update_book(id):
     book.titulo = data.get("titulo", book.titulo)
     book.autor = data.get("autor", book.autor)
     book.isbn = data.get("isbn", book.isbn)
-    book.precio = float(data.get("precio", book.precio))
+
+    if "precio" in data:
+        try:
+            book.precio = float(data["precio"])
+        except:
+            return jsonify({"msg": "El precio debe ser un número"}), 400
+
+    if role == "admin":
+        provider_id = data.get("provider_id")
+        if not provider_id:
+            return jsonify({"msg": "provider_id es obligatorio para admin"}), 400
+
+        link = ProviderBook.query.filter_by(id_libro=id).first()
+
+        if link:
+            link.id_proveedor = provider_id
+        else:
+            new_link = ProviderBook(
+                id_proveedor=provider_id,
+                id_libro=id,
+                cantidad=0
+            )
+            db.session.add(new_link)
+
+    elif role == "provider":
+        link = ProviderBook.query.filter_by(id_libro=id).first()
+        if not link or link.id_proveedor != identity["id"]:
+            return jsonify({"msg": "No autorizado"}), 403
 
     db.session.commit()
+
     return jsonify(book.serialize()), 200
 
 
@@ -379,14 +447,69 @@ def delete_book(book_id):
     if not book:
         return jsonify({"msg": "Libro no encontrado"}), 404
 
-    if CartBook.query.filter_by(id_libro=id).first():
+    if CartBook.query.filter_by(id_libro=book_id).first():
         return jsonify({"msg": "No se puede borrar un libro que está en carritos"}), 400
 
     db.session.delete(book)
     db.session.commit()
     return jsonify({"msg": "Libro eliminado"}), 200
 
-# Fin CruD Libros Layla
+
+@api.route("/books/search", methods=["GET"])
+def search_books():
+    query = request.args.get("q")
+    if not query:
+        return jsonify({"msg": "Falta parámetro q"}), 400
+
+    google_url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+    r = requests.get(google_url)
+    if r.status_code != 200:
+        return jsonify({"msg": "Error consultando Google Books"}), 500
+    data = r.json()
+    results = []
+    for item in data.get("items", []):
+        info = item.get("volumeInfo", {})
+        results.append({
+            "titulo": info.get("title"),
+            "autor": ", ".join(info.get("authors", [])),
+            "descripcion": info.get("description"),
+            "portada": info.get("imageLinks", {}).get("thumbnail"),
+            "categorias": ", ".join(info.get("categories", [])) if info.get("categories") else None,
+            "fecha_publicacion": info.get("publishedDate"),
+            "isbn": next((id["identifier"] for id in info.get("industryIdentifiers", []) if id["type"] in ["ISBN_13", "ISBN_10"]), None),
+            "precio": 0
+        })
+    return jsonify(results), 200
+
+
+@api.route("/books/import", methods=["POST"])
+def import_book():
+    body = request.get_json() or {}
+
+    required = ["titulo", "autor", "isbn"]
+    for field in required:
+        if not body.get(field):
+            return jsonify({"msg": f"Falta el campo {field}"}), 400
+
+    existing = Book.query.filter_by(isbn=body["isbn"]).first()
+
+    if existing:
+        book = existing
+    else:
+        book = Book(
+            titulo=body["titulo"],
+            autor=body["autor"],
+            isbn=body["isbn"],
+            descripcion=body.get("descripcion"),
+            portada=body.get("portada"),
+            categorias=body.get("categorias"),
+            fecha_publicacion=body.get("fecha_publicacion"),
+            precio=body.get("precio", 0)
+        )
+        db.session.add(book)
+        db.session.commit()
+
+    return jsonify(book.serialize()), 201
 
 
 @api.route("/categorialibro", methods=["POST"])
@@ -581,6 +704,32 @@ def delete_categoria(id):
     return jsonify({"msg": "Categoría eliminada"}), 200
 
 
+@api.route("/libros/<int:libro_id>/categorias", methods=["GET"])
+def get_categorias_libro(libro_id):
+    relaciones = Categoria_Libro.query.filter_by(libro_id=libro_id).all()
+    categorias = [rel.categoria.serialize() for rel in relaciones]
+    return jsonify(categorias), 200
+
+
+@api.route("/libros/<int:libro_id>/categorias", methods=["POST"])
+def set_categorias_libro(libro_id):
+    data = request.get_json() or {}
+    categorias_ids = data.get("categorias", [])
+
+    Categoria_Libro.query.filter_by(libro_id=libro_id).delete()
+
+    for cat_id in categorias_ids:
+        nueva_relacion = Categoria_Libro(
+            libro_id=libro_id,
+            categoria_id=cat_id
+        )
+        db.session.add(nueva_relacion)
+
+    db.session.commit()
+
+    return jsonify({"msg": "Categorías actualizadas"}), 200
+
+
 @api.route("/carts", methods=["GET"])
 def get_carts():
     carts = Cart.query.all()
@@ -697,6 +846,24 @@ def pay_cart(cart_id):
     # Calcular total
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
+    #  Validar stock 
+    for item in items:
+        pb = ProviderBook.query.get(item.provider_book_id)
+        if not pb:
+            return jsonify({"msg": "Inventario del proveedor no encontrado"}), 400
+
+        if pb.cantidad < item.cantidad:
+            return jsonify({
+                "msg": f"Stock insuficiente para '{pb.libro.titulo}'. Disponible: {pb.cantidad}, pedido: {item.cantidad}"
+            }), 400
+
+    #  Descontar stock 
+    for item in items:
+        pb = ProviderBook.query.get(item.provider_book_id)
+        pb.cantidad -= item.cantidad
+
+    db.session.commit()
+
     total = 0
     for item in items:
         precio_con_descuento = item.precio * (1 - item.descuento)
@@ -745,6 +912,7 @@ def pay_cart(cart_id):
     }), 200
 
 
+
 @api.route("/cart-books", methods=["GET"])
 def get_cart_books():
     items = CartBook.query.all()
@@ -763,14 +931,19 @@ def get_cart_book(item_id):
 def create_cart_book():
     body = request.get_json(silent=True) or {}
 
-    required = ["id_carrito", "id_libro", "cantidad", "precio"]
+    required = ["id_carrito", "id_libro", "cantidad", "precio", "provider_book_id"]
     for field in required:
         if field not in body:
             return jsonify({"msg": f"Falta {field}"}), 400
 
+    pb = ProviderBook.query.get(body["provider_book_id"])
+    if not pb or pb.id_libro != body["id_libro"]:
+        return jsonify({"msg": "provider_book_id inválido para este libro"}), 400
+
     item = CartBook(
         id_carrito=body["id_carrito"],
         id_libro=body["id_libro"],
+        provider_book_id=body["provider_book_id"],
         cantidad=body["cantidad"],
         precio=body["precio"],
         descuento=body.get("descuento", 0.0)
@@ -808,6 +981,18 @@ def delete_cart_book(item_id):
     db.session.commit()
 
     return jsonify({"msg": "Item eliminado"}), 200
+
+
+@api.route("/carts/abandoned", methods=["GET"])
+def get_abandoned_carts():
+    limite = datetime.utcnow() - timedelta(hours=48)
+
+    carts = Cart.query.filter(
+        Cart.estado == "pendiente",
+        Cart.fecha < limite
+    ).all()
+
+    return jsonify([c.serialize() for c in carts]),
 
 
 @api.route("/delivery", methods=["GET"])
@@ -856,7 +1041,7 @@ def delivery_login():
 def create_delivery():
     body = request.get_json(silent=True) or {}
 
-    required = ["nombre", "apellido", "email", "password", "identificacion"]
+    required = ["name", "lastname", "email", "password", "identificacion"]
     for f in required:
         if not body.get(f):
             return jsonify({"msg": f"Falta {f}"}), 400
@@ -868,8 +1053,8 @@ def create_delivery():
         return jsonify({"msg": "Identificacion ya existe"}), 409
 
     d = Delivery(
-        nombre=body["nombre"],
-        apellido=body["apellido"],
+        name=body["name"],
+        lastname=body["lastname"],
         email=body["email"],
         identificacion=body["identificacion"],
         role="delivery"
@@ -924,6 +1109,115 @@ def delete_delivery(delivery_id):
     return jsonify({"msg": "Repartidor eliminado"}), 200
 
 
+@api.route("/delivery/all", methods=["GET"])
+def get_all_deliveries_admin():
+    deliveries = Delivery.query.all()
+    return jsonify([d.serialize() for d in deliveries]), 200
+
+
+@api.route("/admin/delivery/<int:delivery_id>", methods=["GET"])
+@jwt_required()
+def admin_get_delivery_detail(delivery_id):
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    item = Delivery.query.get(delivery_id)
+    if not item:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    return jsonify(item.serialize()), 200
+
+
+@api.route("/admin/delivery", methods=["POST"])
+@jwt_required()
+def admin_create_delivery():
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    body = request.get_json(silent=True) or {}
+
+    required = ["nombre", "apellido", "email", "password", "identificacion"]
+    for f in required:
+        if not body.get(f):
+            return jsonify({"msg": f"Falta {f}"}), 400
+
+    if Delivery.query.filter_by(email=body["email"]).first():
+        return jsonify({"msg": "Email ya existe"}), 409
+
+    if Delivery.query.filter_by(identificacion=body["identificacion"]).first():
+        return jsonify({"msg": "Identificacion ya existe"}), 409
+
+    d = Delivery(
+        nombre=body["nombre"],
+        apellido=body["apellido"],
+        email=body["email"],
+        identificacion=body["identificacion"],
+        role="delivery"
+    )
+
+    d.set_password(body["password"])
+
+    db.session.add(d)
+    db.session.commit()
+
+    return jsonify(d.serialize()), 201
+
+
+@api.route("/admin/delivery/<int:delivery_id>", methods=["PUT"])
+@jwt_required()
+def admin_update_delivery(delivery_id):
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    d = Delivery.query.get(delivery_id)
+    if not d:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    body = request.get_json(silent=True) or {}
+
+    if "email" in body and body["email"] != d.email:
+        if Delivery.query.filter_by(email=body["email"]).first():
+            return jsonify({"msg": "Email ya existe"}), 409
+        d.email = body["email"]
+
+    if "identificacion" in body and body["identificacion"] != d.identificacion:
+        if Delivery.query.filter_by(identificacion=body["identificacion"]).first():
+            return jsonify({"msg": "Identificacion ya existe"}), 409
+        d.identificacion = body["identificacion"]
+
+    d.nombre = body.get("nombre", d.nombre)
+    d.apellido = body.get("apellido", d.apellido)
+
+    if body.get("password"):
+        d.set_password(body["password"])
+
+    db.session.commit()
+    return jsonify(d.serialize()), 200
+
+
+@api.route("/admin/delivery/<int:delivery_id>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_delivery(delivery_id):
+    identity = get_jwt_identity()
+
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    d = Delivery.query.get(delivery_id)
+    if not d:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    db.session.delete(d)
+    db.session.commit()
+    return jsonify({"msg": "Repartidor eliminado"}), 200
+
+
 @api.route("/reviews", methods=["GET"])
 def get_reviews():
     reviews = Review.query.all()
@@ -965,7 +1259,7 @@ def create_review():
         return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
 
     review = Review(
-        id_cliente=user.id,          # ← usuario logueado
+        id_cliente=user.id,          
         id_libro=body["id_libro"],
         puntuacion=puntuacion,
         comentario=body.get("comentario")
@@ -1096,13 +1390,12 @@ def login_provider():
     if not email or not password:
         return jsonify({"msg": "Email y contraseña requeridos"}), 400
 
-    # Si ese email pertenece a un USER  no es proveedor
     user = User.query.filter_by(email=email).first()
     if user:
         return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
 
     provider = Provider.query.filter_by(email=email).first()
-    if not provider or provider.password != password:
+    if not provider or not provider.check_password(password):
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
     access_token = create_access_token(identity={
@@ -1179,6 +1472,7 @@ def get_provider_books():
     ]), 200
 
 
+
 @api.route("/provider/books/<int:provider_book_id>", methods=["GET"])
 @jwt_required()
 def get_provider_book_detail(provider_book_id):
@@ -1203,6 +1497,7 @@ def get_provider_book_detail(provider_book_id):
     }), 200
 
 
+
 @api.route("/provider/books/<int:provider_book_id>", methods=["PUT"])
 @jwt_required()
 def update_provider_book(provider_book_id):
@@ -1219,16 +1514,18 @@ def update_provider_book(provider_book_id):
     if not link:
         return jsonify({"msg": "No encontrado"}), 404
 
-    #  solo su propio libro
     if link.id_proveedor != provider_id:
         return jsonify({"msg": "No autorizado"}), 403
 
     book = link.libro
 
-    # Editar libro
     book.titulo = body.get("titulo", book.titulo)
     book.autor = body.get("autor", book.autor)
     book.isbn = body.get("isbn", book.isbn)
+    book.descripcion = body.get("descripcion", book.descripcion)
+    book.portada = body.get("portada", book.portada)
+    book.categorias = body.get("categorias", book.categorias)
+    book.fecha_publicacion = body.get("fecha_publicacion", book.fecha_publicacion)
 
     if "precio" in body:
         try:
@@ -1236,7 +1533,6 @@ def update_provider_book(provider_book_id):
         except:
             return jsonify({"msg": "Precio inválido"}), 400
 
-    # Editar cantidad
     if "cantidad" in body:
         try:
             cantidad = int(body["cantidad"])
@@ -1255,6 +1551,82 @@ def update_provider_book(provider_book_id):
     }), 200
 
 
+
+@api.route("/provider/<int:provider_id>/add_book", methods=["POST"])
+@jwt_required()
+def provider_add_book(provider_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "provider" or identity["id"] != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    body = request.get_json() or {}
+
+    book_id = body.get("book_id")
+    cantidad = body.get("cantidad", 0)
+
+    if not book_id:
+        return jsonify({"msg": "Falta book_id"}), 400
+
+    provider = Provider.query.get(provider_id)
+    if not provider:
+        return jsonify({"msg": "Proveedor no encontrado"}), 404
+
+    book = Book.query.get(book_id)
+    if not book:
+        return jsonify({"msg": "Libro no encontrado"}), 404
+
+    existing = ProviderBook.query.filter_by(
+        id_proveedor=provider_id,
+        id_libro=book_id
+    ).first()
+
+    if existing:
+        existing.cantidad += cantidad
+    else:
+        relation = ProviderBook(
+            id_proveedor=provider_id,
+            id_libro=book_id,
+            cantidad=cantidad
+        )
+        db.session.add(relation)
+
+    db.session.commit()
+
+    return jsonify({"msg": "Libro asociado correctamente"}), 200
+
+
+
+@api.route("/provider/books/<int:provider_book_id>/cantidad", methods=["PUT"])
+@jwt_required()
+def update_provider_books_quantity(provider_book_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "provider":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    provider_id = identity["id"]
+    body = request.get_json() or {}
+    cantidad = body.get("cantidad")
+
+    if cantidad is None:
+        return jsonify({"msg": "Falta cantidad"}), 400
+
+    link = ProviderBook.query.get(provider_book_id)
+
+    if not link:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    if link.id_proveedor != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    link.cantidad = cantidad
+    db.session.commit()
+
+    return jsonify({"msg": "Cantidad actualizada"}), 200
+
+
+
 @api.route("/provider/books/<int:provider_book_id>", methods=["DELETE"])
 @jwt_required()
 def delete_provider_book(provider_book_id):
@@ -1264,21 +1636,67 @@ def delete_provider_book(provider_book_id):
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
-    provider_book = ProviderBook.query.get(provider_book_id)
+    link = ProviderBook.query.get(provider_book_id)
 
-    if not provider_book:
+    if not link:
         return jsonify({"msg": "No encontrado"}), 404
 
-    if provider_book.id_proveedor != provider_id:
-        return jsonify({"msg": "No puedes borrar este libro"}), 403
+    if link.id_proveedor != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
 
-    db.session.delete(provider_book)
+    book = link.libro
+
+    db.session.delete(link)
     db.session.commit()
 
-    return jsonify({"msg": "Libro eliminado de tu catálogo"}), 200
+    remaining_links = ProviderBook.query.filter_by(id_libro=book.id).count()
+
+    if remaining_links == 0:
+        db.session.delete(book)
+        db.session.commit()
+        return jsonify({"msg": "Relación eliminada y libro borrado (sin proveedores restantes)"}), 200
+
+    return jsonify({"msg": "Relación eliminada (el libro sigue asociado a otros proveedores)"}), 200
+
+
+
+@api.route("/provider/books/<int:provider_book_id>/edit", methods=["PUT"])
+@jwt_required()
+def edit_provider_book(provider_book_id):
+    identity = get_jwt_identity()
+
+    if identity.get("role") != "provider":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    provider_id = identity["id"]
+    body = request.get_json() or {}
+
+    link = ProviderBook.query.get(provider_book_id)
+
+    if not link:
+        return jsonify({"msg": "No encontrado"}), 404
+
+    if link.id_proveedor != provider_id:
+        return jsonify({"msg": "No autorizado"}), 403
+
+    book = link.libro
+
+    book.titulo = body.get("titulo", book.titulo)
+    book.autor = body.get("autor", book.autor)
+    book.descripcion = body.get("descripcion", book.descripcion)
+    book.portada = body.get("portada", book.portada)
+    book.categorias = body.get("categorias", book.categorias)
+    book.fecha_publicacion = body.get(
+        "fecha_publicacion", book.fecha_publicacion)
+    book.precio = body.get("precio", book.precio)
+
+    db.session.commit()
+
+    return jsonify({"msg": "Libro actualizado"}), 200
 
 
 # Pedidos del proveedor
+
 
 @api.route("/provider/orders", methods=["GET"])
 @jwt_required()
@@ -1290,7 +1708,6 @@ def get_provider_orders():
 
     provider_id = identity["id"]
 
-    # Trae SOLO  CartBook que correspondan a libros de este proveedor
     rows = (
         db.session.query(Cart, CartBook, Book)
         .join(CartBook, CartBook.id_carrito == Cart.id)
@@ -1306,7 +1723,6 @@ def get_provider_orders():
     print("ROWS len:", len(rows))
     rows: print("ROWS first:", rows[0] if rows else None)
 
-    # Agrupar por carrito
     orders = {}
     for cart, cartbook, book in rows:
         if cart.id not in orders:
@@ -1445,17 +1861,22 @@ def delivery_mark_delivered(cart_id):
     if not shipment:
         return jsonify({"msg": "Pedido no encontrado"}), 404
 
-    # solo el asignado puede marcar entregado
     if shipment.delivery_id != delivery_id:
         return jsonify({"msg": "No puedes modificar este pedido"}), 403
 
     shipment.status = "delivered"
+
+    cart = Cart.query.get(cart_id)
+    if cart:
+        cart.estado = "entregado"
+
     db.session.commit()
 
     return jsonify({
         "msg": "Pedido entregado",
         "cart_id": cart_id,
-        "status": shipment.status
+        "status": shipment.status,
+        "cart_estado": cart.estado
     }), 200
 
 
@@ -1572,6 +1993,22 @@ def create_shipment_from_paid_cart(cart_id):
         }
     }), 201
 
+# Endpints Google Pay -layla
+@api.route("/payments/google/confirm", methods=["POST"])
+def google_pay_confirm():
+    body = request.get_json(silent=True) or {}
+
+    cart_id = body.get("cart_id")
+    address_id = body.get("address_id")
+
+    if not cart_id:
+        return jsonify({"msg": "Falta cart_id"}), 400
+
+    if not address_id:
+        return jsonify({"msg": "Falta address_id"}), 400
+
+   
+    print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
 # _______________________Rutas Paypal____________________________
 

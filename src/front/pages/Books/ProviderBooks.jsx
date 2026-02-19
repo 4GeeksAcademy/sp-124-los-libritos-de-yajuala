@@ -3,16 +3,13 @@ import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
 
-
 export const ProviderBooks = () => {
   const [items, setItems] = useState([]);
   const navigate = useNavigate();
   const { store } = useGlobalReducer();
 
   const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
-
-  const role = store.user?.role;
-  const isProvider = role === "provider";
+  const isProvider = store.user?.role === "provider";
 
   const getMyBooks = async () => {
     try {
@@ -58,6 +55,42 @@ export const ProviderBooks = () => {
         return;
       }
 
+      getMyBooks();
+    } catch (error) {
+      alert("Error de red");
+    }
+  };
+
+  const editQuantity = async (providerBookId, currentQty) => {
+    const nuevaCantidad = prompt("Nueva cantidad:", currentQty);
+
+    if (nuevaCantidad === null) return;
+    if (isNaN(nuevaCantidad)) {
+      alert("Cantidad inválida");
+      return;
+    }
+
+    try {
+      const resp = await fetch(
+        `${backendUrl}/api/provider/books/${providerBookId}/cantidad`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${store.token}`,
+          },
+          body: JSON.stringify({ cantidad: parseInt(nuevaCantidad) }),
+        }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        alert(data?.msg || "Error actualizando cantidad");
+        return;
+      }
+
+      alert("Cantidad actualizada");
       getMyBooks();
     } catch (error) {
       alert("Error de red");
@@ -139,8 +172,14 @@ export const ProviderBooks = () => {
                         Ver ficha
                       </button>
 
-                      <button className="btn btn-warning btn-sm" onClick={() => navigate(`/provider/books/${row.id}/edit`)}>Editar</button>
-
+                      <button
+                        className="btn btn-warning btn-sm"
+                        onClick={() =>
+                          editQuantity(row.id, row.cantidad)
+                        }
+                      >
+                        Editar cantidad
+                      </button>
 
                       <button
                         className="btn btn-danger btn-sm"

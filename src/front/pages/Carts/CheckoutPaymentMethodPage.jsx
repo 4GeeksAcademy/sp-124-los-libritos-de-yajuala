@@ -10,6 +10,7 @@ export default function CheckoutPaymentMethodPage() {
   const [selectedMethod, setSelectedMethod] = useState(null);
 
   const methods = [
+    { id: "google_test", label: "Google Pay (prueba)" },
     { id: "card", label: "Tarjeta de crédito / débito" },
     { id: "paypal", label: "PayPal" },
     { id: "cash", label: "Pago contra reembolso" },
@@ -17,21 +18,30 @@ export default function CheckoutPaymentMethodPage() {
   ];
 
   const handleContinue = () => {
-    if (!selectedMethod) {
-      alert("Selecciona un método de pago");
-      return;
-    }
+  if (!selectedMethod) {
+    alert("Selecciona un método de pago");
+    return;
+  }
 
-    if (!addressId) {
-      alert("No hay dirección seleccionada");
-      return;
-    }
+  if (!addressId) {
+    alert("No hay dirección seleccionada");
+    return;
+  }
 
-    // ir a la pantalla que hace el POST /pay
-    navigate("/checkout/payment", {
-      state: { addressId, paymentMethod: selectedMethod }
+  
+  if (selectedMethod === "google_test") {
+    navigate("/checkout/google", {
+      state: { addressId }
     });
-  };
+    return;
+  }
+
+  
+  navigate("/checkout/payment", {
+    state: { addressId, paymentMethod: selectedMethod }
+  });
+};
+
 
   return (
     <div className="container mt-4">

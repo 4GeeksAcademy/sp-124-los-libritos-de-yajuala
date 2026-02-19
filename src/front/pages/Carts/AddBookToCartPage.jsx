@@ -8,6 +8,7 @@ export default function AddBookToCartPage() {
   const [books, setBooks] = useState([]);
   const [form, setForm] = useState({
     id_libro: "",
+    provider_book_id: null,
     cantidad: 1,
     precio: 0,
     descuento: 0
@@ -29,18 +30,20 @@ export default function AddBookToCartPage() {
     if (name === "id_libro") {
       const selectedBook = books.find(b => b.id === parseInt(value));
 
+      // Tomamos el primer proveedor disponible
+      const firstProvider = selectedBook?.proveedores?.[0];
+
       setForm({
         ...form,
-        id_libro: parseInt(value),       
+        id_libro: parseInt(value),
+        provider_book_id: firstProvider ? firstProvider.provider_book_id : null,
         precio: selectedBook ? selectedBook.precio : 0
       });
       return;
     }
 
-
     setForm({ ...form, [name]: value });
   };
-
 
   const saveItem = async () => {
     await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/cart-books`, {
@@ -49,11 +52,11 @@ export default function AddBookToCartPage() {
       body: JSON.stringify({
         id_carrito: parseInt(id),
         id_libro: parseInt(form.id_libro),
+        provider_book_id: form.provider_book_id,
         cantidad: parseInt(form.cantidad),
         precio: parseFloat(form.precio),
         descuento: parseFloat(form.descuento)
       })
-
     });
 
     navigate(`/carts/${id}`);
@@ -77,7 +80,6 @@ export default function AddBookToCartPage() {
             {books.map(b => (
               <option key={b.id} value={b.id}>
                 {b.titulo} — {b.autor}
-
               </option>
             ))}
           </select>
@@ -118,6 +120,7 @@ export default function AddBookToCartPage() {
             step="0.01"
           />
         </div>
+
         <div className="d-flex">
           <button className="btn btn-success" onClick={saveItem}>
             Agregar al carrito
@@ -126,7 +129,8 @@ export default function AddBookToCartPage() {
           <button className="btn btn-secondary ms-2" onClick={() => navigate(`/carts/${id}`)}>
             Cancelar
           </button>
-        </div></div>
+        </div>
+      </div>
     </div>
   );
 }

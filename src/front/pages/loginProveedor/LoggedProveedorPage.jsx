@@ -22,7 +22,7 @@ export default function LoggedProveedorPage() {
 
   return (
     <div className="container mt-4">
-      <h1>Bienvenido, {store.user.nombre}</h1>
+      <h1>Bienvenido, {store.user.name}</h1>
       <p className="text-muted">Panel de Proveedor</p>
 
       <div className="mt-4">
@@ -39,6 +39,14 @@ export default function LoggedProveedorPage() {
         >
           Ver Pedidos
         </button>
+
+        <button
+          className="btn btn-primary me-3"
+          onClick={() => navigate("/provider/books/search")}
+        >
+          Buscar e importar libros
+        </button>
+
 
         <button
           className="btn btn-secondary"

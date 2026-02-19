@@ -8,11 +8,20 @@ class Review(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    id_cliente: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    id_libro: Mapped[int] = mapped_column(ForeignKey("book.id"), nullable=False)
+    id_cliente = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    id_libro: Mapped[int] = mapped_column(
+        ForeignKey("book.id"), nullable=False)
 
     puntuacion: Mapped[int] = mapped_column(Integer, nullable=False)
     comentario: Mapped[str] = mapped_column(String(500), nullable=True)
+    cliente = db.relationship(
+        "User",
+        backref=db.backref("reviews", cascade="all, delete")
+    )
 
     def serialize(self):
         return {

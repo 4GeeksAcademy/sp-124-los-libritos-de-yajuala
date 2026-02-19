@@ -12,6 +12,27 @@ export const Navbar = () => {
     navigate("/");
   };
 
+  const goToAccount = () => {
+    if (!store.user) return;
+
+    switch (store.user.role) {
+      case "client":
+        navigate("/user");
+        break;
+      case "admin":
+        navigate("/admin");
+        break;
+      case "provider":
+        navigate("/provider/me");
+        break;
+      case "delivery":
+        navigate("/loggeddelivery");
+        break;
+      default:
+        navigate("/");
+    }
+  };
+
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-light px-3">
@@ -24,28 +45,26 @@ export const Navbar = () => {
         </span>
 
         <div className="ms-auto d-flex align-items-center">
-          {store.user ? (
+          {store.user && (
             <>
               <span className="me-3">Bienvenido, {store.user.name}</span>
 
-              {store.user.role !== "admin" && (
-                <>
-
-                  <Link to="/user/cart" className="nav-link me-3">
-                    <i className="fas fa-shopping-cart fa-lg"></i>
-
-                  </Link>
+              {store.user.role === "client" && (
 
 
-                  <button
-                    className="btn btn-outline-primary me-2"
-                    onClick={() => navigate("/user")}
-                  >
-                    Mi cuenta
-                  </button>
+                <Link to="/user/cart" className="nav-link me-3">
+                  <i className="fas fa-shopping-cart fa-lg"></i>
 
-                </>
+                </Link>
               )}
+
+              <button
+                className="btn btn-outline-primary me-2"
+                onClick={goToAccount}
+              >
+                Mi cuenta
+              </button>
+
 
 
               <button
@@ -54,8 +73,7 @@ export const Navbar = () => {
                 Logout
               </button>
             </>
-          ) : (
-            <></>
+
           )}
         </div>
       </nav></>
