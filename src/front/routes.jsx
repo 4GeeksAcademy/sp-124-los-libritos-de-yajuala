@@ -82,6 +82,8 @@ import CreateAddressPage from "./pages/clients/address/CreateAddressPage.jsx";
 import EditAddressPage from "./pages/clients/address/EditAddressPage.jsx";
 import CheckoutPaymentMethodPage from "./pages/Carts/CheckoutPaymentMethodPage.jsx";
 
+import PasarelaPago from "./pages/paypal/PasarelaPago.jsx";
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     // CreateRoutesFromElements function allows you to build route elements declaratively.
@@ -149,7 +151,7 @@ export const router = createBrowserRouter(
       {/* NUEVO: carrito activo real */}
       <Route path="/user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
 
-      
+
       <Route path="/payment-success" element={<PaymentSuccessPage />} />
       <Route path="/checkout/address" element={<CheckoutAddressPage />} />
       <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
@@ -167,18 +169,20 @@ export const router = createBrowserRouter(
       <Route path="/logindelivery" element={<LoginDelivery />} />
       <Route path="/loggeddelivery" element={<LoggedDelivery />} />
 
-    
+
       <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
       <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
       <Route path="/provider/books/:id" element={<ProviderBookDetail />} />
       <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
       <Route path="/provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
 
-     
+
       <Route path="/home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
       <Route path="/addresses" element={<AddressesPage />} />
       <Route path="/addresses/create" element={<CreateAddressPage />} />
       <Route path="/addresses/:id/edit" element={<EditAddressPage />} />
+
+      <Route path="/pasarelapago" element={<PasarelaPago />} />
 
     </Route>
   )

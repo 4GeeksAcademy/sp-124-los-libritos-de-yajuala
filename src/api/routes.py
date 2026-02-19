@@ -1,3 +1,8 @@
+import logging
+import os
+import requests as http_requests
+from base64 import b64encode
+
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
@@ -665,15 +670,14 @@ def pay_cart(cart_id):
 
     print("ENTRANDO A PAY_CART PARA:", cart_id)
 
-
     body = request.get_json(silent=True) or {}
     address_id = body.get("address_id")
-    
+
     # Validar que envio direccion
 
     if not address_id:
         return jsonify({"msg": "Falta address_id para crear el envío"}), 400
-    
+
     cart = Cart.query.get(cart_id)
 
     if not cart:
@@ -686,7 +690,7 @@ def pay_cart(cart_id):
     address = Address.query.get(address_id)
     if not address:
         return jsonify({"msg": "Dirección no encontrada"}), 404
-    
+
     if address.id_usuario != cart.id_cliente:
         return jsonify({"msg": "Esa dirección no pertenece al cliente"}), 403
 
@@ -705,8 +709,6 @@ def pay_cart(cart_id):
     # provisional test layla aqui abjo:
     print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
-
-    
     # Verificar que no exista ya un shipment para este cart
     existing_shipment = Shipment.query.filter_by(cart_id=cart.id).first()
     if not existing_shipment:
@@ -840,10 +842,9 @@ def delivery_login():
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
     token = create_access_token(identity={
-    "id": delivery.id,
-    "role": "delivery"
+        "id": delivery.id,
+        "role": "delivery"
     })
-
 
     return jsonify({
         "token": token,
@@ -1303,8 +1304,7 @@ def get_provider_orders():
         .all()
     )
     print("ROWS len:", len(rows))
-    rows:print("ROWS first:", rows[0] if rows else None)
-
+    rows: print("ROWS first:", rows[0] if rows else None)
 
     # Agrupar por carrito
     orders = {}
@@ -1319,19 +1319,18 @@ def get_provider_orders():
             }
 
     orders[cart.id]["items"].append({
-            "cart_book_id": cartbook.id,
-            "id_libro": book.id,
-            "titulo": book.titulo,
-            "isbn": book.isbn,
-            "cantidad": cartbook.cantidad,
-            "precio": cartbook.precio,
-            "descuento": cartbook.descuento
-        })
+        "cart_book_id": cartbook.id,
+        "id_libro": book.id,
+        "titulo": book.titulo,
+        "isbn": book.isbn,
+        "cantidad": cartbook.cantidad,
+        "precio": cartbook.precio,
+        "descuento": cartbook.descuento
+    })
 
     return jsonify(list(orders.values())), 200
 
-#Delivery Layla
-
+# Delivery Layla
 
 
 @api.route("/delivery/orders/available", methods=["GET"])
@@ -1391,7 +1390,9 @@ def delivery_orders_mine():
 
     return jsonify(orders), 200
 
-# endpoint para claim 
+# endpoint para claim
+
+
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
 @jwt_required()
 def delivery_claim_order(cart_id):
@@ -1404,7 +1405,7 @@ def delivery_claim_order(cart_id):
 
     # Buscar el shipment asociado a este cart
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
-    
+
     if not shipment:
         return jsonify({"msg": "Pedido no encontrado"}), 404
 
@@ -1420,7 +1421,7 @@ def delivery_claim_order(cart_id):
     # Asignar el repartidor
     shipment.delivery_id = delivery_id
     shipment.status = "assigned"
-    
+
     db.session.commit()
 
     return jsonify({
@@ -1428,6 +1429,7 @@ def delivery_claim_order(cart_id):
         "cart_id": cart_id,
         "status": shipment.status
     }), 200
+
 
 @api.route("/delivery/orders/<int:cart_id>/delivered", methods=["PUT"])
 @jwt_required()
@@ -1455,6 +1457,7 @@ def delivery_mark_delivered(cart_id):
         "cart_id": cart_id,
         "status": shipment.status
     }), 200
+
 
 @api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
 @jwt_required()
@@ -1497,7 +1500,6 @@ def delivery_order_detail(cart_id):
             for it in items
         ]
     }), 200
-
 
 
 @api.route("/shipments/from-cart/<int:cart_id>", methods=["POST"])
@@ -1571,3 +1573,99 @@ def create_shipment_from_paid_cart(cart_id):
     }), 201
 
 
+# _______________________Rutas Paypal____________________________
+
+PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
+
+
+def get_paypal_access_token():
+    client_id = os.getenv("PAYPAL_CLIENT_ID")
+    client_secret = os.getenv("PAYPAL_CLIENT_SECRET")
+    credentials = b64encode(f"{client_id}:{client_secret}".encode()).decode()
+
+    response = http_requests.post(
+        f"{PAYPAL_BASE_URL}/v1/oauth2/token",
+        headers={
+            "Authorization": f"Basic {credentials}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data="grant_type=client_credentials",
+    )
+    return response.json()["access_token"]
+
+
+@api.route("/orders", methods=["POST"])
+def create_order():
+    request_body = request.get_json()
+
+    if not request_body or "cart" not in request_body:
+        return jsonify({"error": "Cart data missing"}), 400
+
+    cart = request_body["cart"]
+    items_from_front = cart.get("items", [])
+    total = cart.get("total", 0)
+
+    paypal_items = []
+    for item in items_from_front:
+        precio_con_descuento = float(
+            item["unit_amount"]) * (1 - float(item.get("descuento", 0)))
+        paypal_items.append({
+            "name": item["name"],
+            "unit_amount": {
+                "currency_code": "EUR",
+                "value": str(round(precio_con_descuento, 2))
+            },
+            "quantity": str(item["quantity"]),
+            "category": "PHYSICAL_GOODS"
+        })
+
+    try:
+        access_token = get_paypal_access_token()
+        response = http_requests.post(
+            f"{PAYPAL_BASE_URL}/v2/checkout/orders",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "intent": "CAPTURE",
+                "purchase_units": [{
+                    "amount": {
+                        "currency_code": "EUR",
+                        "value": str(round(total, 2)),
+                        "breakdown": {
+                            "item_total": {
+                                "currency_code": "EUR",
+                                "value": str(round(total, 2))
+                            }
+                        }
+                    },
+                    "items": paypal_items
+                }]
+            }
+        )
+        return jsonify(response.json()), response.status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/orders/<order_id>/capture", methods=["POST"])
+def capture_order(order_id):
+    try:
+        access_token = get_paypal_access_token()
+        response = http_requests.post(
+            f"{PAYPAL_BASE_URL}/v2/checkout/orders/{order_id}/capture",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation",
+            }
+        )
+        return jsonify(response.json()), response.status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# _______________________Fin Rutas Paypal____________________________

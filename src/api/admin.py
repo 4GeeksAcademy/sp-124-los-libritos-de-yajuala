@@ -5,7 +5,7 @@ from . import models
 from .models import db
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
-# from .models_books import Book
+from .models_books import Book
 # from api.models import Delivery
 from api.models_reviews import Review
 
@@ -28,3 +28,4 @@ def setup_admin(app):
 
     # admin.add_view(ModelView(Delivery, db.session))
     admin.add_view(ReviewAdmin(Review, db.session))
+    admin.add_view(ModelView(Book, db.session))

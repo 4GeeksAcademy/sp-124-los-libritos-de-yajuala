@@ -22,13 +22,13 @@ static_file_dir = os.path.join(os.path.dirname(
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-app.config["JWT_SECRET_KEY"] = "super-secret-key"  
-app.config["JWT_TOKEN_LOCATION"] = ["headers"] 
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False 
+app.config["JWT_SECRET_KEY"] = "super-secret-key"
+app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
 
 jwt = JWTManager(app)
 app.config["JWT_IDENTITY_CLAIM"] = "identity"
-# CORS 
+# CORS
 app.config["CORS_HEADERS"] = "Content-Type"
 CORS(
     app,
