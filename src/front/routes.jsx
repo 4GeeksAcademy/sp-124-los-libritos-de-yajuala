@@ -218,7 +218,7 @@ export const router = createBrowserRouter(
         <Route path="/addresses/create" element={<CreateAddressPage />} />
         <Route path="/addresses/:id/edit" element={<EditAddressPage />} />
         <Route path="/checkout/google" element={<CheckoutGooglePayPage />} />
-
+        
 
 
       </Route>
@@ -228,8 +228,6 @@ export const router = createBrowserRouter(
         <Route path="users/create" element={<AdminUserCreate />} />
         <Route path="users/:id" element={<AdminUserDetail />} />
         <Route path="users/:id/edit" element={<AdminUserEdit />} />
-
-        <Route path="/pasarelapago" element={<PasarelaPago />} />
         
         <Route path="providers" element={<AdminProvidersList />} />
         <Route path="providers/create" element={<AdminProviderCreate />} />
@@ -240,7 +238,7 @@ export const router = createBrowserRouter(
         <Route path="books/create" element={<AdminBookCreate />} />
         <Route path="books/:id" element={<AdminBookDetail />} />
         <Route path="books/:id/edit" element={<AdminBookEdit />} />
-
+        <Route path="pasarelapago" element={<PasarelaPago />} />
         <Route path="categories" element={<AdminCategoriesList />} />
         <Route path="categories/create" element={<AdminCategoryCreate />} />
         <Route path="categories/:id" element={<AdminCategoryDetail />} />

@@ -315,7 +315,7 @@ def get_book(id):
     return jsonify(book.serialize()), 200
 
 
-# POST /books para proveedores 
+# POST /books para proveedores
 @api.route("/books", methods=["POST"])
 @jwt_required()
 def create_book():
@@ -455,31 +455,48 @@ def delete_book(book_id):
     return jsonify({"msg": "Libro eliminado"}), 200
 
 
-@api.route("/books/search", methods=["GET"])
+@api.route("/books/search")
 def search_books():
-    query = request.args.get("q")
-    if not query:
-        return jsonify({"msg": "Falta parámetro q"}), 400
+    query = request.args.get("q", "").strip()
 
-    google_url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
-    r = requests.get(google_url)
-    if r.status_code != 200:
+    if not query:
+        return jsonify([]), 200
+
+    try:
+        resp = requests.get(
+            "https://www.googleapis.com/books/v1/volumes",
+            params={"q": query, "maxResults": 10},
+            timeout=5
+        )
+
+        if resp.status_code != 200:
+            print("Google Books error:", resp.status_code, resp.text)
+            return jsonify({"msg": "Error consultando Google Books"}), 500
+
+        data = resp.json()
+        items = data.get("items", [])
+
+        results = []
+        for item in items:
+            info = item.get("volumeInfo", {})
+
+            results.append({
+                "titulo": info.get("title", "Sin título"),
+                "autor": ", ".join(info.get("authors", [])),
+                "isbn": next(
+                    (i.get("identifier") for i in info.get("industryIdentifiers", []) if i.get("identifier")),
+                    None
+                ),
+                "descripcion": info.get("description", ""),
+                "portada": info.get("imageLinks", {}).get("thumbnail")
+            })
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        print("ERROR GOOGLE BOOKS:", e)
         return jsonify({"msg": "Error consultando Google Books"}), 500
-    data = r.json()
-    results = []
-    for item in data.get("items", []):
-        info = item.get("volumeInfo", {})
-        results.append({
-            "titulo": info.get("title"),
-            "autor": ", ".join(info.get("authors", [])),
-            "descripcion": info.get("description"),
-            "portada": info.get("imageLinks", {}).get("thumbnail"),
-            "categorias": ", ".join(info.get("categories", [])) if info.get("categories") else None,
-            "fecha_publicacion": info.get("publishedDate"),
-            "isbn": next((id["identifier"] for id in info.get("industryIdentifiers", []) if id["type"] in ["ISBN_13", "ISBN_10"]), None),
-            "precio": 0
-        })
-    return jsonify(results), 200
+
 
 
 @api.route("/books/import", methods=["POST"])
@@ -846,7 +863,7 @@ def pay_cart(cart_id):
     # Calcular total
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
-    #  Validar stock 
+    #  Validar stock
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         if not pb:
@@ -857,7 +874,7 @@ def pay_cart(cart_id):
                 "msg": f"Stock insuficiente para '{pb.libro.titulo}'. Disponible: {pb.cantidad}, pedido: {item.cantidad}"
             }), 400
 
-    #  Descontar stock 
+    #  Descontar stock
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         pb.cantidad -= item.cantidad
@@ -912,7 +929,6 @@ def pay_cart(cart_id):
     }), 200
 
 
-
 @api.route("/cart-books", methods=["GET"])
 def get_cart_books():
     items = CartBook.query.all()
@@ -931,7 +947,8 @@ def get_cart_book(item_id):
 def create_cart_book():
     body = request.get_json(silent=True) or {}
 
-    required = ["id_carrito", "id_libro", "cantidad", "precio", "provider_book_id"]
+    required = ["id_carrito", "id_libro",
+                "cantidad", "precio", "provider_book_id"]
     for field in required:
         if field not in body:
             return jsonify({"msg": f"Falta {field}"}), 400
@@ -1259,7 +1276,7 @@ def create_review():
         return jsonify({"msg": "puntuacion debe estar entre 1 y 5"}), 400
 
     review = Review(
-        id_cliente=user.id,          
+        id_cliente=user.id,
         id_libro=body["id_libro"],
         puntuacion=puntuacion,
         comentario=body.get("comentario")
@@ -1472,7 +1489,6 @@ def get_provider_books():
     ]), 200
 
 
-
 @api.route("/provider/books/<int:provider_book_id>", methods=["GET"])
 @jwt_required()
 def get_provider_book_detail(provider_book_id):
@@ -1495,7 +1511,6 @@ def get_provider_book_detail(provider_book_id):
         "cantidad": link.cantidad,
         "libro": link.libro.serialize() if link.libro else None
     }), 200
-
 
 
 @api.route("/provider/books/<int:provider_book_id>", methods=["PUT"])
@@ -1525,7 +1540,8 @@ def update_provider_book(provider_book_id):
     book.descripcion = body.get("descripcion", book.descripcion)
     book.portada = body.get("portada", book.portada)
     book.categorias = body.get("categorias", book.categorias)
-    book.fecha_publicacion = body.get("fecha_publicacion", book.fecha_publicacion)
+    book.fecha_publicacion = body.get(
+        "fecha_publicacion", book.fecha_publicacion)
 
     if "precio" in body:
         try:
@@ -1549,7 +1565,6 @@ def update_provider_book(provider_book_id):
         "cantidad": link.cantidad,
         "libro": book.serialize()
     }), 200
-
 
 
 @api.route("/provider/<int:provider_id>/add_book", methods=["POST"])
@@ -1596,7 +1611,6 @@ def provider_add_book(provider_id):
     return jsonify({"msg": "Libro asociado correctamente"}), 200
 
 
-
 @api.route("/provider/books/<int:provider_book_id>/cantidad", methods=["PUT"])
 @jwt_required()
 def update_provider_books_quantity(provider_book_id):
@@ -1624,7 +1638,6 @@ def update_provider_books_quantity(provider_book_id):
     db.session.commit()
 
     return jsonify({"msg": "Cantidad actualizada"}), 200
-
 
 
 @api.route("/provider/books/<int:provider_book_id>", methods=["DELETE"])
@@ -1657,7 +1670,6 @@ def delete_provider_book(provider_book_id):
         return jsonify({"msg": "Relación eliminada y libro borrado (sin proveedores restantes)"}), 200
 
     return jsonify({"msg": "Relación eliminada (el libro sigue asociado a otros proveedores)"}), 200
-
 
 
 @api.route("/provider/books/<int:provider_book_id>/edit", methods=["PUT"])
@@ -1994,6 +2006,8 @@ def create_shipment_from_paid_cart(cart_id):
     }), 201
 
 # Endpints Google Pay -layla
+
+
 @api.route("/payments/google/confirm", methods=["POST"])
 def google_pay_confirm():
     body = request.get_json(silent=True) or {}
@@ -2010,7 +2024,11 @@ def google_pay_confirm():
    
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
+  
+    return pay_cart(int(cart_id))
+
 # _______________________Rutas Paypal____________________________
+
 
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
 
@@ -2103,6 +2121,7 @@ def capture_order(order_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 # _______________________Fin Rutas Paypal____________________________
