@@ -1,3 +1,8 @@
+import logging
+import os
+import requests as http_requests
+from base64 import b64encode
+
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
@@ -2005,5 +2010,99 @@ def google_pay_confirm():
    
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
-  
-    return pay_cart(int(cart_id))
+# _______________________Rutas Paypal____________________________
+
+PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
+
+
+def get_paypal_access_token():
+    client_id = os.getenv("PAYPAL_CLIENT_ID")
+    client_secret = os.getenv("PAYPAL_CLIENT_SECRET")
+    credentials = b64encode(f"{client_id}:{client_secret}".encode()).decode()
+
+    response = http_requests.post(
+        f"{PAYPAL_BASE_URL}/v1/oauth2/token",
+        headers={
+            "Authorization": f"Basic {credentials}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data="grant_type=client_credentials",
+    )
+    return response.json()["access_token"]
+
+
+@api.route("/orders", methods=["POST"])
+def create_order():
+    request_body = request.get_json()
+
+    if not request_body or "cart" not in request_body:
+        return jsonify({"error": "Cart data missing"}), 400
+
+    cart = request_body["cart"]
+    items_from_front = cart.get("items", [])
+    total = cart.get("total", 0)
+
+    paypal_items = []
+    for item in items_from_front:
+        precio_con_descuento = float(
+            item["unit_amount"]) * (1 - float(item.get("descuento", 0)))
+        paypal_items.append({
+            "name": item["name"],
+            "unit_amount": {
+                "currency_code": "EUR",
+                "value": str(round(precio_con_descuento, 2))
+            },
+            "quantity": str(item["quantity"]),
+            "category": "PHYSICAL_GOODS"
+        })
+
+    try:
+        access_token = get_paypal_access_token()
+        response = http_requests.post(
+            f"{PAYPAL_BASE_URL}/v2/checkout/orders",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "intent": "CAPTURE",
+                "purchase_units": [{
+                    "amount": {
+                        "currency_code": "EUR",
+                        "value": str(round(total, 2)),
+                        "breakdown": {
+                            "item_total": {
+                                "currency_code": "EUR",
+                                "value": str(round(total, 2))
+                            }
+                        }
+                    },
+                    "items": paypal_items
+                }]
+            }
+        )
+        return jsonify(response.json()), response.status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/orders/<order_id>/capture", methods=["POST"])
+def capture_order(order_id):
+    try:
+        access_token = get_paypal_access_token()
+        response = http_requests.post(
+            f"{PAYPAL_BASE_URL}/v2/checkout/orders/{order_id}/capture",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation",
+            }
+        )
+        return jsonify(response.json()), response.status_code
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# _______________________Fin Rutas Paypal____________________________

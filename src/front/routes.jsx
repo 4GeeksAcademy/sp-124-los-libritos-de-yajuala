@@ -116,6 +116,8 @@ import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 
 
+import PasarelaPago from "./pages/paypal/PasarelaPago.jsx";
+
 export const router = createBrowserRouter(
   createRoutesFromElements(
     // CreateRoutesFromElements function allows you to build route elements declaratively.
@@ -227,6 +229,8 @@ export const router = createBrowserRouter(
         <Route path="users/:id" element={<AdminUserDetail />} />
         <Route path="users/:id/edit" element={<AdminUserEdit />} />
 
+        <Route path="/pasarelapago" element={<PasarelaPago />} />
+        
         <Route path="providers" element={<AdminProvidersList />} />
         <Route path="providers/create" element={<AdminProviderCreate />} />
         <Route path="providers/:id" element={<AdminProviderDetail />} />
