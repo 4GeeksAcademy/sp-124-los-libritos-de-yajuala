@@ -81,6 +81,8 @@ import AddressesPage from "./pages/clients/address/AddressesPage.jsx";
 import CreateAddressPage from "./pages/clients/address/CreateAddressPage.jsx";
 import EditAddressPage from "./pages/clients/address/EditAddressPage.jsx";
 import CheckoutPaymentMethodPage from "./pages/Carts/CheckoutPaymentMethodPage.jsx";
+import CheckoutGooglePayPage from "./pages/Carts/CheckoutGooglePayPage.jsx";
+
 
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminLayout from "./pages/admin/AdminLayout.jsx"
@@ -113,6 +115,8 @@ import AdminReviewDetail from "./pages/admin/reviews/AdminReviewDetail.jsx"
 import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 
+
+import PasarelaPago from "./pages/paypal/PasarelaPago.jsx";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -180,10 +184,10 @@ export const router = createBrowserRouter(
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
-        {/* NUEVO: carrito activo real */}
+      
         <Route path="/user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
 
-        {/* === RUTAS DE CHECKOUT (de develop - tu compañero) === */}
+       
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
         <Route path="/checkout/address" element={<CheckoutAddressPage />} />
         <Route path="/checkout/payment" element={<CheckoutPaymentPage />} />
@@ -201,27 +205,32 @@ export const router = createBrowserRouter(
         <Route path="/logindelivery" element={<LoginDelivery />} />
         <Route path="/loggeddelivery" element={<LoggedDelivery />} />
 
-        {/* === RUTAS DE PROVIDER BOOKS (tuyas - Layla) === */}
+        
         <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
         <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
         <Route path="/provider/books/:id" element={<ProviderBookDetail />} />
         <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
         <Route path="/provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
 
-        {/* === RUTAS DE HOME/ADDRESSES (de develop - tu compañero) === */}
+       
         <Route path="/home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
         <Route path="/addresses" element={<AddressesPage />} />
         <Route path="/addresses/create" element={<CreateAddressPage />} />
         <Route path="/addresses/:id/edit" element={<EditAddressPage />} />
+        <Route path="/checkout/google" element={<CheckoutGooglePayPage />} />
+
+
 
       </Route>
-      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminLayout />}>
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsersList />} />
         <Route path="users/create" element={<AdminUserCreate />} />
         <Route path="users/:id" element={<AdminUserDetail />} />
         <Route path="users/:id/edit" element={<AdminUserEdit />} />
 
+        <Route path="/pasarelapago" element={<PasarelaPago />} />
+        
         <Route path="providers" element={<AdminProvidersList />} />
         <Route path="providers/create" element={<AdminProviderCreate />} />
         <Route path="providers/:id" element={<AdminProviderDetail />} />
@@ -251,9 +260,10 @@ export const router = createBrowserRouter(
 
 
         <Route path="reviews" element={<AdminReviewList />} />
-<Route path="reviews/:id" element={<AdminReviewDetail />} />
+        <Route path="reviews/:id" element={<AdminReviewDetail />} />
 
       </Route>
     </>
   )
 );
+

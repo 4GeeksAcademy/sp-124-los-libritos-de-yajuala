@@ -25,11 +25,20 @@ class BookAdmin(ModelView):
 
 
 def setup_admin(app):
-    admin = Admin(app, name='Dashboard')
+  
+    app.secret_key = os.environ.get('FLASK_APP_KEY', 'sample key')
+    admin = Admin(app, name='4Geeks Admin',
+                  theme=Bootstrap4Theme(swatch='cerulean'))
+  
+    for name, obj in inspect.getmembers(models):
+        # Verify that the object is a SQLAlchemy model before adding it to the admin.
+        if inspect.isclass(obj) and issubclass(obj, db.Model):
+            admin.add_view(ModelView(obj, db.session))
 
     admin.add_view(ModelView(User, db.session))
     admin.add_view(ModelView(Provider, db.session))
-
+    admin.add_view(ReviewAdmin(Review, db.session))
+    admin.add_view(ModelView(Book, db.session))
     admin.add_view(BookAdmin(Book, db.session))
 
     admin.add_view(ModelView(Categorias, db.session))

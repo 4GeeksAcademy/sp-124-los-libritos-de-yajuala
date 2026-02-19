@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 
 export default function CartDetailPage() {
@@ -7,6 +8,17 @@ export default function CartDetailPage() {
   const [cart, setCart] = useState(null);
   const [items, setItems] = useState([]);
   const { store, dispatch } = useGlobalReducer();
+  const navigate = useNavigate();
+
+  const handlePay = () => {
+    navigate("/pasarelapago", {
+      state: {
+        cart,
+        items,
+        total
+      }
+    });
+  };
 
 
   const total = items.reduce((acc, item) => {
@@ -45,10 +57,10 @@ export default function CartDetailPage() {
   if (!cart) return <p className="text-center mt-5">Cargando...</p>;
 
   const role = store.user?.role;
-	const isAdmin = role === "admin";
-	const isProvider = role === "provider";
-	const isDelivery = role === "delivery";
-	const isClient = role === "client";
+  const isAdmin = role === "admin";
+  const isProvider = role === "provider";
+  const isDelivery = role === "delivery";
+  const isClient = role === "client";
 
   return (
     <div className="container mt-4">
@@ -77,30 +89,38 @@ export default function CartDetailPage() {
 
             <p><strong>Descuento:</strong> {item.descuento * 100}%</p>
             {!isClient && (
-            <div className="d-flex">
-              <Link
-                to={`/cart-books/${item.id}/edit`}
-                className="btn btn-primary btn-sm me-2"
-              >
-                Editar
-              </Link>
+              <div className="d-flex">
+                <Link
+                  to={`/cart-books/${item.id}/edit`}
+                  className="btn btn-primary btn-sm me-2"
+                >
+                  Editar
+                </Link>
 
 
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => deleteItem(item.id)}
-              >
-                Eliminar
-              </button>
-            </div>)}</div>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => deleteItem(item.id)}
+                >
+                  Eliminar
+                </button>
+              </div>)}</div>
         ))}
         <div className="d-flex">
           {!isClient && (
             <Link to={`/carts/${id}/add-book`} className="btn btn-success me-2">
-            Agregar libro
-          </Link>
+              Agregar libro
+            </Link>
           )}
-          
+          {!isClient && cart.estado !== "pagado" && (
+            <button
+              onClick={handlePay}
+              className="btn btn-warning me-2"
+            >
+              Pagar
+            </button>
+          )}
+
 
           <Link to="/carts" className="btn btn-secondary">
             Volver
