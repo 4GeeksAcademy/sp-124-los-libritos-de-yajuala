@@ -458,14 +458,20 @@ def delete_book(book_id):
 @api.route("/books/search")
 def search_books():
     query = request.args.get("q", "").strip()
+    search_type = request.args.get("type", "title")  # "title" o "author"
 
     if not query:
         return jsonify([]), 200
 
     try:
+        if search_type == "author":
+            q = f"inauthor:{query}"
+        else:
+            q = f"intitle:{query}"
+
         resp = requests.get(
             "https://www.googleapis.com/books/v1/volumes",
-            params={"q": query, "maxResults": 10},
+            params={"q": q, "maxResults": 12},
             timeout=5
         )
 
@@ -480,13 +486,15 @@ def search_books():
         for item in items:
             info = item.get("volumeInfo", {})
 
+            isbn = None
+            identifiers = info.get("industryIdentifiers", [])
+            if identifiers:
+                isbn = identifiers[0].get("identifier")
+
             results.append({
                 "titulo": info.get("title", "Sin título"),
                 "autor": ", ".join(info.get("authors", [])),
-                "isbn": next(
-                    (i.get("identifier") for i in info.get("industryIdentifiers", []) if i.get("identifier")),
-                    None
-                ),
+                "isbn": isbn,
                 "descripcion": info.get("description", ""),
                 "portada": info.get("imageLinks", {}).get("thumbnail")
             })
@@ -498,35 +506,58 @@ def search_books():
         return jsonify({"msg": "Error consultando Google Books"}), 500
 
 
-
 @api.route("/books/import", methods=["POST"])
+@jwt_required()
 def import_book():
-    body = request.get_json() or {}
+    try:
+        body = request.get_json()
 
-    required = ["titulo", "autor", "isbn"]
-    for field in required:
-        if not body.get(field):
-            return jsonify({"msg": f"Falta el campo {field}"}), 400
+        titulo = body.get("titulo")
+        autor = body.get("autor")
+        isbn = body.get("isbn")
+        descripcion = body.get("descripcion")
+        portada = body.get("portada")
+        precio = body.get("precio")
 
-    existing = Book.query.filter_by(isbn=body["isbn"]).first()
+        if not titulo:
+            return jsonify({"msg": "El título es obligatorio"}), 400
 
-    if existing:
-        book = existing
-    else:
-        book = Book(
-            titulo=body["titulo"],
-            autor=body["autor"],
-            isbn=body["isbn"],
-            descripcion=body.get("descripcion"),
-            portada=body.get("portada"),
-            categorias=body.get("categorias"),
-            fecha_publicacion=body.get("fecha_publicacion"),
-            precio=body.get("precio", 0)
+        if precio is None:
+            return jsonify({"msg": "El precio es obligatorio"}), 400
+
+        if not isbn:
+            import uuid
+            isbn = "NOISBN-" + uuid.uuid4().hex[:12]
+
+        existing = Book.query.filter_by(isbn=isbn).first()
+
+        if existing:
+            existing.titulo = titulo or existing.titulo
+            existing.autor = autor or existing.autor
+            existing.descripcion = descripcion or existing.descripcion
+            existing.portada = portada or existing.portada
+            existing.precio = precio or existing.precio
+
+            db.session.commit()
+            return jsonify(existing.serialize()), 200
+
+        new_book = Book(
+            titulo=titulo,
+            autor=autor,
+            isbn=isbn,
+            descripcion=descripcion,
+            portada=portada,
+            precio=precio
         )
-        db.session.add(book)
+
+        db.session.add(new_book)
         db.session.commit()
 
-    return jsonify(book.serialize()), 201
+        return jsonify(new_book.serialize()), 201
+
+    except Exception as e:
+        print("ERROR IMPORTANDO LIBRO:", e)
+        return jsonify({"msg": "Error interno importando libro"}), 500
 
 
 @api.route("/categorialibro", methods=["POST"])
@@ -1477,7 +1508,14 @@ def get_provider_books():
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
-    links = ProviderBook.query.filter_by(id_proveedor=provider_id).all()
+
+    links = (
+        ProviderBook.query
+        .filter_by(id_proveedor=provider_id)
+        .join(Book)
+        .order_by(Book.titulo.asc())
+        .all()
+    )
 
     return jsonify([
         {
@@ -1583,6 +1621,9 @@ def provider_add_book(provider_id):
     if not book_id:
         return jsonify({"msg": "Falta book_id"}), 400
 
+    if cantidad is None or int(cantidad) < 0:
+        return jsonify({"msg": "Cantidad inválida"}), 400
+
     provider = Provider.query.get(provider_id)
     if not provider:
         return jsonify({"msg": "Proveedor no encontrado"}), 404
@@ -1597,18 +1638,22 @@ def provider_add_book(provider_id):
     ).first()
 
     if existing:
-        existing.cantidad += cantidad
+        existing.cantidad += int(cantidad)
     else:
         relation = ProviderBook(
             id_proveedor=provider_id,
             id_libro=book_id,
-            cantidad=cantidad
+            cantidad=int(cantidad)
         )
         db.session.add(relation)
 
     db.session.commit()
 
-    return jsonify({"msg": "Libro asociado correctamente"}), 200
+    return jsonify({
+        "msg": "Libro asociado correctamente",
+        "book": book.serialize(),
+        "cantidad": cantidad
+    }), 200
 
 
 @api.route("/provider/books/<int:provider_book_id>/cantidad", methods=["PUT"])
@@ -2021,10 +2066,8 @@ def google_pay_confirm():
     if not address_id:
         return jsonify({"msg": "Falta address_id"}), 400
 
-   
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
-  
     return pay_cart(int(cart_id))
 
 # _______________________Rutas Paypal____________________________
@@ -2121,7 +2164,6 @@ def capture_order(order_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 
 # _______________________Fin Rutas Paypal____________________________
