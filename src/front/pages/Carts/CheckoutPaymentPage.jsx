@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import CheckoutPaypalPay from "./CheckoutPaypalPay";
 
 export default function CheckoutPaymentPage() {
   const { store, dispatch } = useGlobalReducer();
@@ -13,39 +14,22 @@ export default function CheckoutPaymentPage() {
 
   const [address, setAddress] = useState(null);
 
- // useEffect(() => {
- //   if (!store.activeCart) {
- //     fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
- //       .then(res => res.json())
- //       .then(data => {
-//       dispatch({
-//            type: "set_active_cart",
-//            payload: data.cart
-//          });
-//        });
-//    }
-//  }, []);
-
   useEffect(() => {
-  if (!store.user?.id) return;
+    if (!store.user?.id) return;
 
-  const needsCart =
-    !store.activeCart ||
-    store.activeCart.id_cliente !== store.user.id ||
-    store.activeCart.estado !== "pendiente";
+    const needsCart =
+      !store.activeCart ||
+      store.activeCart.id_cliente !== store.user.id ||
+      store.activeCart.estado !== "pendiente";
 
-  if (needsCart) {
-    fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
-      .then((res) => res.json())
-      .then((data) => {
-        dispatch({
-          type: "set_active_cart",
-          payload: data.cart
+    if (needsCart) {
+      fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
+        .then((res) => res.json())
+        .then((data) => {
+          dispatch({ type: "set_active_cart", payload: data.cart });
         });
-      });
-  }
-}, [store.user?.id]);
-
+    }
+  }, [store.user?.id]);
 
   useEffect(() => {
     if (!addressId) return;
@@ -68,34 +52,18 @@ export default function CheckoutPaymentPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            address_id: addressId,
-            payment_method: paymentMethod
-          })
+          body: JSON.stringify({ address_id: addressId, payment_method: paymentMethod })
         }
       );
 
       const data = await resp.json();
-
-      console.log("RESPUESTA PAY:", data);
-
 
       if (!resp.ok) {
         alert(data.msg || "Error al pagar");
         return;
       }
 
-      // dispatch({
-      //  type: "SET_ACTIVE_CART",
-      //  payload: data.nuevo_carrito
-      // });
-
-      dispatch({
-        type: "set_active_cart",
-        payload: data.nuevo_carrito
-      });
-
-
+      dispatch({ type: "set_active_cart", payload: data.nuevo_carrito });
       navigate("/payment-success");
     } catch (err) {
       console.error(err);
@@ -123,9 +91,13 @@ export default function CheckoutPaymentPage() {
         {paymentMethod}
       </div>
 
-      <button className="btn btn-success mt-4" onClick={handlePay}>
-        Confirmar pago
-      </button>
+      {paymentMethod === "paypal" ? (
+        <CheckoutPaypalPay addressId={addressId} />
+      ) : (
+        <button className="btn btn-success mt-4" onClick={handlePay}>
+          Confirmar pago
+        </button>
+      )}
     </div>
   );
 }

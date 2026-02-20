@@ -268,7 +268,7 @@ class Address(db.Model):
         nullable=False
     )
 
-    nombre = db.Column(db.String(120), nullable=False)  # Ej: "Casa", "Trabajo"
+    nombre = db.Column(db.String(120), nullable=False)
     direccion = db.Column(db.String(255), nullable=False)
     ciudad = db.Column(db.String(120), nullable=False)
     provincia = db.Column(db.String(120), nullable=False)
