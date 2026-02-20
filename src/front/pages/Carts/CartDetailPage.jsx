@@ -10,17 +10,7 @@ export default function CartDetailPage() {
   const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
 
-  const handlePay = () => {
-    navigate("/pasarelapago", {
-      state: {
-        cart,
-        items,
-        total
-      }
-    });
-  };
-
-
+  
   const total = items.reduce((acc, item) => {
     const precioConDescuento = item.precio * (1 - item.descuento);
     return acc + precioConDescuento * item.cantidad;
@@ -112,16 +102,7 @@ export default function CartDetailPage() {
               Agregar libro
             </Link>
           )}
-          {!isClient && cart.estado !== "pagado" && (
-            <button
-              onClick={handlePay}
-              className="btn btn-warning me-2"
-            >
-              Pagar
-            </button>
-          )}
-
-
+          
           <Link to="/carts" className="btn btn-secondary">
             Volver
           </Link>

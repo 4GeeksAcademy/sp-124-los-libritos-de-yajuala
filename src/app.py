@@ -31,7 +31,6 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
 
 jwt = JWTManager(app)
 app.config["JWT_IDENTITY_CLAIM"] = "identity"
-
 app.config["CORS_HEADERS"] = "Content-Type"
 CORS(
     app,
