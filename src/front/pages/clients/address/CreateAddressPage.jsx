@@ -23,11 +23,7 @@ export default function CreateAddressPage() {
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
 
-<<<<<<< HEAD
- 
-=======
-  
->>>>>>> develop
+
   useEffect(() => {
     if (window.google?.maps) {
       initMap(40.4168, -3.7038);
@@ -70,11 +66,6 @@ export default function CreateAddressPage() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-<<<<<<< HEAD
-  
-=======
-  // Geocodificar ( backend)
->>>>>>> develop
 const handleBlur = async () => {
   const fullAddress = `${form.direccion}, ${form.ciudad}, ${form.provincia}, ${form.codigo_postal}`;
   if (!form.direccion || !form.ciudad) return;
@@ -106,11 +97,7 @@ const handleBlur = async () => {
     return;
   }
 
-<<<<<<< HEAD
-  
-=======
- 
->>>>>>> develop
+
   let payload = { ...form };
 
   if (payload.latitud == null || payload.longitud == null) {
@@ -179,11 +166,7 @@ else initMap(data.lat, data.lng);
       <input className="form-control mt-3" name="codigo_postal" placeholder="Código postal" value={form.codigo_postal} onChange={handleChange} onBlur={handleBlur} />
       <input className="form-control mt-3" name="telefono" placeholder="Teléfono" value={form.telefono} onChange={handleChange} />
 
-<<<<<<< HEAD
-      
-=======
-    
->>>>>>> develop
+
       <div
         ref={mapRef}
         className="mt-4"

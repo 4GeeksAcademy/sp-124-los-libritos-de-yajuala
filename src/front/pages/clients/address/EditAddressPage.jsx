@@ -107,7 +107,7 @@ export default function EditAddressPage() {
       <input className="form-control mt-3" name="codigo_postal" value={form.codigo_postal} onChange={handleChange} />
       <input className="form-control mt-3" name="telefono" value={form.telefono} onChange={handleChange} />
 
-      {/* Mapa con marcador draggable */}
+    
       <div
         ref={mapRef}
         className="mt-4"
