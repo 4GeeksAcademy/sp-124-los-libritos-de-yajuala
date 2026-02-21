@@ -52,7 +52,7 @@ export default function useGlobalReducer() {
 
         validateToken: async (token) => {
             try {
-                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/validate`, {
+                const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/validate`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
