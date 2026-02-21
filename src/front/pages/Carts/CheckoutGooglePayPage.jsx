@@ -14,7 +14,6 @@ export default function CheckoutGooglePayPage() {
   const [loading, setLoading] = useState(true);
   const [gpayReady, setGpayReady] = useState(false);
 
- 
   useEffect(() => {
     if (!store.user?.id) return;
 
@@ -30,9 +29,8 @@ export default function CheckoutGooglePayPage() {
           dispatch({ type: "set_active_cart", payload: data.cart });
         });
     }
-  }, [store.user?.id]);
+  }, [store.user?.id, store.activeCart]); 
 
-  
   useEffect(() => {
     const interval = setInterval(() => {
       if (window.google?.payments?.api) {
@@ -41,7 +39,6 @@ export default function CheckoutGooglePayPage() {
       }
     }, 200);
 
-    
     const timeout = setTimeout(() => {
       clearInterval(interval);
       setLoading(false);
@@ -59,7 +56,6 @@ export default function CheckoutGooglePayPage() {
         environment: "TEST"
       });
 
-    
       const isReadyRequest = {
         apiVersion: 2,
         apiVersionMinor: 0,
@@ -79,7 +75,6 @@ export default function CheckoutGooglePayPage() {
       if (res.result) {
         setGpayReady(true);
 
-        
         if (gpayBtnRef.current) {
           gpayBtnRef.current.innerHTML = "";
           const button = paymentsClient.createButton({
@@ -101,15 +96,23 @@ export default function CheckoutGooglePayPage() {
       alert("No hay dirección seleccionada");
       return;
     }
-    if (!store.activeCart?.id) {
+
+    
+    let cart = store.activeCart;
+    if (!cart?.id && store.user?.id) {
+      const res = await fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`);
+      const data = await res.json();
+      cart = data.cart;
+      dispatch({ type: "set_active_cart", payload: cart });
+    }
+
+    if (!cart?.id) {
       alert("Carrito no encontrado");
       return;
     }
 
+    const total = Number(cart.monto_total || 0.01).toFixed(2); 
 
-    const total = Number(store.activeCart.monto_total || 0.01).toFixed(2);
-
-   
     const paymentDataRequest = {
       apiVersion: 2,
       apiVersionMinor: 0,
@@ -142,14 +145,13 @@ export default function CheckoutGooglePayPage() {
     try {
       const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
 
-  
       const resp = await fetch(`${backendUrl}/api/payments/google/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cart_id: store.activeCart.id,
+          cart_id: cart.id, 
           address_id: addressId,
-          paymentData 
+          paymentData
         })
       });
 
@@ -163,7 +165,6 @@ export default function CheckoutGooglePayPage() {
       dispatch({ type: "set_active_cart", payload: data.nuevo_carrito });
       navigate("/payment-success");
     } catch (err) {
-     
       console.error("Google Pay error:", err);
       alert("Pago cancelado o error en Google Pay (TEST)");
     }
