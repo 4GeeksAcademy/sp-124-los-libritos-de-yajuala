@@ -24,6 +24,33 @@ api = Blueprint('api', __name__)
 # CORS(api)
 CORS(api, origins="*")
 
+@api.route("/geocode", methods=["GET"])
+def geocode():
+    address = (request.args.get("address") or "").strip()
+    if not address:
+        return jsonify({"msg": "address is required"}), 400
+
+    key = os.getenv("GOOGLE_MAPS_KEY")
+    if not key:
+        return jsonify({"msg": "Missing GOOGLE_MAPS_KEY in server env"}), 500
+
+    r = requests.get(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        params={"address": address, "key": key},
+        timeout=10
+    )
+    data = r.json()
+
+    if data.get("status") != "OK" or not data.get("results"):
+        return jsonify({
+            "msg": "Geocoding failed",
+            "status": data.get("status"),
+            "error_message": data.get("error_message")
+        }), 400
+
+    loc = data["results"][0]["geometry"]["location"]
+    return jsonify({"lat": loc["lat"], "lng": loc["lng"]}), 200
+
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -123,7 +150,9 @@ def create_address(user_id):
         ciudad=data.get("ciudad"),
         provincia=data.get("provincia"),
         codigo_postal=data.get("codigo_postal"),
-        telefono=data.get("telefono")
+        telefono=data.get("telefono"),
+        latitud=data.get("latitud"),
+        longitud=data.get("longitud")
     )
 
     db.session.add(new_address)
@@ -146,6 +175,8 @@ def update_address(address_id):
     address.provincia = data.get("provincia", address.provincia)
     address.codigo_postal = data.get("codigo_postal", address.codigo_postal)
     address.telefono = data.get("telefono", address.telefono)
+    address.latitud = data.get("latitud", address.latitud)
+    address.longitud = data.get("longitud", address.longitud)
 
     db.session.commit()
 
@@ -1960,6 +1991,11 @@ def delivery_order_detail(cart_id):
         return jsonify({"msg": "Carrito no encontrado"}), 404
 
     address = Address.query.get(shipment.address_id)
+
+    print("DEBUG -> address_id:", shipment.address_id,
+      "lat:", address.latitud if address else None,
+      "lng:", address.longitud if address else None)
+    
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
     return jsonify({
@@ -2167,3 +2203,5 @@ def capture_order(order_id):
 
 
 # _______________________Fin Rutas Paypal____________________________
+
+

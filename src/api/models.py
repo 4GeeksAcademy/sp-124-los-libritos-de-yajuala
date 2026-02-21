@@ -274,6 +274,8 @@ class Address(db.Model):
     provincia = db.Column(db.String(120), nullable=False)
     codigo_postal = db.Column(db.String(20), nullable=False)
     telefono = db.Column(db.String(20), nullable=True)
+    latitud = db.Column(db.Float, nullable=True)
+    longitud = db.Column(db.Float, nullable=True)
 
     usuario = db.relationship(
         "User",
@@ -289,7 +291,9 @@ class Address(db.Model):
             "ciudad": self.ciudad,
             "provincia": self.provincia,
             "codigo_postal": self.codigo_postal,
-            "telefono": self.telefono
+            "telefono": self.telefono,
+            "latitud": self.latitud,
+            "longitud": self.longitud
         }
 
 
@@ -421,3 +425,4 @@ class Shipment(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
+

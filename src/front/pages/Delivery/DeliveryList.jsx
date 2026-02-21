@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -265,6 +266,15 @@ export const Delivery = () => {
                             Tel: {detail.address.telefono}
                           </div>
                         )}
+
+                        
+                        {detail.address.latitud != null &&
+                          detail.address.longitud != null && (
+                            <DeliveryMap
+                              lat={detail.address.latitud}
+                              lng={detail.address.longitud}
+                            />
+                          )}
                       </div>
                     )}
 
@@ -298,3 +308,60 @@ export const Delivery = () => {
     </div>
   );
 };
+
+function DeliveryMap({ lat, lng }) {
+  const mapRef = React.useRef(null);
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  React.useEffect(() => {
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return;
+
+    const initMap = () => {
+      if (!mapRef.current || !window.google?.maps) return;
+
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: { lat: latNum, lng: lngNum },
+        zoom: 15,
+        disableDefaultUI: true,
+        gestureHandling: "none",
+        draggable: false,
+      });
+
+      new window.google.maps.Marker({
+        position: { lat: latNum, lng: lngNum },
+        map,
+      });
+    };
+
+    if (window.google?.maps) {
+      initMap();
+      return;
+    }
+
+  
+    const existing = document.querySelector('script[data-google-maps="1"]');
+    if (existing) {
+      existing.addEventListener("load", initMap);
+      return () => existing.removeEventListener("load", initMap);
+    }
+
+    const script = document.createElement("script");
+    script.dataset.googleMaps = "1";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.onload = initMap;
+    document.head.appendChild(script);
+  }, [lat, lng, googleMapsApiKey]);
+
+  return (
+    <div
+      ref={mapRef}
+      className="mt-2"
+      style={{ width: "100%", height: "200px", borderRadius: "8px" }}
+    />
+  );
+}
