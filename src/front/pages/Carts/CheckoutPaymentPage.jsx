@@ -26,7 +26,7 @@ export default function CheckoutPaymentPage() {
       fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
         .then((res) => res.json())
         .then((data) => {
-          dispatch({ type: "set_active_cart", payload: data.cart });
+          dispatch({ type: "set_active_cart", payload: data });
         });
     }
   }, [store.user?.id]);

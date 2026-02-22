@@ -9,7 +9,8 @@ const LoggedDelivery = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+
 
     if (!token || !storedUser.id) {
       navigate("/delivery/login");
@@ -30,7 +31,7 @@ const LoggedDelivery = () => {
   return (
     <div className="container mt-5">
       <h1>Panel de Repartidor 🚴‍♂️</h1>
-      <p>Bienvenido, {user.nombre}</p>
+      <p>Bienvenido, {user.name}</p>
 
       <Delivery />
     </div>

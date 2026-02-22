@@ -2,6 +2,7 @@ import logging
 import os
 import requests as http_requests
 from base64 import b64encode
+from werkzeug.security import generate_password_hash, check_password_hash
 
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
@@ -23,6 +24,7 @@ api = Blueprint('api', __name__)
 # Allow CORS requests to this API
 # CORS(api)
 CORS(api, origins="*")
+
 
 @api.route("/geocode", methods=["GET"])
 def geocode():
@@ -88,11 +90,13 @@ def create_user():
     if User.query.filter_by(email=body["email"]).first():
         return jsonify({"msg": "El email ya existe"}), 400
 
+    hashed_password = generate_password_hash(body["password"])
+
     user = User(
         name=body["name"],
         lastname=body["lastname"],
         email=body["email"],
-        password=body["password"],
+        password=hashed_password,
         role=body.get("role", "client")
     )
 
@@ -1077,9 +1081,10 @@ def get_abandoned_carts():
 @api.route("/delivery", methods=["GET"])
 @jwt_required()
 def get_delivery_list():
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity["role"] != "delivery":
+    if not delivery or delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
 
     items = Delivery.query.all()
@@ -1094,25 +1099,25 @@ def get_delivery_detail(delivery_id):
     return jsonify(item.serialize()), 200
 
 
-@api.route('/delivery/login', methods=['POST'])
-def delivery_login():
+@api.route("/delivery/login", methods=["POST"])
+def login_delivery():
     data = request.json
     email = data.get("email")
     password = data.get("password")
 
     delivery = Delivery.query.filter_by(email=email).first()
 
-    if not delivery or not delivery.check_password(password):
+    if not delivery or not check_password_hash(delivery.password, password):
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    token = create_access_token(identity={
-        "id": delivery.id,
-        "role": "delivery"
-    })
+    if not delivery.is_approved:
+        return jsonify({"msg": "Tu cuenta está pendiente de aprobación por el administrador."}), 403
+
+    token = create_access_token(identity=delivery.id)
 
     return jsonify({
         "token": token,
-        "user": delivery.serialize()
+        "delivery": delivery.serialize()
     }), 200
 
 
@@ -1136,7 +1141,8 @@ def create_delivery():
         lastname=body["lastname"],
         email=body["email"],
         identificacion=body["identificacion"],
-        role="delivery"
+        role="delivery",
+        is_approved=False
     )
 
     d.set_password(body["password"])
@@ -1401,42 +1407,26 @@ def delete_review(review_id):
 
 @api.route("/login", methods=["POST"])
 def login():
-    body = request.get_json() or {}
-
-    email = body.get("email")
-    password = body.get("password")
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
 
     if not email or not password:
-        return jsonify({"msg": "Email y contraseña requeridos"}), 400
+        return jsonify({"msg": "Email y contraseña son obligatorios"}), 400
 
     user = User.query.filter_by(email=email).first()
 
-    #  Si el email pertenece a un PROVIDER
-    provider = Provider.query.filter_by(email=email).first()
-    if provider:
-        return jsonify({
-            "msg": "No tienes permiso para acceder al panel de cliente"
-        }), 403
-
-    if not user or user.password != password:
+    if not user:
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    if user.email == "admin@admin.com" and user.password == "123":
-        user.role = "admin"
-        db.session.commit()
+    if not check_password_hash(user.password, password):
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    access_token = create_access_token(
-        identity={
-            "id": user.id,
-            "role": user.role
-        }
-    )
+    if user.role == "delivery":
+        return jsonify({"msg": "Usa el login de repartidor"}), 403
 
-    return jsonify({
-        "msg": "Login correcto",
-        "token": access_token,
-        "user": user.serialize()
-    }), 200
+    token = create_access_token(identity=user.id)
+    return jsonify({"token": token, "user": user.serialize()}), 200
 
 
 @api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
@@ -1492,41 +1482,36 @@ def login_provider():
 @api.route("/delivery/pedidos", methods=["GET"])
 @jwt_required()
 def delivery_pedidos():
-    user = get_jwt_identity()
-    if user["role"] != "delivery":
+    delivery_id = get_jwt_identity()  # esto es un int
+    delivery = Delivery.query.get(delivery_id)
+
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
     return jsonify({"msg": "Pedidos del repartidor"}), 200
 
 
 @api.route("/validate", methods=["GET"])
 @jwt_required()
 def validate():
-    identity = get_jwt_identity()
-    role = identity.get("role")
+    user_id = get_jwt_identity()
 
-    if role == "provider":
-        entity = Provider.query.get(identity["id"])
-        if not entity:
-            return jsonify({"msg": "Proveedor no encontrado"}), 404
-        return jsonify({
-            "user": {**entity.serialize(), "role": "provider"}
-        }), 200
 
-    if role == "delivery":
-        entity = Delivery.query.get(identity["id"])
-        if not entity:
-            return jsonify({"msg": "Repartidor no encontrado"}), 404
-        return jsonify({
-            "user": {**entity.serialize(), "role": "delivery"}
-        }), 200
+    user = User.query.get(user_id)
 
-    user = User.query.get(identity["id"])
+    if not user:
+        user = Delivery.query.get(user_id)
+
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
 
     return jsonify({
         "user": user.serialize()
     }), 200
+
 
 
 # ENDPOINTS PROVIDER BOOKS
@@ -1840,17 +1825,19 @@ def get_provider_orders():
 @api.route("/delivery/orders/available", methods=["GET"])
 @jwt_required()
 def delivery_orders_available():
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
 
     rows = (
         db.session.query(Shipment, Cart)
         .join(Cart, Cart.id == Shipment.cart_id)
-        .filter(Shipment.status == "unassigned")
-        .filter(Shipment.delivery_id.is_(None))
-        .filter(Cart.estado == "pagado")
+        .filter(Shipment.delivery_id == None) 
         .order_by(Shipment.id.desc())
         .all()
     )
@@ -1866,15 +1853,18 @@ def delivery_orders_available():
     return jsonify(orders), 200
 
 
+
 @api.route("/delivery/orders", methods=["GET"])
 @jwt_required()
 def delivery_orders_mine():
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
 
     rows = (
         db.session.query(Shipment, Cart)
@@ -1894,56 +1884,42 @@ def delivery_orders_mine():
 
     return jsonify(orders), 200
 
+
 # endpoint para claim
 
 
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
 @jwt_required()
-def delivery_claim_order(cart_id):
-    identity = get_jwt_identity()
-
-    if identity.get("role") != "delivery":
-        return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
-
-    # Buscar el shipment asociado a este cart
-    shipment = Shipment.query.filter_by(cart_id=cart_id).first()
-
-    if not shipment:
-        return jsonify({"msg": "Pedido no encontrado"}), 404
-
-    # Verificar que no esté ya asignado
-    if shipment.delivery_id is not None:
-        return jsonify({"msg": "Este pedido ya está asignado a otro repartidor"}), 400
-
-    # Verificar el cart  pagado
-    cart = Cart.query.get(cart_id)
-    if not cart or cart.estado != "pagado":
-        return jsonify({"msg": "El pedido no está disponible"}), 400
-
-    # Asignar el repartidor
-    shipment.delivery_id = delivery_id
-    shipment.status = "assigned"
-
-    db.session.commit()
-
-    return jsonify({
-        "msg": "Pedido asignado correctamente",
-        "cart_id": cart_id,
-        "status": shipment.status
-    }), 200
+def delivery_claim_order(cart_id): 
+    delivery_id = get_jwt_identity() 
+    delivery = Delivery.query.get(delivery_id) 
+    if not delivery: 
+        return jsonify({"msg": "Repartidor no encontrado"}), 404 
+    if delivery.role != "delivery": 
+        return jsonify({"msg": "No autorizado"}), 403 
+    
+    shipment = Shipment.query.get(cart_id) 
+    if not shipment: 
+        return jsonify({"msg": "Pedido no encontrado"}), 404 
+    
+    if shipment.delivery_id is not None: 
+        return jsonify({"msg": "Este pedido ya fue asignado"}), 400 
+    shipment.delivery_id = delivery_id 
+    db.session.commit() 
+    return jsonify({"msg": "Pedido asignado correctamente"}), 200
 
 
 @api.route("/delivery/orders/<int:cart_id>/delivered", methods=["PUT"])
 @jwt_required()
 def delivery_mark_delivered(cart_id):
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
 
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
     if not shipment:
@@ -1964,25 +1940,27 @@ def delivery_mark_delivered(cart_id):
         "msg": "Pedido entregado",
         "cart_id": cart_id,
         "status": shipment.status,
-        "cart_estado": cart.estado
+        "cart_estado": cart.estado if cart else None
     }), 200
+
 
 
 @api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
 @jwt_required()
 def delivery_order_detail(cart_id):
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
 
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
     if not shipment:
         return jsonify({"msg": "Pedido no encontrado"}), 404
 
-    # solo el repartidor asignado puede ver el detalle
     if shipment.delivery_id != delivery_id:
         return jsonify({"msg": "No autorizado"}), 403
 
@@ -1993,9 +1971,9 @@ def delivery_order_detail(cart_id):
     address = Address.query.get(shipment.address_id)
 
     print("DEBUG -> address_id:", shipment.address_id,
-      "lat:", address.latitud if address else None,
-      "lng:", address.longitud if address else None)
-    
+          "lat:", address.latitud if address else None,
+          "lng:", address.longitud if address else None)
+
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
     return jsonify({
@@ -2014,6 +1992,7 @@ def delivery_order_detail(cart_id):
             for it in items
         ]
     }), 200
+
 
 
 @api.route("/shipments/from-cart/<int:cart_id>", methods=["POST"])
@@ -2204,4 +2183,26 @@ def capture_order(order_id):
 
 # _______________________Fin Rutas Paypal____________________________
 
+@api.route("/repartidores/pendientes", methods=["GET"])
+def repartidores_pendientes():
+    pendientes = Delivery.query.filter_by(is_approved=False).all()
+    return jsonify([d.serialize() for d in pendientes]), 200
 
+
+@api.route("/repartidores/<int:delivery_id>/aprobar", methods=["PUT"])
+def aprobar_repartidor(delivery_id):
+    delivery = Delivery.query.get(delivery_id)
+
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    delivery.is_approved = True
+    db.session.commit()
+
+    return jsonify({"msg": "Repartidor aprobado correctamente"}), 200
+
+
+@api.route("/repartidores/pendientes/count", methods=["GET"])
+def count_repartidores_pendientes():
+    count = Delivery.query.filter_by(is_approved=False).count()
+    return jsonify({"count": count}), 200
