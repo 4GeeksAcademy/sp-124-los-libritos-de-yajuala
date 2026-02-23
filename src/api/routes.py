@@ -4,6 +4,7 @@ import requests as http_requests
 import cloudinary
 import cloudinary.uploader
 from base64 import b64encode
+from werkzeug.security import generate_password_hash, check_password_hash
 
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
@@ -32,6 +33,34 @@ cloudinary.config(
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
+
+
+@api.route("/geocode", methods=["GET"])
+def geocode():
+    address = (request.args.get("address") or "").strip()
+    if not address:
+        return jsonify({"msg": "address is required"}), 400
+
+    key = os.getenv("GOOGLE_MAPS_KEY")
+    if not key:
+        return jsonify({"msg": "Missing GOOGLE_MAPS_KEY in server env"}), 500
+
+    r = requests.get(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        params={"address": address, "key": key},
+        timeout=10
+    )
+    data = r.json()
+
+    if data.get("status") != "OK" or not data.get("results"):
+        return jsonify({
+            "msg": "Geocoding failed",
+            "status": data.get("status"),
+            "error_message": data.get("error_message")
+        }), 400
+
+    loc = data["results"][0]["geometry"]["location"]
+    return jsonify({"lat": loc["lat"], "lng": loc["lng"]}), 200
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -70,11 +99,13 @@ def create_user():
     if User.query.filter_by(email=body["email"]).first():
         return jsonify({"msg": "El email ya existe"}), 400
 
+    hashed_password = generate_password_hash(body["password"])
+
     user = User(
         name=body["name"],
         lastname=body["lastname"],
         email=body["email"],
-        password=body["password"],
+        password=hashed_password,
         role=body.get("role", "client")
     )
 
@@ -132,7 +163,9 @@ def create_address(user_id):
         ciudad=data.get("ciudad"),
         provincia=data.get("provincia"),
         codigo_postal=data.get("codigo_postal"),
-        telefono=data.get("telefono")
+        telefono=data.get("telefono"),
+        latitud=data.get("latitud"),
+        longitud=data.get("longitud")
     )
 
     db.session.add(new_address)
@@ -155,6 +188,8 @@ def update_address(address_id):
     address.provincia = data.get("provincia", address.provincia)
     address.codigo_postal = data.get("codigo_postal", address.codigo_postal)
     address.telefono = data.get("telefono", address.telefono)
+    address.latitud = data.get("latitud", address.latitud)
+    address.longitud = data.get("longitud", address.longitud)
 
     db.session.commit()
 
@@ -467,14 +502,20 @@ def delete_book(book_id):
 @api.route("/books/search")
 def search_books():
     query = request.args.get("q", "").strip()
+    search_type = request.args.get("type", "title")  # "title" o "author"
 
     if not query:
         return jsonify([]), 200
 
     try:
+        if search_type == "author":
+            q = f"inauthor:{query}"
+        else:
+            q = f"intitle:{query}"
+
         resp = requests.get(
             "https://www.googleapis.com/books/v1/volumes",
-            params={"q": query, "maxResults": 10},
+            params={"q": q, "maxResults": 12},
             timeout=5
         )
 
@@ -489,14 +530,15 @@ def search_books():
         for item in items:
             info = item.get("volumeInfo", {})
 
+            isbn = None
+            identifiers = info.get("industryIdentifiers", [])
+            if identifiers:
+                isbn = identifiers[0].get("identifier")
+
             results.append({
                 "titulo": info.get("title", "Sin título"),
                 "autor": ", ".join(info.get("authors", [])),
-                "isbn": next(
-                    (i.get("identifier") for i in info.get(
-                        "industryIdentifiers", []) if i.get("identifier")),
-                    None
-                ),
+                "isbn": isbn,
                 "descripcion": info.get("description", ""),
                 "portada": info.get("imageLinks", {}).get("thumbnail")
             })
@@ -509,33 +551,57 @@ def search_books():
 
 
 @api.route("/books/import", methods=["POST"])
+@jwt_required()
 def import_book():
-    body = request.get_json() or {}
+    try:
+        body = request.get_json()
 
-    required = ["titulo", "autor", "isbn"]
-    for field in required:
-        if not body.get(field):
-            return jsonify({"msg": f"Falta el campo {field}"}), 400
+        titulo = body.get("titulo")
+        autor = body.get("autor")
+        isbn = body.get("isbn")
+        descripcion = body.get("descripcion")
+        portada = body.get("portada")
+        precio = body.get("precio")
 
-    existing = Book.query.filter_by(isbn=body["isbn"]).first()
+        if not titulo:
+            return jsonify({"msg": "El título es obligatorio"}), 400
 
-    if existing:
-        book = existing
-    else:
-        book = Book(
-            titulo=body["titulo"],
-            autor=body["autor"],
-            isbn=body["isbn"],
-            descripcion=body.get("descripcion"),
-            portada=body.get("portada"),
-            categorias=body.get("categorias"),
-            fecha_publicacion=body.get("fecha_publicacion"),
-            precio=body.get("precio", 0)
+        if precio is None:
+            return jsonify({"msg": "El precio es obligatorio"}), 400
+
+        if not isbn:
+            import uuid
+            isbn = "NOISBN-" + uuid.uuid4().hex[:12]
+
+        existing = Book.query.filter_by(isbn=isbn).first()
+
+        if existing:
+            existing.titulo = titulo or existing.titulo
+            existing.autor = autor or existing.autor
+            existing.descripcion = descripcion or existing.descripcion
+            existing.portada = portada or existing.portada
+            existing.precio = precio or existing.precio
+
+            db.session.commit()
+            return jsonify(existing.serialize()), 200
+
+        new_book = Book(
+            titulo=titulo,
+            autor=autor,
+            isbn=isbn,
+            descripcion=descripcion,
+            portada=portada,
+            precio=precio
         )
-        db.session.add(book)
+
+        db.session.add(new_book)
         db.session.commit()
 
-    return jsonify(book.serialize()), 201
+        return jsonify(new_book.serialize()), 201
+
+    except Exception as e:
+        print("ERROR IMPORTANDO LIBRO:", e)
+        return jsonify({"msg": "Error interno importando libro"}), 500
 
 
 @api.route("/categorialibro", methods=["POST"])
@@ -1024,9 +1090,10 @@ def get_abandoned_carts():
 @api.route("/delivery", methods=["GET"])
 @jwt_required()
 def get_delivery_list():
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity["role"] != "delivery":
+    if not delivery or delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
 
     items = Delivery.query.all()
@@ -1041,25 +1108,25 @@ def get_delivery_detail(delivery_id):
     return jsonify(item.serialize()), 200
 
 
-@api.route('/delivery/login', methods=['POST'])
-def delivery_login():
+@api.route("/delivery/login", methods=["POST"])
+def login_delivery():
     data = request.json
     email = data.get("email")
     password = data.get("password")
 
     delivery = Delivery.query.filter_by(email=email).first()
 
-    if not delivery or not delivery.check_password(password):
+    if not delivery or not check_password_hash(delivery.password, password):
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    token = create_access_token(identity={
-        "id": delivery.id,
-        "role": "delivery"
-    })
+    if not delivery.is_approved:
+        return jsonify({"msg": "Tu cuenta está pendiente de aprobación por el administrador."}), 403
+
+    token = create_access_token(identity=delivery.id)
 
     return jsonify({
         "token": token,
-        "user": delivery.serialize()
+        "delivery": delivery.serialize()
     }), 200
 
 
@@ -1083,7 +1150,8 @@ def create_delivery():
         lastname=body["lastname"],
         email=body["email"],
         identificacion=body["identificacion"],
-        role="delivery"
+        role="delivery",
+        is_approved=False
     )
 
     d.set_password(body["password"])
@@ -1348,42 +1416,26 @@ def delete_review(review_id):
 
 @api.route("/login", methods=["POST"])
 def login():
-    body = request.get_json() or {}
-
-    email = body.get("email")
-    password = body.get("password")
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")
 
     if not email or not password:
-        return jsonify({"msg": "Email y contraseña requeridos"}), 400
+        return jsonify({"msg": "Email y contraseña son obligatorios"}), 400
 
     user = User.query.filter_by(email=email).first()
 
-    #  Si el email pertenece a un PROVIDER
-    provider = Provider.query.filter_by(email=email).first()
-    if provider:
-        return jsonify({
-            "msg": "No tienes permiso para acceder al panel de cliente"
-        }), 403
-
-    if not user or user.password != password:
+    if not user:
         return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    if user.email == "admin@admin.com" and user.password == "123":
-        user.role = "admin"
-        db.session.commit()
+    if not check_password_hash(user.password, password):
+        return jsonify({"msg": "Credenciales incorrectas"}), 401
 
-    access_token = create_access_token(
-        identity={
-            "id": user.id,
-            "role": user.role
-        }
-    )
+    if user.role == "delivery":
+        return jsonify({"msg": "Usa el login de repartidor"}), 403
 
-    return jsonify({
-        "msg": "Login correcto",
-        "token": access_token,
-        "user": user.serialize()
-    }), 200
+    token = create_access_token(identity=user.id)
+    return jsonify({"token": token, "user": user.serialize()}), 200
 
 
 @api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
@@ -1439,41 +1491,36 @@ def login_provider():
 @api.route("/delivery/pedidos", methods=["GET"])
 @jwt_required()
 def delivery_pedidos():
-    user = get_jwt_identity()
-    if user["role"] != "delivery":
+    delivery_id = get_jwt_identity()  # esto es un int
+    delivery = Delivery.query.get(delivery_id)
+
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
     return jsonify({"msg": "Pedidos del repartidor"}), 200
 
 
 @api.route("/validate", methods=["GET"])
 @jwt_required()
 def validate():
-    identity = get_jwt_identity()
-    role = identity.get("role")
+    user_id = get_jwt_identity()
 
-    if role == "provider":
-        entity = Provider.query.get(identity["id"])
-        if not entity:
-            return jsonify({"msg": "Proveedor no encontrado"}), 404
-        return jsonify({
-            "user": {**entity.serialize(), "role": "provider"}
-        }), 200
 
-    if role == "delivery":
-        entity = Delivery.query.get(identity["id"])
-        if not entity:
-            return jsonify({"msg": "Repartidor no encontrado"}), 404
-        return jsonify({
-            "user": {**entity.serialize(), "role": "delivery"}
-        }), 200
+    user = User.query.get(user_id)
 
-    user = User.query.get(identity["id"])
+    if not user:
+        user = Delivery.query.get(user_id)
+
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
 
     return jsonify({
         "user": user.serialize()
     }), 200
+
 
 
 # ENDPOINTS PROVIDER BOOKS
@@ -1486,7 +1533,14 @@ def get_provider_books():
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
-    links = ProviderBook.query.filter_by(id_proveedor=provider_id).all()
+
+    links = (
+        ProviderBook.query
+        .filter_by(id_proveedor=provider_id)
+        .join(Book)
+        .order_by(Book.titulo.asc())
+        .all()
+    )
 
     return jsonify([
         {
@@ -1592,6 +1646,9 @@ def provider_add_book(provider_id):
     if not book_id:
         return jsonify({"msg": "Falta book_id"}), 400
 
+    if cantidad is None or int(cantidad) < 0:
+        return jsonify({"msg": "Cantidad inválida"}), 400
+
     provider = Provider.query.get(provider_id)
     if not provider:
         return jsonify({"msg": "Proveedor no encontrado"}), 404
@@ -1606,18 +1663,22 @@ def provider_add_book(provider_id):
     ).first()
 
     if existing:
-        existing.cantidad += cantidad
+        existing.cantidad += int(cantidad)
     else:
         relation = ProviderBook(
             id_proveedor=provider_id,
             id_libro=book_id,
-            cantidad=cantidad
+            cantidad=int(cantidad)
         )
         db.session.add(relation)
 
     db.session.commit()
 
-    return jsonify({"msg": "Libro asociado correctamente"}), 200
+    return jsonify({
+        "msg": "Libro asociado correctamente",
+        "book": book.serialize(),
+        "cantidad": cantidad
+    }), 200
 
 
 @api.route("/provider/books/<int:provider_book_id>/cantidad", methods=["PUT"])
@@ -1773,17 +1834,19 @@ def get_provider_orders():
 @api.route("/delivery/orders/available", methods=["GET"])
 @jwt_required()
 def delivery_orders_available():
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
 
     rows = (
         db.session.query(Shipment, Cart)
         .join(Cart, Cart.id == Shipment.cart_id)
-        .filter(Shipment.status == "unassigned")
-        .filter(Shipment.delivery_id.is_(None))
-        .filter(Cart.estado == "pagado")
+        .filter(Shipment.delivery_id == None) 
         .order_by(Shipment.id.desc())
         .all()
     )
@@ -1799,15 +1862,18 @@ def delivery_orders_available():
     return jsonify(orders), 200
 
 
+
 @api.route("/delivery/orders", methods=["GET"])
 @jwt_required()
 def delivery_orders_mine():
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
 
     rows = (
         db.session.query(Shipment, Cart)
@@ -1827,56 +1893,42 @@ def delivery_orders_mine():
 
     return jsonify(orders), 200
 
+
 # endpoint para claim
 
 
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
 @jwt_required()
-def delivery_claim_order(cart_id):
-    identity = get_jwt_identity()
-
-    if identity.get("role") != "delivery":
-        return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
-
-    # Buscar el shipment asociado a este cart
-    shipment = Shipment.query.filter_by(cart_id=cart_id).first()
-
-    if not shipment:
-        return jsonify({"msg": "Pedido no encontrado"}), 404
-
-    # Verificar que no esté ya asignado
-    if shipment.delivery_id is not None:
-        return jsonify({"msg": "Este pedido ya está asignado a otro repartidor"}), 400
-
-    # Verificar el cart  pagado
-    cart = Cart.query.get(cart_id)
-    if not cart or cart.estado != "pagado":
-        return jsonify({"msg": "El pedido no está disponible"}), 400
-
-    # Asignar el repartidor
-    shipment.delivery_id = delivery_id
-    shipment.status = "assigned"
-
-    db.session.commit()
-
-    return jsonify({
-        "msg": "Pedido asignado correctamente",
-        "cart_id": cart_id,
-        "status": shipment.status
-    }), 200
+def delivery_claim_order(cart_id): 
+    delivery_id = get_jwt_identity() 
+    delivery = Delivery.query.get(delivery_id) 
+    if not delivery: 
+        return jsonify({"msg": "Repartidor no encontrado"}), 404 
+    if delivery.role != "delivery": 
+        return jsonify({"msg": "No autorizado"}), 403 
+    
+    shipment = Shipment.query.get(cart_id) 
+    if not shipment: 
+        return jsonify({"msg": "Pedido no encontrado"}), 404 
+    
+    if shipment.delivery_id is not None: 
+        return jsonify({"msg": "Este pedido ya fue asignado"}), 400 
+    shipment.delivery_id = delivery_id 
+    db.session.commit() 
+    return jsonify({"msg": "Pedido asignado correctamente"}), 200
 
 
 @api.route("/delivery/orders/<int:cart_id>/delivered", methods=["PUT"])
 @jwt_required()
 def delivery_mark_delivered(cart_id):
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
 
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
     if not shipment:
@@ -1897,25 +1949,27 @@ def delivery_mark_delivered(cart_id):
         "msg": "Pedido entregado",
         "cart_id": cart_id,
         "status": shipment.status,
-        "cart_estado": cart.estado
+        "cart_estado": cart.estado if cart else None
     }), 200
+
 
 
 @api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
 @jwt_required()
 def delivery_order_detail(cart_id):
-    identity = get_jwt_identity()
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
 
-    if identity.get("role") != "delivery":
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    if delivery.role != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
-
-    delivery_id = identity["id"]
 
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
     if not shipment:
         return jsonify({"msg": "Pedido no encontrado"}), 404
 
-    # solo el repartidor asignado puede ver el detalle
     if shipment.delivery_id != delivery_id:
         return jsonify({"msg": "No autorizado"}), 403
 
@@ -1924,6 +1978,11 @@ def delivery_order_detail(cart_id):
         return jsonify({"msg": "Carrito no encontrado"}), 404
 
     address = Address.query.get(shipment.address_id)
+
+    print("DEBUG -> address_id:", shipment.address_id,
+          "lat:", address.latitud if address else None,
+          "lng:", address.longitud if address else None)
+
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
     return jsonify({
@@ -1942,6 +2001,7 @@ def delivery_order_detail(cart_id):
             for it in items
         ]
     }), 200
+
 
 
 @api.route("/shipments/from-cart/<int:cart_id>", methods=["POST"])
@@ -2155,3 +2215,26 @@ def update_user_avatar(user_id):
     db.session.commit()
 
     return jsonify(user.serialize()), 200
+@api.route("/repartidores/pendientes", methods=["GET"])
+def repartidores_pendientes():
+    pendientes = Delivery.query.filter_by(is_approved=False).all()
+    return jsonify([d.serialize() for d in pendientes]), 200
+
+
+@api.route("/repartidores/<int:delivery_id>/aprobar", methods=["PUT"])
+def aprobar_repartidor(delivery_id):
+    delivery = Delivery.query.get(delivery_id)
+
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+
+    delivery.is_approved = True
+    db.session.commit()
+
+    return jsonify({"msg": "Repartidor aprobado correctamente"}), 200
+
+
+@api.route("/repartidores/pendientes/count", methods=["GET"])
+def count_repartidores_pendientes():
+    count = Delivery.query.filter_by(is_approved=False).count()
+    return jsonify({"count": count}), 200

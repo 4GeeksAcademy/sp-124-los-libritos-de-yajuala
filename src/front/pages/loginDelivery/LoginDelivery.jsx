@@ -35,13 +35,11 @@ export default function LoginDelivery() {
         throw new Error(data.msg || "Credenciales incorrectas");
       }
 
-      // Guardar token y usuario en store y localStorage
       actions.setToken(data.token);
-      actions.setUser(data.user);
+      actions.setUser(data.delivery);
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("user", JSON.stringify(data.delivery));
 
-      // Redirigir a zona de repartidores
       navigate("/loggeddelivery");
 
     } catch (err) {
@@ -49,6 +47,7 @@ export default function LoginDelivery() {
       alert(err.message);
     }
   };
+
 
   return (
     <div className="container mt-5">

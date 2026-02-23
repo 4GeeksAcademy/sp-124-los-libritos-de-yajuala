@@ -108,6 +108,7 @@ import AdminReviewList from "./pages/admin/reviews/AdminReviewList.jsx";
 import AdminReviewDetail from "./pages/admin/reviews/AdminReviewDetail.jsx";
 import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
+import AdminRepartidoresPendientes from "./components/AdminRepartidoresPendientes.jsx";
 
 export const router = createBrowserRouter(
         createRoutesFromElements(
@@ -213,6 +214,7 @@ export const router = createBrowserRouter(
                         {/* ── Admin con su propio layout ── */}
                         <Route path="/admin" element={<AdminLayout />}>
                                 <Route path="dashboard" element={<AdminDashboard />} />
+                                <Route path="repartidores" element={<AdminRepartidoresPendientes />} />
                                 <Route path="users" element={<AdminUsersList />} />
                                 <Route path="users/create" element={<AdminUserCreate />} />
                                 <Route path="users/:id" element={<AdminUserDetail />} />

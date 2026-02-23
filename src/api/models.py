@@ -41,13 +41,14 @@ class Delivery(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     identificacion = db.Column(db.String(50), unique=True, nullable=False)
     role = db.Column(db.String(20), nullable=False, default="delivery")
-    password = db.Column(db.String(200), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    is_approved = db.Column(db.Boolean, nullable=False, default=False)
 
-    def set_password(self, password):
-        self.password = password
-
-    def check_password(self, password):
-        return self.password == password
+    def set_password(self, raw_password): 
+        self.password = generate_password_hash(raw_password) 
+        
+    def check_password(self, raw_password): 
+        return check_password_hash(self.password, raw_password)
 
     def serialize(self):
         return {
@@ -56,7 +57,8 @@ class Delivery(db.Model):
             "lastname": self.lastname,
             "email": self.email,
             "identificacion": self.identificacion,
-            "role": self.role
+            "role": self.role,
+            "is_approved": self.is_approved
         }
 
 
@@ -276,6 +278,8 @@ class Address(db.Model):
     provincia = db.Column(db.String(120), nullable=False)
     codigo_postal = db.Column(db.String(20), nullable=False)
     telefono = db.Column(db.String(20), nullable=True)
+    latitud = db.Column(db.Float, nullable=True)
+    longitud = db.Column(db.Float, nullable=True)
 
     usuario = db.relationship(
         "User",
@@ -291,7 +295,9 @@ class Address(db.Model):
             "ciudad": self.ciudad,
             "provincia": self.provincia,
             "codigo_postal": self.codigo_postal,
-            "telefono": self.telefono
+            "telefono": self.telefono,
+            "latitud": self.latitud,
+            "longitud": self.longitud
         }
 
 
