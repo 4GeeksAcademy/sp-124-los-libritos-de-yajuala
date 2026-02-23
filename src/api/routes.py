@@ -20,6 +20,8 @@ from flask_cors import CORS
 from api.models_reviews import Review
 from datetime import datetime, timedelta
 from api.models import Shipment
+from api.models import Author, UserBookPreference, UserCategoryPreference, UserAuthorPreference
+
 
 api = Blueprint('api', __name__)
 
@@ -2261,3 +2263,115 @@ def aprobar_repartidor(delivery_id):
 def count_repartidores_pendientes():
     count = Delivery.query.filter_by(is_approved=False).count()
     return jsonify({"count": count}), 200
+
+
+# endpoints tinderete
+
+# Libros
+@api.route("/users/<int:user_id>/swipe/books", methods=["GET"])
+def swipe_books_feed(user_id):
+    limit = int(request.args.get("limit", 20))
+
+    
+    voted = UserBookPreference.query.filter_by(id_usuario=user_id).all()
+    voted_ids = {v.id_libro for v in voted}
+
+    
+    q = Book.query
+    if voted_ids:
+        q = q.filter(~Book.id.in_(voted_ids))
+
+    books = q.limit(limit).all()
+    return jsonify([b.serialize() for b in books]), 200
+
+# Categorias
+
+@api.route("/users/<int:user_id>/swipe/categories", methods=["GET"])
+def swipe_categories_feed(user_id):
+    limit = int(request.args.get("limit", 20))
+
+    voted = UserCategoryPreference.query.filter_by(id_usuario=user_id).all()
+    voted_ids = {v.id_categoria for v in voted}
+
+    q = Categorias.query
+    if voted_ids:
+        q = q.filter(~Categorias.id.in_(voted_ids))
+
+    cats = q.limit(limit).all()
+    return jsonify([c.serialize() for c in cats]), 200
+
+# Autores
+
+@api.route("/users/<int:user_id>/swipe/authors", methods=["GET"])
+def swipe_authors_feed(user_id):
+    limit = int(request.args.get("limit", 20))
+
+    voted = UserAuthorPreference.query.filter_by(id_usuario=user_id).all()
+    voted_ids = {v.id_autor for v in voted}
+
+    q = Author.query
+    if voted_ids:
+        q = q.filter(~Author.id.in_(voted_ids))
+
+    authors = q.limit(limit).all()
+    return jsonify([a.serialize() for a in authors]), 200
+
+# Votar Libro +1/-1
+@api.route("/users/<int:user_id>/swipe/books/<int:book_id>", methods=["POST"])
+def swipe_book_vote(user_id, book_id):
+    body = request.get_json(silent=True) or {}
+    pref = body.get("preference")
+
+    if pref not in (1, -1):
+        return jsonify({"msg": "preference debe ser 1 o -1"}), 400
+
+    
+    row = UserBookPreference.query.filter_by(id_usuario=user_id, id_libro=book_id).first()
+    if row:
+        row.preference = pref
+    else:
+        row = UserBookPreference(id_usuario=user_id, id_libro=book_id, preference=pref)
+        db.session.add(row)
+
+    db.session.commit()
+    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
+
+# Votar Categoria
+
+@api.route("/users/<int:user_id>/swipe/categories/<int:category_id>", methods=["POST"])
+def swipe_category_vote(user_id, category_id):
+    body = request.get_json(silent=True) or {}
+    pref = body.get("preference")
+
+    if pref not in (1, -1):
+        return jsonify({"msg": "preference debe ser 1 o -1"}), 400
+
+    row = UserCategoryPreference.query.filter_by(id_usuario=user_id, id_categoria=category_id).first()
+    if row:
+        row.preference = pref
+    else:
+        row = UserCategoryPreference(id_usuario=user_id, id_categoria=category_id, preference=pref)
+        db.session.add(row)
+
+    db.session.commit()
+    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
+
+# Votar autor
+
+@api.route("/users/<int:user_id>/swipe/authors/<int:author_id>", methods=["POST"])
+def swipe_author_vote(user_id, author_id):
+    body = request.get_json(silent=True) or {}
+    pref = body.get("preference")
+
+    if pref not in (1, -1):
+        return jsonify({"msg": "preference debe ser 1 o -1"}), 400
+
+    row = UserAuthorPreference.query.filter_by(id_usuario=user_id, id_autor=author_id).first()
+    if row:
+        row.preference = pref
+    else:
+        row = UserAuthorPreference(id_usuario=user_id, id_autor=author_id, preference=pref)
+        db.session.add(row)
+
+    db.session.commit()
+    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+
 db = SQLAlchemy()
 
 
@@ -431,3 +432,143 @@ class Shipment(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
+
+# Efecto tinder
+
+
+class UserBookPreference(db.Model):
+    __tablename__ = "user_book_preferences"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_usuario = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    id_libro = db.Column(
+        db.Integer,
+        db.ForeignKey("book.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    usuario = db.relationship("User", backref=db.backref("book_preferences", cascade="all, delete"))
+    libro = db.relationship("Book", backref=db.backref("user_preferences", cascade="all, delete"))
+
+    __table_args__ = (
+        db.UniqueConstraint("id_usuario", "id_libro", name="uq_user_book_preference"),
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_usuario": self.id_usuario,
+            "id_libro": self.id_libro,
+            "preference": self.preference,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class UserCategoryPreference(db.Model):
+    __tablename__ = "user_category_preferences"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_usuario = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    id_categoria = db.Column(
+        db.Integer,
+        db.ForeignKey("categorias.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    usuario = db.relationship("User", backref=db.backref("category_preferences", cascade="all, delete"))
+    categoria = db.relationship("Categorias", backref=db.backref("user_preferences", cascade="all, delete"))
+
+    __table_args__ = (
+        db.UniqueConstraint("id_usuario", "id_categoria", name="uq_user_category_preference"),
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_usuario": self.id_usuario,
+            "id_categoria": self.id_categoria,
+            "preference": self.preference,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+# CCrear tabla Author para poder tener id_autor
+class Author(db.Model):
+    __tablename__ = "author"
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(200), nullable=False, unique=True, index=True)
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class UserAuthorPreference(db.Model):
+    __tablename__ = "user_author_preferences"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    id_usuario = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    id_autor = db.Column(
+        db.Integer,
+        db.ForeignKey("author.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    usuario = db.relationship("User", backref=db.backref("author_preferences", cascade="all, delete"))
+    autor = db.relationship("Author", backref=db.backref("user_preferences", cascade="all, delete"))
+
+    __table_args__ = (
+        db.UniqueConstraint("id_usuario", "id_autor", name="uq_user_author_preference"),
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "id_usuario": self.id_usuario,
+            "id_autor": self.id_autor,
+            "preference": self.preference,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+    
+    
