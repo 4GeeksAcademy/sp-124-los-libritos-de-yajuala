@@ -43,6 +43,7 @@ class Delivery(db.Model):
     role = db.Column(db.String(20), nullable=False, default="delivery")
     password = db.Column(db.String(255), nullable=False)
     is_approved = db.Column(db.Boolean, nullable=False, default=False)
+    avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
     def set_password(self, raw_password): 
         self.password = generate_password_hash(raw_password) 
@@ -57,6 +58,7 @@ class Delivery(db.Model):
             "lastname": self.lastname,
             "email": self.email,
             "identificacion": self.identificacion,
+            "avatar_url": self.avatar_url,
             "role": self.role,
             "is_approved": self.is_approved
         }
