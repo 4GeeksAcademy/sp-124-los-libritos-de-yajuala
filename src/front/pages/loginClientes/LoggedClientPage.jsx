@@ -107,7 +107,7 @@ export default function LoggedClientPage() {
               width: "60px",
               height: "60px",
               padding: 0,
-              fontSize: "14px"
+              fontSize: "18px"
             }}
             onClick={() => fileInputRef.current.click()}
             title="Cambiar foto"
