@@ -2201,7 +2201,7 @@ def update_user_avatar(user_id):
 
     result = cloudinary.uploader.upload(
         file,
-        folder="avatars",
+        folder="avatars-users",
         public_id=f"user_{user_id}",
         overwrite=True
     )
@@ -2225,7 +2225,7 @@ def update_delivery_avatar(delivery_id):
 
     result = cloudinary.uploader.upload(
         file,
-        folder="avatars",
+        folder="avatars-delivery",
         public_id=f"delivery_{delivery_id}",
         overwrite=True
     )
@@ -2234,6 +2234,30 @@ def update_delivery_avatar(delivery_id):
     db.session.commit()
 
     return jsonify(delivery.serialize()), 200
+
+
+@api.route("/provider/<int:provider_id>/avatar", methods=["PUT"])
+def update_provider_avatar(provider_id):
+    provider = Provider.query.get(provider_id)
+    if provider is None:
+        return jsonify({"msg": "Provider not found"}), 404
+
+    if "avatar" not in request.files:
+        return jsonify({"msg": "No se ha enviado ninguna imagen"}), 400
+
+    file = request.files["avatar"]
+
+    result = cloudinary.uploader.upload(
+        file,
+        folder="avatars-providers",
+        public_id=f"provider_{provider_id}",
+        overwrite=True
+    )
+
+    provider.avatar_url = result["secure_url"]
+    db.session.commit()
+
+    return jsonify(provider.serialize()), 200
 
 # _______Fin Cloudinary Enpoint___________
 
