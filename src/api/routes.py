@@ -1508,7 +1508,6 @@ def delivery_pedidos():
 def validate():
     user_id = get_jwt_identity()
 
-
     user = User.query.get(user_id)
 
     if not user:
@@ -1520,7 +1519,6 @@ def validate():
     return jsonify({
         "user": user.serialize()
     }), 200
-
 
 
 # ENDPOINTS PROVIDER BOOKS
@@ -1846,7 +1844,7 @@ def delivery_orders_available():
     rows = (
         db.session.query(Shipment, Cart)
         .join(Cart, Cart.id == Shipment.cart_id)
-        .filter(Shipment.delivery_id == None) 
+        .filter(Shipment.delivery_id == None)
         .order_by(Shipment.id.desc())
         .all()
     )
@@ -1860,7 +1858,6 @@ def delivery_orders_available():
         })
 
     return jsonify(orders), 200
-
 
 
 @api.route("/delivery/orders", methods=["GET"])
@@ -1899,22 +1896,22 @@ def delivery_orders_mine():
 
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
 @jwt_required()
-def delivery_claim_order(cart_id): 
-    delivery_id = get_jwt_identity() 
-    delivery = Delivery.query.get(delivery_id) 
-    if not delivery: 
-        return jsonify({"msg": "Repartidor no encontrado"}), 404 
-    if delivery.role != "delivery": 
-        return jsonify({"msg": "No autorizado"}), 403 
-    
-    shipment = Shipment.query.get(cart_id) 
-    if not shipment: 
-        return jsonify({"msg": "Pedido no encontrado"}), 404 
-    
-    if shipment.delivery_id is not None: 
-        return jsonify({"msg": "Este pedido ya fue asignado"}), 400 
-    shipment.delivery_id = delivery_id 
-    db.session.commit() 
+def delivery_claim_order(cart_id):
+    delivery_id = get_jwt_identity()
+    delivery = Delivery.query.get(delivery_id)
+    if not delivery:
+        return jsonify({"msg": "Repartidor no encontrado"}), 404
+    if delivery.role != "delivery":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    shipment = Shipment.query.get(cart_id)
+    if not shipment:
+        return jsonify({"msg": "Pedido no encontrado"}), 404
+
+    if shipment.delivery_id is not None:
+        return jsonify({"msg": "Este pedido ya fue asignado"}), 400
+    shipment.delivery_id = delivery_id
+    db.session.commit()
     return jsonify({"msg": "Pedido asignado correctamente"}), 200
 
 
@@ -1951,7 +1948,6 @@ def delivery_mark_delivered(cart_id):
         "status": shipment.status,
         "cart_estado": cart.estado if cart else None
     }), 200
-
 
 
 @api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
@@ -2001,7 +1997,6 @@ def delivery_order_detail(cart_id):
             for it in items
         ]
     }), 200
-
 
 
 @api.route("/shipments/from-cart/<int:cart_id>", methods=["POST"])
@@ -2215,6 +2210,34 @@ def update_user_avatar(user_id):
     db.session.commit()
 
     return jsonify(user.serialize()), 200
+
+
+@api.route("/delivery/<int:delivery_id>/avatar", methods=["PUT"])
+def update_delivery_avatar(delivery_id):
+    delivery = Delivery.query.get(delivery_id)
+    if delivery is None:
+        return jsonify({"msg": "Delivery not found"}), 404
+
+    if "avatar" not in request.files:
+        return jsonify({"msg": "No se ha enviado ninguna imagen"}), 400
+
+    file = request.files["avatar"]
+
+    result = cloudinary.uploader.upload(
+        file,
+        folder="avatars",
+        public_id=f"delivery_{delivery_id}",
+        overwrite=True
+    )
+
+    delivery.avatar_url = result["secure_url"]
+    db.session.commit()
+
+    return jsonify(delivery.serialize()), 200
+
+# _______Fin Cloudinary Enpoint___________
+
+
 @api.route("/repartidores/pendientes", methods=["GET"])
 def repartidores_pendientes():
     pendientes = Delivery.query.filter_by(is_approved=False).all()
