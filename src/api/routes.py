@@ -1,6 +1,8 @@
 import logging
 import os
 import requests as http_requests
+import cloudinary
+import cloudinary.uploader
 from base64 import b64encode
 
 """
@@ -23,6 +25,13 @@ api = Blueprint('api', __name__)
 # Allow CORS requests to this API
 # CORS(api)
 CORS(api, origins="*")
+
+# Configura cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 
 
 @api.route('/hello', methods=['POST', 'GET'])
@@ -484,7 +493,8 @@ def search_books():
                 "titulo": info.get("title", "Sin título"),
                 "autor": ", ".join(info.get("authors", [])),
                 "isbn": next(
-                    (i.get("identifier") for i in info.get("industryIdentifiers", []) if i.get("identifier")),
+                    (i.get("identifier") for i in info.get(
+                        "industryIdentifiers", []) if i.get("identifier")),
                     None
                 ),
                 "descripcion": info.get("description", ""),
@@ -496,7 +506,6 @@ def search_books():
     except Exception as e:
         print("ERROR GOOGLE BOOKS:", e)
         return jsonify({"msg": "Error consultando Google Books"}), 500
-
 
 
 @api.route("/books/import", methods=["POST"])
@@ -2021,10 +2030,8 @@ def google_pay_confirm():
     if not address_id:
         return jsonify({"msg": "Falta address_id"}), 400
 
-   
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
-  
     return pay_cart(int(cart_id))
 
 # _______________________Rutas Paypal____________________________
@@ -2123,5 +2130,28 @@ def capture_order(order_id):
         return jsonify({"error": str(e)}), 500
 
 
-
 # _______________________Fin Rutas Paypal____________________________
+
+# _______Cloudinary Enpoint___________
+@api.route("/user/<int:user_id>/avatar", methods=["PUT"])
+def update_user_avatar(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({"msg": "User not found"}), 404
+
+    if "avatar" not in request.files:
+        return jsonify({"msg": "No se ha enviado ninguna imagen"}), 400
+
+    file = request.files["avatar"]
+
+    result = cloudinary.uploader.upload(
+        file,
+        folder="avatars",
+        public_id=f"user_{user_id}",
+        overwrite=True
+    )
+
+    user.avatar_url = result["secure_url"]
+    db.session.commit()
+
+    return jsonify(user.serialize()), 200

@@ -16,6 +16,7 @@ class User(db.Model):
     email: Mapped[str] = mapped_column(
         String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(200), nullable=False)
+    avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
     role: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="client")
@@ -26,7 +27,8 @@ class User(db.Model):
             "name": self.name,
             "lastname": self.lastname,
             "email": self.email,
-            "role": self.role
+            "role": self.role,
+            "avatar_url": self.avatar_url
         }
 
 
