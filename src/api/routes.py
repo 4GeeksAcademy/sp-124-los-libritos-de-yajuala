@@ -2129,8 +2129,7 @@ def create_order():
 
     paypal_items = []
     for item in items_from_front:
-        precio_con_descuento = float(
-            item["unit_amount"]) * (1 - float(item.get("descuento", 0)))
+        precio_con_descuento = float(item["unit_amount"]) * (1 - float(item.get("descuento", 0)))
         paypal_items.append({
             "name": item["name"],
             "unit_amount": {
@@ -2166,11 +2165,13 @@ def create_order():
                 }]
             }
         )
-        return jsonify(response.json()), response.status_code
+
+        data = response.json()
+
+        return jsonify({ "id": data["id"] }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @api.route("/orders/<order_id>/capture", methods=["POST"])
 def capture_order(order_id):
