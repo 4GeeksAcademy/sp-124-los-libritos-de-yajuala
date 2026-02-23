@@ -47,6 +47,7 @@ export default function ProviderBookSearch() {
         descripcion: book.descripcion,
         portada: book.portada,
         precio: parseFloat(precio),
+        categorias: book.categorias || [],
       }),
     });
 

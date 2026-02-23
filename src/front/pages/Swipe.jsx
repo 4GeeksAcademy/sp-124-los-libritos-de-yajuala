@@ -148,9 +148,15 @@ export default function Swipe() {
       return;
     }
 
+    const currentY = pos.y;
+    setPos({ x: 0, y: 0, dragging: false });
     const offX = dir === "right" ? window.innerWidth : -window.innerWidth;
-    setAnim({ x: offX, y: pos.y, rot: dir === "right" ? 30 : -30, transition: "transform 0.25s ease-out" });
-    setTimeout(() => setTopIndex((i) => i - 1), 260);
+    setAnim({ x: offX, y: currentY, rot: dir === "right" ? 30 : -30, transition: "transform 0.25s ease-out" });
+    const votedIndex = topIndex;
+    setTimeout(() => {
+      setCards(prev => prev.filter((_, idx) => idx !== votedIndex));
+      setTopIndex((i) => i - 1);
+    }, 260);
   };
 
   const onPointerUp = () => {

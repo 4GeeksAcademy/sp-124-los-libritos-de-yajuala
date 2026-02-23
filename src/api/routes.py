@@ -542,7 +542,8 @@ def search_books():
                 "autor": ", ".join(info.get("authors", [])),
                 "isbn": isbn,
                 "descripcion": info.get("description", ""),
-                "portada": info.get("imageLinks", {}).get("thumbnail")
+                "portada": info.get("imageLinks", {}).get("thumbnail"),
+                "categorias": info.get("categories", [])
             })
 
         return jsonify(results), 200
@@ -564,6 +565,9 @@ def import_book():
         descripcion = body.get("descripcion")
         portada = body.get("portada")
         precio = body.get("precio")
+        categorias_list = body.get("categorias", [])
+        if isinstance(categorias_list, str):
+            categorias_list = [categorias_list]
 
         if not titulo:
             return jsonify({"msg": "El título es obligatorio"}), 400
@@ -583,7 +587,6 @@ def import_book():
             existing.descripcion = descripcion or existing.descripcion
             existing.portada = portada or existing.portada
             existing.precio = precio or existing.precio
-
             db.session.commit()
             return jsonify(existing.serialize()), 200
 
@@ -595,8 +598,31 @@ def import_book():
             portada=portada,
             precio=precio
         )
-
         db.session.add(new_book)
+        db.session.commit()
+
+        # Guardar autor en tabla Author
+        if autor:
+            author_obj = Author.query.filter_by(nombre=autor).first()
+            if not author_obj:
+                author_obj = Author(nombre=autor)
+                db.session.add(author_obj)
+                db.session.commit()
+
+        # Guardar categorias en Categorias y Categoria_Libro
+        for nombre_cat in categorias_list:
+            if not nombre_cat:
+                continue
+            cat = Categorias.query.filter_by(nombre=nombre_cat).first()
+            if not cat:
+                cat = Categorias(nombre=nombre_cat, descripcion=nombre_cat)
+                db.session.add(cat)
+                db.session.commit()
+            existing_rel = Categoria_Libro.query.filter_by(categoria_id=cat.id, libro_id=new_book.id).first()
+            if not existing_rel:
+                rel = Categoria_Libro(categoria_id=cat.id, libro_id=new_book.id)
+                db.session.add(rel)
+
         db.session.commit()
 
         return jsonify(new_book.serialize()), 201
