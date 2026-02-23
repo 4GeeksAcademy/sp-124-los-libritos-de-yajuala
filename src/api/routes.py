@@ -1,6 +1,8 @@
 import logging
 import os
 import requests as http_requests
+import cloudinary
+import cloudinary.uploader
 from base64 import b64encode
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -24,6 +26,13 @@ api = Blueprint('api', __name__)
 # Allow CORS requests to this API
 # CORS(api)
 CORS(api, origins="*")
+
+# Configura cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
 
 
 @api.route("/geocode", methods=["GET"])
@@ -2183,6 +2192,29 @@ def capture_order(order_id):
 
 # _______________________Fin Rutas Paypal____________________________
 
+# _______Cloudinary Enpoint___________
+@api.route("/user/<int:user_id>/avatar", methods=["PUT"])
+def update_user_avatar(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({"msg": "User not found"}), 404
+
+    if "avatar" not in request.files:
+        return jsonify({"msg": "No se ha enviado ninguna imagen"}), 400
+
+    file = request.files["avatar"]
+
+    result = cloudinary.uploader.upload(
+        file,
+        folder="avatars",
+        public_id=f"user_{user_id}",
+        overwrite=True
+    )
+
+    user.avatar_url = result["secure_url"]
+    db.session.commit()
+
+    return jsonify(user.serialize()), 200
 @api.route("/repartidores/pendientes", methods=["GET"])
 def repartidores_pendientes():
     pendientes = Delivery.query.filter_by(is_approved=False).all()

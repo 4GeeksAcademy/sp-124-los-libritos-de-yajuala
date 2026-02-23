@@ -181,6 +181,7 @@ export const router = createBrowserRouter(
                                 <Route path="user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
                                 <Route path="user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
                                 <Route path="user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
+                                <Route path="user/edit" element={<ProtectedRoute><EditClientPage /></ProtectedRoute>} />
 
                                 {/* Auth proveedores */}
                                 <Route path="login/provider" element={<LoginProviderPage />} />

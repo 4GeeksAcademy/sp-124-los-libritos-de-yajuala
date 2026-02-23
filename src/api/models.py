@@ -10,12 +10,16 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = "user"
 
-    id = db.Column(db.Integer, primary_key=True) 
-    name = db.Column(db.String(120), nullable=False)
-    lastname = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default="cliente")
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    lastname: Mapped[str] = mapped_column(String(120), nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(200), nullable=False)
+    avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
+
+    role: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="client")
 
     def serialize(self):
         return {
@@ -24,6 +28,7 @@ class User(db.Model):
             "lastname": self.lastname,
             "email": self.email,
             "role": self.role,
+            "avatar_url": self.avatar_url
         }
 
 
