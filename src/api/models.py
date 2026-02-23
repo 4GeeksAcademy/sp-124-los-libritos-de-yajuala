@@ -45,10 +45,10 @@ class Delivery(db.Model):
     is_approved = db.Column(db.Boolean, nullable=False, default=False)
     avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
-    def set_password(self, raw_password): 
-        self.password = generate_password_hash(raw_password) 
-        
-    def check_password(self, raw_password): 
+    def set_password(self, raw_password):
+        self.password = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password):
         return check_password_hash(self.password, raw_password)
 
     def serialize(self):
@@ -101,6 +101,7 @@ class Provider(db.Model):
         nullable=False,
         index=True
     )
+    avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -114,6 +115,7 @@ class Provider(db.Model):
             "name": self.name,
             "email": self.email,
             "telefono": self.telefono,
+            "avatar_url": self.avatar_url,
             "documento": self.documento
         }
 
