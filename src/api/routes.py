@@ -1506,12 +1506,16 @@ def delivery_pedidos():
 @api.route("/validate", methods=["GET"])
 @jwt_required()
 def validate():
-    user_id = get_jwt_identity()
+    identity = get_jwt_identity()
+    user_id = identity.get("id")
+    role = identity.get("role")
 
-    user = User.query.get(user_id)
-
-    if not user:
+    if role == "delivery":
         user = Delivery.query.get(user_id)
+    elif role == "provider":
+        user = Provider.query.get(user_id)
+    else:
+        user = User.query.get(user_id)
 
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
@@ -1548,6 +1552,8 @@ def get_provider_books():
         }
         for link in links
     ]), 200
+
+# ________________ Endpoint de la importacion de libros desde la APi ________________
 
 
 @api.route("/provider/books/<int:provider_book_id>", methods=["GET"])
@@ -1626,6 +1632,8 @@ def update_provider_book(provider_book_id):
         "cantidad": link.cantidad,
         "libro": book.serialize()
     }), 200
+
+# ________________ Fin Endpoint de la importacion de libros desde la APi ________________
 
 
 @api.route("/provider/<int:provider_id>/add_book", methods=["POST"])
@@ -2258,6 +2266,30 @@ def update_provider_avatar(provider_id):
     db.session.commit()
 
     return jsonify(provider.serialize()), 200
+
+
+@api.route("/books/<int:book_id>/portada", methods=["PUT"])
+def update_book_avatar(book_id):
+    book = Book.query.get(book_id)
+    if book is None:
+        return jsonify({"msg": "Book not found"}), 404
+
+    if "portada" not in request.files:
+        return jsonify({"msg": "No se ha enviado ninguna imagen"}), 400
+
+    file = request.files["portada"]
+
+    result = cloudinary.uploader.upload(
+        file,
+        folder="avatars-books",
+        public_id=f"book_{book_id}",
+        overwrite=True
+    )
+
+    book.portada = result["secure_url"]
+    db.session.commit()
+
+    return jsonify(book.serialize()), 200
 
 # _______Fin Cloudinary Enpoint___________
 

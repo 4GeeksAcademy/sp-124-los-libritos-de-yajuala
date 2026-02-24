@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
@@ -9,14 +9,24 @@ export const ProviderBookCreate = () => {
     autor: "",
     isbn: "",
     descripcion: "",
-    portada: "",
     precio: "",
     cantidad: ""
   });
+  const [portadaFile, setPortadaFile] = useState(null);
+  const [portadaPreview, setPortadaPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const navigate = useNavigate();
   const { store } = useGlobalReducer();
   const backendUrl = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+
+  const handlePortadaChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPortadaFile(file);
+    setPortadaPreview(URL.createObjectURL(file));
+  };
 
   const createBook = async () => {
     if (!form.titulo || !form.autor || !form.precio) {
@@ -24,6 +34,9 @@ export const ProviderBookCreate = () => {
       return;
     }
 
+    setUploading(true);
+
+    // 1. Crear el libro primero (sin portada)
     const resp = await fetch(`${backendUrl}/api/books/import`, {
       method: "POST",
       headers: {
@@ -35,7 +48,7 @@ export const ProviderBookCreate = () => {
         autor: form.autor,
         isbn: form.isbn || null,
         descripcion: form.descripcion,
-        portada: form.portada,
+        portada: null,
         precio: parseFloat(form.precio)
       })
     });
@@ -43,23 +56,41 @@ export const ProviderBookCreate = () => {
     const data = await resp.json();
     if (!resp.ok) {
       alert(data.msg || "Error creando libro");
+      setUploading(false);
       return;
     }
 
-    const providerId = store.user.id;
+    const bookId = data.id;
 
-    await fetch(`${backendUrl}/api/provider/${providerId}/add_book`, {
+    // 2. Si hay portada, subirla a Cloudinary
+    if (portadaFile) {
+      const formData = new FormData();
+      formData.append("portada", portadaFile);
+
+      const portadaResp = await fetch(`${backendUrl}/api/books/${bookId}/portada`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!portadaResp.ok) {
+        alert("Libro creado pero error subiendo la portada");
+      }
+    }
+
+    // 3. Asociar al proveedor
+    await fetch(`${backendUrl}/api/provider/${store.user.id}/add_book`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${store.token}`,
       },
       body: JSON.stringify({
-        book_id: data.id,
+        book_id: bookId,
         cantidad: parseInt(form.cantidad || 0)
       })
     });
 
+    setUploading(false);
     alert("Libro creado y asociado correctamente");
     navigate("/provider/books");
   };
@@ -67,7 +98,6 @@ export const ProviderBookCreate = () => {
   return (
     <div className="container mt-5">
       <ProviderPanelButtons />
-
       <h1>Crear Libro (Proveedor)</h1>
 
       <div className="card mt-3">
@@ -85,8 +115,31 @@ export const ProviderBookCreate = () => {
           <label className="form-label">Descripción</label>
           <textarea className="form-control mb-3" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} />
 
-          <label className="form-label">URL Portada</label>
-          <input className="form-control mb-3" value={form.portada} onChange={(e) => setForm({ ...form, portada: e.target.value })} />
+          <label className="form-label">Portada</label>
+          <div className="mb-3">
+            {portadaPreview && (
+              <img
+                src={portadaPreview}
+                alt="Preview portada"
+                className="mb-2 d-block"
+                style={{ width: "150px", height: "200px", objectFit: "cover", borderRadius: "4px" }}
+              />
+            )}
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => fileInputRef.current.click()}
+            >
+              {portadaPreview ? "Cambiar imagen" : "Subir portada"}
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handlePortadaChange}
+            />
+          </div>
 
           <label className="form-label">Precio (€)</label>
           <input type="number" className="form-control mb-3" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} />
@@ -94,7 +147,9 @@ export const ProviderBookCreate = () => {
           <label className="form-label">Cantidad inicial</label>
           <input type="number" className="form-control mb-3" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
 
-          <button className="btn btn-success" onClick={createBook}>Crear libro</button>
+          <button className="btn btn-success" onClick={createBook} disabled={uploading}>
+            {uploading ? "Creando..." : "Crear libro"}
+          </button>
         </div>
       </div>
     </div>
