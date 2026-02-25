@@ -1,3 +1,4 @@
+from sqlalchemy import case, func
 import logging
 import os
 import requests as http_requests
@@ -2343,49 +2344,92 @@ def count_repartidores_pendientes():
 def swipe_books_feed(user_id):
     limit = int(request.args.get("limit", 20))
 
-    voted = UserBookPreference.query.filter_by(id_usuario=user_id).all()
-    voted_ids = {v.id_libro for v in voted}
+    voted_ids = {
+        v.id_libro
+        for v in UserBookPreference.query.filter_by(id_usuario=user_id).all()
+    }
 
-    q = Book.query
-    if voted_ids:
-        q = q.filter(~Book.id.in_(voted_ids))
+    cat_prefs = UserCategoryPreference.query.filter_by(id_usuario=user_id).all()
+    author_prefs = UserAuthorPreference.query.filter_by(id_usuario=user_id).all()
 
-    books = q.limit(limit).all()
-    return jsonify([b.serialize() for b in books]), 200
+    liked_cat_ids = [p.id_categoria for p in cat_prefs if p.preference == 1]
+    disliked_cat_ids = [p.id_categoria for p in cat_prefs if p.preference == -1]
 
-# Categorias
+    liked_author_ids = [p.id_autor for p in author_prefs if p.preference == 1]
+    disliked_author_ids = [p.id_autor for p in author_prefs if p.preference == -1]
 
 
 @api.route("/users/<int:user_id>/swipe/categories", methods=["GET"])
 def swipe_categories_feed(user_id):
     limit = int(request.args.get("limit", 20))
 
-    voted = UserCategoryPreference.query.filter_by(id_usuario=user_id).all()
-    voted_ids = {v.id_categoria for v in voted}
+    if liked_author_ids:
+        liked_author_names = [
+            a.nombre for a in Author.query.filter(Author.id.in_(liked_author_ids)).all()
+        ]
 
-    q = Categorias.query
+    if disliked_author_ids:
+        disliked_author_names = [
+            a.nombre for a in Author.query.filter(Author.id.in_(disliked_author_ids)).all()
+        ]
+
+    score = (
+        func.coalesce(
+            func.sum(
+                case(
+                    (Categoria_Libro.categoria_id.in_(liked_cat_ids), 3),
+                    else_=0
+                )
+            ),
+            0
+        )
+        - func.coalesce(
+            func.sum(
+                case(
+                    (Categoria_Libro.categoria_id.in_(disliked_cat_ids), 3),
+                    else_=0
+                )
+            ),
+            0
+        )
+        + case((Book.autor.in_(liked_author_names), 5), else_=0)
+        - case((Book.autor.in_(disliked_author_names), 5), else_=0)
+    ).label("score")
+
+    query = (
+        db.session.query(Book, score)
+        .outerjoin(Categoria_Libro, Categoria_Libro.libro_id == Book.id)
+        .group_by(Book.id)
+        .order_by(score.desc(), Book.id.desc())
+    )
+
     if voted_ids:
-        q = q.filter(~Categorias.id.in_(voted_ids))
+        query = query.filter(~Book.id.in_(voted_ids))
 
-    cats = q.limit(limit).all()
-    return jsonify([c.serialize() for c in cats]), 200
+    results = query.limit(limit).all()
 
-# Autores
+    # Si no quedan libros sin votar, modo infinito controlado
+    if not results:
+        query = (
+            db.session.query(Book, score)
+            .outerjoin(Categoria_Libro, Categoria_Libro.libro_id == Book.id)
+            .group_by(Book.id)
+            .order_by(score.desc(), Book.id.desc())
+        )
 
 
 @api.route("/users/<int:user_id>/swipe/authors", methods=["GET"])
 def swipe_authors_feed(user_id):
     limit = int(request.args.get("limit", 20))
 
-    voted = UserAuthorPreference.query.filter_by(id_usuario=user_id).all()
-    voted_ids = {v.id_autor for v in voted}
+        if disliked_books:
+            query = query.filter(~Book.id.in_(disliked_books))
 
-    q = Author.query
-    if voted_ids:
-        q = q.filter(~Author.id.in_(voted_ids))
+        results = query.limit(limit).all()
 
-    authors = q.limit(limit).all()
-    return jsonify([a.serialize() for a in authors]), 200
+    books = [book.serialize() for (book, _s) in results]
+    return jsonify(books), 200
+
 
 # Votar Libro +1/-1
 
@@ -2399,18 +2443,45 @@ def swipe_book_vote(user_id, book_id):
         return jsonify({"msg": "preference debe ser 1 o -1"}), 400
 
     row = UserBookPreference.query.filter_by(
-        id_usuario=user_id, id_libro=book_id).first()
+        id_usuario=user_id,
+        id_libro=book_id
+    ).first()
+
     if row:
         row.preference = pref
     else:
         row = UserBookPreference(
-            id_usuario=user_id, id_libro=book_id, preference=pref)
+            id_usuario=user_id,
+            id_libro=book_id,
+            preference=pref
+        )
         db.session.add(row)
 
     db.session.commit()
-    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
+    return jsonify(row.serialize()), 200
 
-# Votar Categoria
+
+# Categorias
+@api.route("/users/<int:user_id>/swipe/categories", methods=["GET"])
+def swipe_categories_feed(user_id):
+    limit = int(request.args.get("limit", 20))
+
+    voted_ids = {
+        v.id_categoria
+        for v in UserCategoryPreference.query.filter_by(id_usuario=user_id).all()
+    }
+
+    q = Categorias.query
+    if voted_ids:
+        q = q.filter(~Categorias.id.in_(voted_ids))
+
+    cats = q.limit(limit).all()
+
+    if not cats:
+        cats = Categorias.query.limit(limit).all()
+
+    return jsonify([c.serialize() for c in cats]), 200
+
 
 
 @api.route("/users/<int:user_id>/swipe/categories/<int:category_id>", methods=["POST"])
@@ -2422,18 +2493,45 @@ def swipe_category_vote(user_id, category_id):
         return jsonify({"msg": "preference debe ser 1 o -1"}), 400
 
     row = UserCategoryPreference.query.filter_by(
-        id_usuario=user_id, id_categoria=category_id).first()
+        id_usuario=user_id,
+        id_categoria=category_id
+    ).first()
+
     if row:
         row.preference = pref
     else:
         row = UserCategoryPreference(
-            id_usuario=user_id, id_categoria=category_id, preference=pref)
+            id_usuario=user_id,
+            id_categoria=category_id,
+            preference=pref
+        )
         db.session.add(row)
 
     db.session.commit()
-    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
+    return jsonify(row.serialize()), 200
 
-# Votar autor
+
+# Autores
+@api.route("/users/<int:user_id>/swipe/authors", methods=["GET"])
+def swipe_authors_feed(user_id):
+    limit = int(request.args.get("limit", 20))
+
+    voted_ids = {
+        v.id_autor
+        for v in UserAuthorPreference.query.filter_by(id_usuario=user_id).all()
+    }
+
+    q = Author.query
+    if voted_ids:
+        q = q.filter(~Author.id.in_(voted_ids))
+
+    authors = q.limit(limit).all()
+
+    if not authors:
+        authors = Author.query.limit(limit).all()
+
+    return jsonify([a.serialize() for a in authors]), 200
+
 
 
 @api.route("/users/<int:user_id>/swipe/authors/<int:author_id>", methods=["POST"])
@@ -2445,13 +2543,19 @@ def swipe_author_vote(user_id, author_id):
         return jsonify({"msg": "preference debe ser 1 o -1"}), 400
 
     row = UserAuthorPreference.query.filter_by(
-        id_usuario=user_id, id_autor=author_id).first()
+        id_usuario=user_id,
+        id_autor=author_id
+    ).first()
+
     if row:
         row.preference = pref
     else:
         row = UserAuthorPreference(
-            id_usuario=user_id, id_autor=author_id, preference=pref)
+            id_usuario=user_id,
+            id_autor=author_id,
+            preference=pref
+        )
         db.session.add(row)
 
     db.session.commit()
-    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
+    return jsonify(row.serialize()), 200

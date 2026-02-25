@@ -32,11 +32,21 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
 jwt = JWTManager(app)
 app.config["JWT_IDENTITY_CLAIM"] = "identity"
 app.config["CORS_HEADERS"] = "Content-Type"
+
+#CORS(
+#    app,
+#    resources={r"/*": {"origins": "*"}},
+#    supports_credentials=True,
+#    allow_headers="*",
+#    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+#)
+
+
 CORS(
     app,
-    resources={r"/*": {"origins": "*"}},
-    supports_credentials=True,
-    allow_headers="*",
+    resources={r"/api/*": {"origins": "*"}},
+    supports_credentials=False,
+    allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 )
 
