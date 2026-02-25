@@ -3,7 +3,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer";
 
 const THRESHOLD = 90;
 const ROTATION = 18;
-const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 
 function getToken() {
   return localStorage.getItem("token");
@@ -226,7 +226,7 @@ export default function Swipe() {
                   overflow: "hidden", touchAction: "none",
                   cursor: isTop ? "grab" : "default",
                   transform, transition: isTop ? anim.transition : "transform 0.2s ease",
-                  zIndex: i, userSelect: "none",
+                  zIndex: 100 + i, userSelect: "none",
                 }}
               >
                 {c.img ? (
@@ -255,7 +255,7 @@ export default function Swipe() {
           )}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 18 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 18, position: "relative", zIndex: 9999 }}>
           <button
             onClick={() => commitSwipe("left")}
             disabled={!topCard || loading}
