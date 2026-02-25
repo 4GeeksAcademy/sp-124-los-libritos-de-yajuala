@@ -69,6 +69,7 @@ import { ProviderBookEdit } from "./pages/Books/ProviderBookEdit.jsx";
 import { ProviderOrders } from "./pages/proveedores/ProviderOrders.jsx";
 
 import HomeClients from "./pages/homeClients/HomeClients.jsx";
+import Swipe from "./pages/Swipe.jsx";
 import PaymentSuccessPage from "./pages/Carts/PaymentSuccessPage.jsx";
 import CheckoutAddressPage from "./pages/Carts/CheckoutAddressPage.jsx";
 import CheckoutPaymentPage from "./pages/Carts/CheckoutPaymentPage.jsx";
@@ -110,6 +111,7 @@ import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 import AdminRepartidoresPendientes from "./components/AdminRepartidoresPendientes.jsx";
 
+
 export const router = createBrowserRouter(
         createRoutesFromElements(
                 <>
@@ -118,6 +120,7 @@ export const router = createBrowserRouter(
                                 <Route index element={<Home />} />
                                 <Route path="single/:theId" element={<Single />} />
                                 <Route path="demo" element={<Demo />} />
+                                <Route path="/swipe" element={<ProtectedRoute><Swipe /></ProtectedRoute>} />
 
                                 {/* Proveedores */}
                                 <Route path="provider" element={<AdminRoute><Provider /></AdminRoute>} />
@@ -248,6 +251,8 @@ export const router = createBrowserRouter(
 
                                 <Route path="reviews" element={<AdminReviewList />} />
                                 <Route path="reviews/:id" element={<AdminReviewDetail />} />
+
+                                
                         </Route>
                 </>
         )

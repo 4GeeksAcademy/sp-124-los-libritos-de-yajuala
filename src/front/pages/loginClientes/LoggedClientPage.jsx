@@ -218,6 +218,9 @@ export default function LoggedClientPage() {
         <button className="btn btn-warning" onClick={() => navigate("/home-client")}>
           Ver libros
         </button>
+        <button className="btn btn-primary" onClick={() => navigate("/swipe")}>
+          Mis matches
+        </button>
         <button className="btn btn-success" onClick={() => navigate("/user/cart")}>
           Ver carrito
         </button>
