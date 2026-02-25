@@ -602,14 +602,6 @@ def import_book():
         db.session.add(new_book)
         db.session.commit()
 
-        # Guardar autor en tabla Author
-        if autor:
-            author_obj = Author.query.filter_by(nombre=autor).first()
-            if not author_obj:
-                author_obj = Author(nombre=autor)
-                db.session.add(author_obj)
-                db.session.commit()
-
         # Guardar categorias en Categorias y Categoria_Libro
         for nombre_cat in categorias_list:
             if not nombre_cat:
@@ -627,7 +619,6 @@ def import_book():
                 db.session.add(rel)
 
         db.session.commit()
-
         return jsonify(new_book.serialize()), 201
 
     except Exception as e:
@@ -1822,7 +1813,6 @@ def edit_provider_book(provider_book_id):
 def get_provider_orders():
     identity = get_jwt_identity()
     if identity.get("role") != "provider":
-
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
@@ -1839,8 +1829,6 @@ def get_provider_orders():
         .order_by(Cart.fecha.desc(), Cart.id.desc())
         .all()
     )
-    print("ROWS len:", len(rows))
-    rows: print("ROWS first:", rows[0] if rows else None)
 
     orders = {}
     for cart, cartbook, book in rows:
@@ -1852,16 +1840,15 @@ def get_provider_orders():
                 "id_cliente": cart.id_cliente,
                 "items": []
             }
-
-    orders[cart.id]["items"].append({
-        "cart_book_id": cartbook.id,
-        "id_libro": book.id,
-        "titulo": book.titulo,
-        "isbn": book.isbn,
-        "cantidad": cartbook.cantidad,
-        "precio": cartbook.precio,
-        "descuento": cartbook.descuento
-    })
+        orders[cart.id]["items"].append({  # 👈 dentro del for
+            "cart_book_id": cartbook.id,
+            "id_libro": book.id,
+            "titulo": book.titulo,
+            "isbn": book.isbn,
+            "cantidad": cartbook.cantidad,
+            "precio": cartbook.precio,
+            "descuento": cartbook.descuento
+        })
 
     return jsonify(list(orders.values())), 200
 
@@ -2371,8 +2358,10 @@ def swipe_books_feed(user_id):
     liked_author_ids = [p.id_autor for p in author_prefs if p.preference == 1]
     disliked_author_ids = [p.id_autor for p in author_prefs if p.preference == -1]
 
-    liked_author_names = []
-    disliked_author_names = []
+
+@api.route("/users/<int:user_id>/swipe/categories", methods=["GET"])
+def swipe_categories_feed(user_id):
+    limit = int(request.args.get("limit", 20))
 
     if liked_author_ids:
         liked_author_names = [
@@ -2428,14 +2417,10 @@ def swipe_books_feed(user_id):
             .order_by(score.desc(), Book.id.desc())
         )
 
-        # excluir libros que el usuario haya dislikeado
-        disliked_books = {
-            v.id_libro
-            for v in UserBookPreference.query.filter_by(
-                id_usuario=user_id,
-                preference=-1
-            ).all()
-        }
+
+@api.route("/users/<int:user_id>/swipe/authors", methods=["GET"])
+def swipe_authors_feed(user_id):
+    limit = int(request.args.get("limit", 20))
 
         if disliked_books:
             query = query.filter(~Book.id.in_(disliked_books))
@@ -2444,6 +2429,9 @@ def swipe_books_feed(user_id):
 
     books = [book.serialize() for (book, _s) in results]
     return jsonify(books), 200
+
+
+# Votar Libro +1/-1
 
 
 @api.route("/users/<int:user_id>/swipe/books/<int:book_id>", methods=["POST"])
@@ -2495,6 +2483,7 @@ def swipe_categories_feed(user_id):
     return jsonify([c.serialize() for c in cats]), 200
 
 
+
 @api.route("/users/<int:user_id>/swipe/categories/<int:category_id>", methods=["POST"])
 def swipe_category_vote(user_id, category_id):
     body = request.get_json(silent=True) or {}
@@ -2542,6 +2531,7 @@ def swipe_authors_feed(user_id):
         authors = Author.query.limit(limit).all()
 
     return jsonify([a.serialize() for a in authors]), 200
+
 
 
 @api.route("/users/<int:user_id>/swipe/authors/<int:author_id>", methods=["POST"])
