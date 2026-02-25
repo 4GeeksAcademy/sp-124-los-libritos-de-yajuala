@@ -601,14 +601,6 @@ def import_book():
         db.session.add(new_book)
         db.session.commit()
 
-        # Guardar autor en tabla Author
-        if autor:
-            author_obj = Author.query.filter_by(nombre=autor).first()
-            if not author_obj:
-                author_obj = Author(nombre=autor)
-                db.session.add(author_obj)
-                db.session.commit()
-
         # Guardar categorias en Categorias y Categoria_Libro
         for nombre_cat in categorias_list:
             if not nombre_cat:
@@ -618,13 +610,14 @@ def import_book():
                 cat = Categorias(nombre=nombre_cat, descripcion=nombre_cat)
                 db.session.add(cat)
                 db.session.commit()
-            existing_rel = Categoria_Libro.query.filter_by(categoria_id=cat.id, libro_id=new_book.id).first()
+            existing_rel = Categoria_Libro.query.filter_by(
+                categoria_id=cat.id, libro_id=new_book.id).first()
             if not existing_rel:
-                rel = Categoria_Libro(categoria_id=cat.id, libro_id=new_book.id)
+                rel = Categoria_Libro(
+                    categoria_id=cat.id, libro_id=new_book.id)
                 db.session.add(rel)
 
         db.session.commit()
-
         return jsonify(new_book.serialize()), 201
 
     except Exception as e:
@@ -1819,7 +1812,6 @@ def edit_provider_book(provider_book_id):
 def get_provider_orders():
     identity = get_jwt_identity()
     if identity.get("role") != "provider":
-
         return jsonify({"msg": "No autorizado"}), 403
 
     provider_id = identity["id"]
@@ -1836,8 +1828,6 @@ def get_provider_orders():
         .order_by(Cart.fecha.desc(), Cart.id.desc())
         .all()
     )
-    print("ROWS len:", len(rows))
-    rows: print("ROWS first:", rows[0] if rows else None)
 
     orders = {}
     for cart, cartbook, book in rows:
@@ -1849,16 +1839,15 @@ def get_provider_orders():
                 "id_cliente": cart.id_cliente,
                 "items": []
             }
-
-    orders[cart.id]["items"].append({
-        "cart_book_id": cartbook.id,
-        "id_libro": book.id,
-        "titulo": book.titulo,
-        "isbn": book.isbn,
-        "cantidad": cartbook.cantidad,
-        "precio": cartbook.precio,
-        "descuento": cartbook.descuento
-    })
+        orders[cart.id]["items"].append({  # 👈 dentro del for
+            "cart_book_id": cartbook.id,
+            "id_libro": book.id,
+            "titulo": book.titulo,
+            "isbn": book.isbn,
+            "cantidad": cartbook.cantidad,
+            "precio": cartbook.precio,
+            "descuento": cartbook.descuento
+        })
 
     return jsonify(list(orders.values())), 200
 
@@ -2354,11 +2343,9 @@ def count_repartidores_pendientes():
 def swipe_books_feed(user_id):
     limit = int(request.args.get("limit", 20))
 
-    
     voted = UserBookPreference.query.filter_by(id_usuario=user_id).all()
     voted_ids = {v.id_libro for v in voted}
 
-    
     q = Book.query
     if voted_ids:
         q = q.filter(~Book.id.in_(voted_ids))
@@ -2367,6 +2354,7 @@ def swipe_books_feed(user_id):
     return jsonify([b.serialize() for b in books]), 200
 
 # Categorias
+
 
 @api.route("/users/<int:user_id>/swipe/categories", methods=["GET"])
 def swipe_categories_feed(user_id):
@@ -2384,6 +2372,7 @@ def swipe_categories_feed(user_id):
 
 # Autores
 
+
 @api.route("/users/<int:user_id>/swipe/authors", methods=["GET"])
 def swipe_authors_feed(user_id):
     limit = int(request.args.get("limit", 20))
@@ -2399,6 +2388,8 @@ def swipe_authors_feed(user_id):
     return jsonify([a.serialize() for a in authors]), 200
 
 # Votar Libro +1/-1
+
+
 @api.route("/users/<int:user_id>/swipe/books/<int:book_id>", methods=["POST"])
 def swipe_book_vote(user_id, book_id):
     body = request.get_json(silent=True) or {}
@@ -2407,18 +2398,20 @@ def swipe_book_vote(user_id, book_id):
     if pref not in (1, -1):
         return jsonify({"msg": "preference debe ser 1 o -1"}), 400
 
-    
-    row = UserBookPreference.query.filter_by(id_usuario=user_id, id_libro=book_id).first()
+    row = UserBookPreference.query.filter_by(
+        id_usuario=user_id, id_libro=book_id).first()
     if row:
         row.preference = pref
     else:
-        row = UserBookPreference(id_usuario=user_id, id_libro=book_id, preference=pref)
+        row = UserBookPreference(
+            id_usuario=user_id, id_libro=book_id, preference=pref)
         db.session.add(row)
 
     db.session.commit()
     return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
 
 # Votar Categoria
+
 
 @api.route("/users/<int:user_id>/swipe/categories/<int:category_id>", methods=["POST"])
 def swipe_category_vote(user_id, category_id):
@@ -2428,17 +2421,20 @@ def swipe_category_vote(user_id, category_id):
     if pref not in (1, -1):
         return jsonify({"msg": "preference debe ser 1 o -1"}), 400
 
-    row = UserCategoryPreference.query.filter_by(id_usuario=user_id, id_categoria=category_id).first()
+    row = UserCategoryPreference.query.filter_by(
+        id_usuario=user_id, id_categoria=category_id).first()
     if row:
         row.preference = pref
     else:
-        row = UserCategoryPreference(id_usuario=user_id, id_categoria=category_id, preference=pref)
+        row = UserCategoryPreference(
+            id_usuario=user_id, id_categoria=category_id, preference=pref)
         db.session.add(row)
 
     db.session.commit()
     return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
 
 # Votar autor
+
 
 @api.route("/users/<int:user_id>/swipe/authors/<int:author_id>", methods=["POST"])
 def swipe_author_vote(user_id, author_id):
@@ -2448,11 +2444,13 @@ def swipe_author_vote(user_id, author_id):
     if pref not in (1, -1):
         return jsonify({"msg": "preference debe ser 1 o -1"}), 400
 
-    row = UserAuthorPreference.query.filter_by(id_usuario=user_id, id_autor=author_id).first()
+    row = UserAuthorPreference.query.filter_by(
+        id_usuario=user_id, id_autor=author_id).first()
     if row:
         row.preference = pref
     else:
-        row = UserAuthorPreference(id_usuario=user_id, id_autor=author_id, preference=pref)
+        row = UserAuthorPreference(
+            id_usuario=user_id, id_autor=author_id, preference=pref)
         db.session.add(row)
 
     db.session.commit()
