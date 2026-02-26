@@ -111,6 +111,9 @@ import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 import AdminRepartidoresPendientes from "./components/AdminRepartidoresPendientes.jsx";
 
+import ProviderLayout from "./pages/proveedores/ProviderLayout.jsx";
+
+
 
 export const router = createBrowserRouter(
         createRoutesFromElements(
@@ -121,19 +124,6 @@ export const router = createBrowserRouter(
                                 <Route path="single/:theId" element={<Single />} />
                                 <Route path="demo" element={<Demo />} />
                                 <Route path="/swipe" element={<ProtectedRoute><Swipe /></ProtectedRoute>} />
-
-                                {/* Proveedores */}
-                                <Route path="provider" element={<AdminRoute><Provider /></AdminRoute>} />
-                                <Route path="provider/create" element={<AddProvider />} />
-                                <Route path="provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
-                                <Route path="provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
-                                <Route path="provider/books/search" element={<ProviderBookSearch />} />
-                                <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
-                                <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
-                                <Route path="provider/books/:id" element={<ProviderBookDetail />} />
-                                <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
-                                <Route path="provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
-                                <Route path="provider/me" element={<LoggedProveedorPage />} />
 
                                 {/* Clientes */}
                                 <Route path="clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
@@ -251,8 +241,18 @@ export const router = createBrowserRouter(
 
                                 <Route path="reviews" element={<AdminReviewList />} />
                                 <Route path="reviews/:id" element={<AdminReviewDetail />} />
+                        </Route>
 
-                                
+                        {/* ── Provider con su propio layout ── */}
+                        <Route path="/provider" element={<ProtectedRoute><ProviderLayout /></ProtectedRoute>}>
+                                <Route index element={<LoggedProveedorPage />} />
+                                <Route path="me" element={<LoggedProveedorPage />} />
+                                <Route path="books" element={<ProviderBooks />} />
+                                <Route path="books/search" element={<ProviderBookSearch />} />
+                                <Route path="books/new" element={<ProviderBookCreate />} />
+                                <Route path="books/:id" element={<ProviderBookDetail />} />
+                                <Route path="books/:id/edit" element={<ProviderBookEdit />} />
+                                <Route path="orders" element={<ProviderOrders />} />
                         </Route>
                 </>
         )
