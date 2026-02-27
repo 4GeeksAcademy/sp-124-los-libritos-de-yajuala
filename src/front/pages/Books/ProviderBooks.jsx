@@ -177,7 +177,7 @@ export const ProviderBooks = () => {
                           editQuantity(row.id, row.cantidad)
                         }
                       >
-                        Editar cantidad
+                        Editar cantidades
                       </button>
 
                       <button

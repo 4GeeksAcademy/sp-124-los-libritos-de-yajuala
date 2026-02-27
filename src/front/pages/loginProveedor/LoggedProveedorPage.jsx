@@ -102,7 +102,7 @@ export default function LoggedProveedorPage() {
               height: "200px",
               borderRadius: "50%",
               objectFit: "cover",
-              border: "3px solid #198754"
+              border: "3px solid #929191"
             }}
           />
           <button
@@ -200,13 +200,13 @@ export default function LoggedProveedorPage() {
 
       {/* Acciones */}
       <div className="d-flex flex-wrap gap-3">
-        <button className="btn btn-primary" onClick={() => navigate("/provider/books")}>
+        <button className="btn" style={{background:"#2563eb", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/books")}>
           Gestionar Libros
         </button>
-        <button className="btn btn-success" onClick={() => navigate("/provider/orders")}>
+        <button className="btn" style={{background:"#1d4ed8", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/orders")}>
           Ver Pedidos
         </button>
-        <button className="btn btn-primary" onClick={() => navigate("/provider/books/search")}>
+        <button className="btn" style={{background:"#2563eb", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/books/search")}>
           Buscar e importar libros
         </button>
       </div>

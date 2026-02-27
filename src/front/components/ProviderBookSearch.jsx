@@ -104,13 +104,13 @@ export default function ProviderBookSearch() {
 
       <div className="d-flex gap-2 mb-3">
         <button
-          className={`btn ${searchType === "title" ? "btn-primary" : "btn-outline-primary"}`}
+          style={searchType === "title" ? styles.btnPrimary : styles.btnOutline}
           onClick={() => setSearchType("title")}
         >
           Buscar por título
         </button>
         <button
-          className={`btn ${searchType === "author" ? "btn-primary" : "btn-outline-primary"}`}
+          style={searchType === "author" ? styles.btnPrimary : styles.btnOutline}
           onClick={() => setSearchType("author")}
         >
           Buscar por autor
@@ -125,7 +125,7 @@ export default function ProviderBookSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && searchBooks()}
         />
-        <button className="btn btn-success" onClick={searchBooks} disabled={loading}>
+        <button style={styles.btnPrimary} onClick={searchBooks} disabled={loading}>
           {loading ? "Buscando..." : "Buscar"}
         </button>
       </div>
@@ -153,7 +153,7 @@ export default function ProviderBookSearch() {
                   <strong>ISBN:</strong> {book.isbn || "N/A"} <br />
                   <small>{book.descripcion || "Sin descripción"}</small>
                 </p>
-                <button className="btn btn-primary w-100" onClick={() => importBook(book)}>
+                <button style={{...styles.btnPrimary, width: "100%"}} onClick={() => importBook(book)}>
                   Importar libro
                 </button>
               </div>
@@ -163,7 +163,7 @@ export default function ProviderBookSearch() {
       </div>
 
       <button
-        className="btn btn-warning mt-4"
+        style={{...styles.btnNeutral, marginTop: 16}}
         onClick={() => navigate("/provider/books/new")}
       >
         Crear libro manualmente
@@ -171,3 +171,33 @@ export default function ProviderBookSearch() {
     </div>
   );
 }
+
+const styles = {
+  btnPrimary: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "none",
+    background: "#2563eb",
+    color: "#ffffff",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  btnOutline: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "1px solid #2563eb",
+    background: "transparent",
+    color: "#2563eb",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  btnNeutral: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "1px solid #cbd5e1",
+    background: "#f8fafc",
+    color: "#475569",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+};
