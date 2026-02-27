@@ -116,6 +116,7 @@ import SelectCategoriesPage from "./pages/categorias/SelectCategoriesPage.jsx";
 import ChatPage from "./components/chat/ChatPage.jsx";
 import ProviderNotifications from "./pages/proveedores/ProviderNotifications.jsx";
 import ProviderLayout from "./pages/proveedores/ProviderLayout.jsx";
+import DeliveryHistory from "./pages/Delivery/DeliveryHistory.jsx";
 
 export const router = createBrowserRouter(
         createRoutesFromElements(
@@ -163,12 +164,12 @@ export const router = createBrowserRouter(
                                 <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
 
                                 
-                                <Route path="delivery" element={<AdminRoute><Delivery /></AdminRoute>} />
+                                <Route path="delivery" element={<Delivery />} />
                                 <Route path="delivery/register" element={<DeliveryCreate />} />
                                 <Route path="delivery/new" element={<DeliveryCreate />} />
                                 <Route path="delivery/:id" element={<DeliveryDetail />} />
-                                <Route path="delivery/:id/edit" element={<AdminRoute><DeliveryEdit /></AdminRoute>} />
-
+                                <Route path="delivery/:id/edit" element={<DeliveryEdit />} />
+                                <Route path="delivery/history" element={<DeliveryHistory />} />
                                 
                                 <Route path="reviews" element={<Reviews />} />
                                 <Route path="reviews/new" element={<ProtectedRoute><ReviewCreate /></ProtectedRoute>} />

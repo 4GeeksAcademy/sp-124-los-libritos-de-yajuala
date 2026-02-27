@@ -211,6 +211,15 @@ class Cart(db.Model):
         cascade="all, delete"
     )
 
+    id_repartidor = db.Column(
+        db.Integer,
+        db.ForeignKey("delivery.id"),
+        nullable=True
+    )
+
+    repartidor = db.relationship("Delivery", backref="pedidos")
+
+
     def serialize(self):
         return {
             "id": self.id,

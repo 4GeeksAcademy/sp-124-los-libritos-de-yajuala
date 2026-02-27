@@ -48,10 +48,27 @@ const MENU_CLIENTE = {
   ],
 };
 
+const MENU_DELIVERY = {
+  secciones: [
+    {
+      Label: "Reparto",
+      items: [
+        { label: "Pedidos asignados", to: "/delivery", icon: <IcoCart /> },
+        { label: "Historial de reparto", to: "/delivery/history", icon: <IcoHistory /> },
+      ],
+    },
+    {
+      label: "Mi cuenta",
+      items: [
+        { label: "Mi perfil", to: "/loggeddelivery", icon: <IcoUser /> }
+      ],
+    }
+  ]
+}
+
 // ── Aquí añadirás los menús de otros roles ───────────────────
 // const MENU_ADMIN    = { secciones: [...] };
 // const MENU_PROVIDER = { secciones: [...] };
-// const MENU_DELIVERY = { secciones: [...] };
 
 export const Navbar = ({ onToggle }) => {
   const location = useLocation();
@@ -89,7 +106,7 @@ export const Navbar = ({ onToggle }) => {
 
   // Elige el menú según el rol
   // Cuando el usuario no está logueado mostramos solo la sección "Tienda"
-  const menu = isCliente ? MENU_CLIENTE : {
+  const menu = user ? (isDelivery ? MENU_DELIVERY : MENU_CLIENTE) : {
     secciones: [
       {
         label: "Tienda",
@@ -102,8 +119,11 @@ export const Navbar = ({ onToggle }) => {
     ],
   };
 
+  
+
   // Etiqueta del rol para mostrar debajo del nombre
-  const rolLabel = isCliente ? "Cliente" : "Invitado";
+  const rolLabel = isCliente ? "Cliente" : isDelivery ? "Repartidor" : "Invitado";
+  
   const inicial = user?.name ? user.name[0].toUpperCase() : "?";
   const isActive = (to) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
