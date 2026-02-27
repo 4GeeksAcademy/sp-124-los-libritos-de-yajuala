@@ -11,10 +11,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book
+from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book, Author, UserBookPreference, UserCategoryPreference, UserAuthorPreference, ChatConversation, ChatMessage, UserCategoryPreference, ProveedorNotificacion
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import and_
 import requests
+import json
+
 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -566,10 +568,7 @@ def import_book():
         descripcion = body.get("descripcion")
         portada = body.get("portada")
         precio = body.get("precio")
-        categorias_list = body.get("categorias", [])
-        if isinstance(categorias_list, str):
-            categorias_list = [categorias_list]
-
+        categorias = body.get("categorias", [])
         if not titulo:
             return jsonify({"msg": "El título es obligatorio"}), 400
 
@@ -589,6 +588,16 @@ def import_book():
             existing.portada = portada or existing.portada
             existing.precio = precio or existing.precio
             db.session.commit()
+
+            Categoria_Libro.query.filter_by(libro_id=existing.id).delete()
+
+            for cat_id in categorias:
+                rel = Categoria_Libro(
+                    libro_id=existing.id, categoria_id=cat_id)
+                db.session.add(rel)
+
+            db.session.commit()
+
             return jsonify(existing.serialize()), 200
 
         new_book = Book(
@@ -947,8 +956,6 @@ def pay_cart(cart_id):
     body = request.get_json(silent=True) or {}
     address_id = body.get("address_id")
 
-    # Validar que envio direccion
-
     if not address_id:
         return jsonify({"msg": "Falta address_id para crear el envío"}), 400
 
@@ -960,7 +967,6 @@ def pay_cart(cart_id):
     if cart.estado != "pendiente":
         return jsonify({"msg": "Este carrito no se puede pagar"}), 400
 
-    # Verificar que la dir existe y pertenece al cliente
     address = Address.query.get(address_id)
     if not address:
         return jsonify({"msg": "Dirección no encontrada"}), 404
@@ -968,10 +974,8 @@ def pay_cart(cart_id):
     if address.id_usuario != cart.id_cliente:
         return jsonify({"msg": "Esa dirección no pertenece al cliente"}), 403
 
-    
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
-    #  Validar stock
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         if not pb:
@@ -982,7 +986,6 @@ def pay_cart(cart_id):
                 "msg": f"Stock insuficiente para '{pb.libro.titulo}'. Disponible: {pb.cantidad}, pedido: {item.cantidad}"
             }), 400
 
-    #  Descontar stock
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         pb.cantidad -= item.cantidad
@@ -997,11 +1000,8 @@ def pay_cart(cart_id):
     cart.monto_total = total
     cart.estado = "pagado"
     db.session.commit()
-
-    # provisional test layla aqui abjo
     print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
-    # Verificar que no exista ya un shipment para este cart
     existing_shipment = Shipment.query.filter_by(cart_id=cart.id).first()
     if not existing_shipment:
         shipment = Shipment(
@@ -1015,7 +1015,6 @@ def pay_cart(cart_id):
     else:
         shipment = existing_shipment
 
-    # Crear nuevo carrito vacio para el cliente
     new_cart = Cart(
         id_cliente=cart.id_cliente,
         estado="pendiente",
@@ -2151,12 +2150,12 @@ def create_order():
 
     cart = request_body["cart"]
     items_from_front = cart.get("items", [])
-    total = cart.get("total", 0)
+    total = float(cart.get("total", 0))
 
     paypal_items = []
     for item in items_from_front:
-        precio_con_descuento = float(
-            item["unit_amount"]) * (1 - float(item.get("descuento", 0)))
+        precio_con_descuento = float(item["unit_amount"]["value"])
+
         paypal_items.append({
             "name": item["name"],
             "unit_amount": {
@@ -2180,11 +2179,12 @@ def create_order():
                 "purchase_units": [{
                     "amount": {
                         "currency_code": "EUR",
-                        "value": str(round(total, 2)),
+                        "value": f"{total:.2f}",
                         "breakdown": {
                             "item_total": {
                                 "currency_code": "EUR",
-                                "value": str(round(total, 2))
+                                "value": f"{total:.2f}",
+
                             }
                         }
                     },
@@ -2192,25 +2192,69 @@ def create_order():
                 }]
             }
         )
-        return jsonify(response.json()), response.status_code
+        print("PAYPAL RAW RESPONSE:", response.text)
+
+        data = response.json()
+
+        if "id" not in data:
+            return jsonify({"error": "PayPal error", "details": data}), 500
+
+        return jsonify({"id": data["id"]}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @api.route("/orders/<order_id>/capture", methods=["POST"])
 def capture_order(order_id):
     try:
+        body = request.get_json()
+
+        if not body:
+            return jsonify({"error": "Missing JSON body"}), 400
+
+        user_id = body.get("user_id")
+        cart_id = body.get("cart_id")
+
+        if not user_id or not cart_id:
+            return jsonify({"error": "Missing user_id or cart_id"}), 400
+
         access_token = get_paypal_access_token()
         response = http_requests.post(
             f"{PAYPAL_BASE_URL}/v2/checkout/orders/{order_id}/capture",
             headers={
                 "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json",
-                "Prefer": "return=representation",
+                "Content-Type": "application/json"
             }
         )
-        return jsonify(response.json()), response.status_code
+
+        data = response.json()
+        print("PAYPAL CAPTURE RESPONSE:", data)
+
+        if data.get("status") != "COMPLETED":
+            return jsonify({"error": "Payment not completed", "details": data}), 400
+
+        cart = Cart.query.get(cart_id)
+
+        if not cart:
+            return jsonify({"error": "Cart not found"}), 404
+
+        cart.estado = "pagado"
+        cart.fecha = datetime.utcnow()
+        db.session.commit()
+
+        new_cart = Cart(
+            id_cliente=user_id,
+            monto_total=0,
+            estado="pendiente"
+        )
+        db.session.add(new_cart)
+        db.session.commit()
+
+        return jsonify({
+            "msg": "Payment captured",
+            "old_cart_id": cart_id,
+            "new_cart_id": new_cart.id
+        }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -2341,9 +2385,43 @@ def count_repartidores_pendientes():
     count = Delivery.query.filter_by(is_approved=False).count()
     return jsonify({"count": count}), 200
 
-# endpoints tinderete
 
-# Libros
+@api.route("/users/<int:user_id>/favorite-categories", methods=["GET"])
+def get_favorite_categories(user_id):
+    prefs = UserCategoryPreference.query.filter_by(
+        id_usuario=user_id,
+        preference=1
+    ).all()
+
+    return jsonify([p.categoria.serialize() for p in prefs]), 200
+
+
+@api.route("/users/<int:user_id>/favorite-categories", methods=["POST"])
+def save_favorite_categories(user_id):
+    data = request.get_json()
+    category_ids = data.get("categories", [])
+
+    clean_ids = []
+    for cid in category_ids:
+        try:
+            clean_ids.append(int(cid))
+        except:
+            continue
+
+    UserCategoryPreference.query.filter_by(id_usuario=user_id).delete()
+
+    for cid in clean_ids:
+        pref = UserCategoryPreference(
+            id_usuario=user_id,
+            id_categoria=cid,
+            preference=1
+        )
+        db.session.add(pref)
+
+    db.session.commit()
+    return jsonify({"msg": "Saved"}), 200
+
+
 @api.route("/users/<int:user_id>/swipe/books", methods=["GET"])
 def swipe_books_feed(user_id):
     limit = int(request.args.get("limit", 20))
@@ -2484,6 +2562,170 @@ def swipe_author_vote(user_id, author_id):
             id_autor=author_id,
             preference=pref
         )
+    db.session.add(row)
+
+    db.session.commit()
+    return jsonify(row.serialize() if hasattr(row, "serialize") else {"ok": True}), 200
+
+
+@api.route("/users/<int:user_id>/preferences", methods=["GET"])
+def get_user_preferences(user_id):
+    books = UserBookPreference.query.filter_by(id_usuario=user_id).all()
+    cats = UserCategoryPreference.query.filter_by(id_usuario=user_id).all()
+    authors = UserAuthorPreference.query.filter_by(id_usuario=user_id).all()
+
+    return jsonify({
+        "books": [b.serialize() for b in books],
+        "categories": [c.serialize() for c in cats],
+        "authors": [a.serialize() for a in authors]
+    }), 200
+
+
+@api.route("/users/<int:user_id>/recommendations", methods=["GET"])
+def recommend_books(user_id):
+    return jsonify({"msg": "recommendations coming soon"}), 200
+
+
+@api.route("/users/<int:user_id>/conversations", methods=["GET"])
+@jwt_required()
+def list_conversations(user_id):
+    conversations = ChatConversation.query.filter_by(
+        user_id=user_id).order_by(ChatConversation.updated_at.desc()).all()
+    return jsonify([c.serialize() for c in conversations]), 200
+
+
+@api.route("/users/<int:user_id>/conversations", methods=["POST"])
+def create_conversation(user_id):
+    conv = ChatConversation(user_id=user_id, title="Nueva conversación")
+    db.session.add(conv)
+    db.session.commit()
+
+    return jsonify(conv.serialize()), 201
+
+
+@api.route("/conversations/<int:conversation_id>", methods=["GET"])
+def get_conversation_messages(conversation_id):
+    conv = ChatConversation.query.get(conversation_id)
+    if not conv:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    messages = ChatMessage.query.filter_by(
+        conversation_id=conversation_id).order_by(ChatMessage.created_at.asc()).all()
+
+    return jsonify({
+        "conversation": conv.serialize(),
+        "messages": [m.serialize() for m in messages]
+    }), 200
+
+
+@api.route("/conversations/<int:conversation_id>/messages", methods=["POST"])
+@jwt_required()
+def send_message(conversation_id):
+    from api.ai.agent import agent_decide, agent_generate_final_response
+    from api.ai.google_books import google_books_search
+
+    conv = ChatConversation.query.get(conversation_id)
+    if not conv:
+        return jsonify({"error": "Conversation not found"}), 404
+
+    data = request.get_json()
+    user_message = data.get("content", "").strip()
+    user_id = get_jwt_identity()
+
+    msg_user = ChatMessage(
+        conversation_id=conversation_id,
+        sender="user",
+        content=user_message
+    )
+    db.session.add(msg_user)
+
+    history = [
+        {"role": m.sender, "content": m.content}
+        for m in ChatMessage.query.filter_by(conversation_id=conversation_id).all()
+    ]
+
+    decision = agent_decide(user_message, history, user_id)
+
+    if decision["accion"] == "preguntar":
+        bot_reply = decision["respuesta"]
+
+    elif decision["accion"] == "buscar_internos":
+        libros = Book.query.filter(Book.titulo.ilike(f"%{decision['query']}%")).limit(5).all()
+        resultados = [{"titulo": b.titulo, "autor": b.autor} for b in libros]
+        bot_reply = agent_generate_final_response(user_message, history, resultados, user_id)
+
+    elif decision["accion"] == "buscar_externos":
+        resultados = google_books_search(decision["query"])
+        bot_reply = agent_generate_final_response(user_message, history, resultados, user_id)
+
+    msg_bot = ChatMessage(
+        conversation_id=conversation_id,
+        sender="bot",
+        content=json.dumps(bot_reply, ensure_ascii=False)
+    )
+
+    db.session.add(msg_bot)
+
+    conv.updated_at = db.func.now()
+    db.session.commit()
+
+    return jsonify({
+        "user_message": msg_user.serialize(),
+        "bot_message": msg_bot.serialize()
+    }), 200
+
+@api.route("/proveedores/notificaciones", methods=["POST"])
+@jwt_required()
+def crear_notificacion_proveedor():
+    data = request.json
+    user_id = get_jwt_identity()
+
+    noti = ProveedorNotificacion(
+        libro_titulo=data["titulo"],
+        libro_autor=data.get("autor"),
+        categoria=data.get("categoria"),
+        id_usuario=user_id
+    )
+
+    db.session.add(noti)
+    db.session.commit()
+
+    return jsonify({"msg": "Notificación enviada a proveedores"}), 201
+
+@api.route("/proveedores/notificaciones", methods=["GET"])
+@jwt_required()
+def listar_notificaciones_proveedor():
+    notificaciones = ProveedorNotificacion.query.order_by(
+        ProveedorNotificacion.created_at.desc()
+    ).all()
+
+    return jsonify([{
+        "id": n.id,
+        "titulo": n.libro_titulo,
+        "autor": n.libro_autor,
+        "categoria": n.categoria,
+        "estado": n.estado,
+        "usuario": n.usuario.name if n.usuario else None,
+        "created_at": n.created_at.isoformat()
+    } for n in notificaciones])
+
+@api.route("/proveedores/notificaciones/<int:id>", methods=["PATCH"])
+@jwt_required()
+def actualizar_notificacion_proveedor(id):
+    data = request.json
+    nueva_accion = data.get("accion")
+
+    noti = ProveedorNotificacion.query.get(id)
+    if not noti:
+        return jsonify({"msg": "Notificación no encontrada"}), 404
+
+    if nueva_accion not in ["visto", "aceptado", "rechazado"]:
+        return jsonify({"msg": "Acción inválida"}), 400
+
+    noti.estado = nueva_accion
+    db.session.commit()
+
+    return jsonify({"msg": "Estado actualizado"})
         db.session.add(row)
 
     db.session.commit()

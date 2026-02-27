@@ -111,9 +111,11 @@ import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 import AdminRepartidoresPendientes from "./components/AdminRepartidoresPendientes.jsx";
 
+import FavoriteCategoriesPage from "./pages/categorias/FavoriteCategoriesPage.jsx";
+import SelectCategoriesPage from "./pages/categorias/SelectCategoriesPage.jsx";
+import ChatPage from "./components/chat/ChatPage.jsx";
+import ProviderNotifications from "./pages/proveedores/ProviderNotifications.jsx";
 import ProviderLayout from "./pages/proveedores/ProviderLayout.jsx";
-
-
 
 export const router = createBrowserRouter(
         createRoutesFromElements(
@@ -125,7 +127,22 @@ export const router = createBrowserRouter(
                                 <Route path="demo" element={<Demo />} />
                                 <Route path="/swipe" element={<ProtectedRoute><Swipe /></ProtectedRoute>} />
 
-                            
+                                {/* Proveedores */}
+                                <Route path="provider" element={<AdminRoute><Provider /></AdminRoute>} />
+                                <Route path="provider/create" element={<AddProvider />} />
+                                <Route path="provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
+                                <Route path="provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
+                                <Route path="provider/books/search" element={<ProviderBookSearch />} />
+                                <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
+                                <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
+                                <Route path="provider/books/:id" element={<ProviderBookDetail />} />
+                                <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
+                                <Route path="provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
+                                <Route path="provider/me" element={<LoggedProveedorPage />} />
+                                <Route path="/provider/notifications" element={<ProviderNotifications />} />
+
+
+                                {/* Clientes */}
                                 <Route path="clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
                                 <Route path="clients/:id" element={<AdminRoute><ClientDetailPage /></AdminRoute>} />
                                 <Route path="clients/create" element={<AddNewClient />} />
@@ -174,6 +191,8 @@ export const router = createBrowserRouter(
                                 <Route path="user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
                                 <Route path="user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
                                 <Route path="user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
+                                <Route path="user/favorite-categories" element={<ProtectedRoute><FavoriteCategoriesPage /></ProtectedRoute>} />
+                                <Route path="/user/select-categories" element={<SelectCategoriesPage />} />
                                 <Route path="user/edit" element={<ProtectedRoute><EditClientPage /></ProtectedRoute>} />
 
                                 
@@ -200,6 +219,8 @@ export const router = createBrowserRouter(
                                 <Route path="addresses/:id/edit" element={<EditAddressPage />} />
 
                                 <Route path="home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
+                                <Route path="chat" element={<ChatPage />} />
+
 
                         </Route>
 

@@ -224,7 +224,18 @@ export default function LoggedClientPage() {
         <button className="btn btn-success" onClick={() => navigate("/user/cart")}>
           Ver carrito
         </button>
-        <button className="btn btn-outline-secondary" onClick={() => navigate("/home-client")}>
+
+        <button
+          className="btn btn-info"
+          onClick={() => navigate("/user/favorite-categories")}
+        >
+          Categorías favoritas
+        </button>
+
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate("/home-client")}
+        >
           Volver al inicio
         </button>
       </div>

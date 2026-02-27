@@ -209,6 +209,22 @@ export default function LoggedProveedorPage() {
         <button className="btn" style={{background:"#2563eb", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/books/search")}>
           Buscar e importar libros
         </button>
+
+        <button
+          className="btn btn-warning me-3"
+          onClick={() => navigate("/provider/notifications")}
+        >
+          Solicitudes de Importación
+        </button>
+
+
+
+        <button
+          className="btn btn-secondary"
+          onClick={() => navigate("/provider/me")}
+        >
+          Volver al panel
+        </button>
       </div>
     </div>
   );
