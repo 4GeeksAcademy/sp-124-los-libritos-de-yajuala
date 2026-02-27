@@ -137,7 +137,13 @@ export const ProviderBooks = () => {
 
             return (
               <div key={row.id} className="col-12 col-md-6 col-lg-4 mb-3">
-                <div className="card">
+                <div className="card h-100">
+                  <img
+                    src={book.portada || "https://via.placeholder.com/300x200?text=Sin+portada"}
+                    alt={book.titulo}
+                    className="card-img-top"
+                    style={{ height: "200px", objectFit: "cover" }}
+                  />
                   <div className="card-body">
                     <h5 className="card-title">{book.titulo}</h5>
 
@@ -171,7 +177,7 @@ export const ProviderBooks = () => {
                           editQuantity(row.id, row.cantidad)
                         }
                       >
-                        Editar cantidad
+                        Editar cantidades
                       </button>
 
                       <button

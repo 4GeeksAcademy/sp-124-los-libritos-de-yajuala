@@ -10,16 +10,39 @@ export default function ProviderBookSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [searchType, setSearchType] = useState("title");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const searchBooks = async () => {
     if (!query.trim()) return;
+    setError("");
+    setLoading(true);
 
-    const resp = await fetch(
-      `${backendUrl}/api/books/search?q=${encodeURIComponent(query)}&type=${searchType}`
-    );
+    try {
+      const resp = await fetch(
+        `${backendUrl}/api/books/search?q=${encodeURIComponent(query)}&type=${searchType}`
+      );
+      const data = await resp.json();
 
-    const data = await resp.json();
-    setResults(data);
+      if (!resp.ok) {
+        setError(data.msg || "Error en la búsqueda");
+        setResults([]);
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        setError("La API de búsqueda no está disponible en este momento. Inténtalo más tarde.");
+        setResults([]);
+        return;
+      }
+
+      setResults(data);
+    } catch (err) {
+      setError("Error de conexión con el servidor");
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const importBook = async (book) => {
@@ -47,16 +70,15 @@ export default function ProviderBookSearch() {
         descripcion: book.descripcion,
         portada: book.portada,
         precio: parseFloat(precio),
+        categorias: book.categorias || [],
       }),
     });
 
     const savedBook = await resp.json();
     if (!resp.ok) return alert(savedBook.msg || "Error importando libro");
 
-    const providerId = store.user.id;
-
     const resp2 = await fetch(
-      `${backendUrl}/api/provider/${providerId}/add_book`,
+      `${backendUrl}/api/provider/${store.user.id}/add_book`,
       {
         method: "POST",
         headers: {
@@ -82,14 +104,13 @@ export default function ProviderBookSearch() {
 
       <div className="d-flex gap-2 mb-3">
         <button
-          className={`btn ${searchType === "title" ? "btn-primary" : "btn-outline-primary"}`}
+          style={searchType === "title" ? styles.btnPrimary : styles.btnOutline}
           onClick={() => setSearchType("title")}
         >
           Buscar por título
         </button>
-
         <button
-          className={`btn ${searchType === "author" ? "btn-primary" : "btn-outline-primary"}`}
+          style={searchType === "author" ? styles.btnPrimary : styles.btnOutline}
           onClick={() => setSearchType("author")}
         >
           Buscar por autor
@@ -102,11 +123,16 @@ export default function ProviderBookSearch() {
           placeholder="Introduce tu búsqueda..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && searchBooks()}
         />
-        <button className="btn btn-success" onClick={searchBooks}>
-          Buscar
+        <button style={styles.btnPrimary} onClick={searchBooks} disabled={loading}>
+          {loading ? "Buscando..." : "Buscar"}
         </button>
       </div>
+
+      {error && (
+        <div className="alert alert-warning">{error}</div>
+      )}
 
       <div className="row">
         {results.map((book, i) => (
@@ -120,7 +146,6 @@ export default function ProviderBookSearch() {
                   style={{ height: "250px", objectFit: "cover" }}
                 />
               )}
-
               <div className="card-body">
                 <h5 className="card-title">{book.titulo}</h5>
                 <p className="card-text">
@@ -128,11 +153,7 @@ export default function ProviderBookSearch() {
                   <strong>ISBN:</strong> {book.isbn || "N/A"} <br />
                   <small>{book.descripcion || "Sin descripción"}</small>
                 </p>
-
-                <button
-                  className="btn btn-primary w-100"
-                  onClick={() => importBook(book)}
-                >
+                <button style={{...styles.btnPrimary, width: "100%"}} onClick={() => importBook(book)}>
                   Importar libro
                 </button>
               </div>
@@ -142,7 +163,7 @@ export default function ProviderBookSearch() {
       </div>
 
       <button
-        className="btn btn-warning  mt-4"
+        style={{...styles.btnNeutral, marginTop: 16}}
         onClick={() => navigate("/provider/books/new")}
       >
         Crear libro manualmente
@@ -150,3 +171,33 @@ export default function ProviderBookSearch() {
     </div>
   );
 }
+
+const styles = {
+  btnPrimary: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "none",
+    background: "#2563eb",
+    color: "#ffffff",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  btnOutline: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "1px solid #2563eb",
+    background: "transparent",
+    color: "#2563eb",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  btnNeutral: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "1px solid #cbd5e1",
+    background: "#f8fafc",
+    color: "#475569",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+};

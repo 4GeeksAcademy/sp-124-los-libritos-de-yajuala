@@ -83,7 +83,7 @@ export default function LoggedClientPage() {
   return (
     <div className="container mt-4" style={{ maxWidth: "700px" }}>
 
-      {/* Cabecera perfil */}
+      
       <div className="d-flex align-items-center gap-4 mb-4">
         <div style={{ position: "relative" }}>
           <img
@@ -137,7 +137,7 @@ export default function LoggedClientPage() {
         </div>
       )}
 
-      {/* Sección editar perfil */}
+      
       <div className="card mb-4">
         <div className="card-header d-flex justify-content-between align-items-center">
           <span>Datos del perfil</span>
@@ -207,7 +207,7 @@ export default function LoggedClientPage() {
         </div>
       </div>
 
-      {/* Acciones */}
+      
       <div className="d-flex flex-wrap gap-3">
         <button className="btn btn-success" onClick={() => navigate("/user/history")}>
           Ver historial de pedidos
@@ -218,11 +218,10 @@ export default function LoggedClientPage() {
         <button className="btn btn-warning" onClick={() => navigate("/home-client")}>
           Ver libros
         </button>
-
-        <button
-          className="btn btn-success me-3"
-          onClick={() => navigate("/user/cart")}
-        >
+        <button className="btn btn-primary" onClick={() => navigate("/swipe")}>
+          Mis matches
+        </button>
+        <button className="btn btn-success" onClick={() => navigate("/user/cart")}>
           Ver carrito
         </button>
 

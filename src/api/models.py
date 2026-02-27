@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+
 db = SQLAlchemy()
 
 
@@ -43,11 +44,12 @@ class Delivery(db.Model):
     role = db.Column(db.String(20), nullable=False, default="delivery")
     password = db.Column(db.String(255), nullable=False)
     is_approved = db.Column(db.Boolean, nullable=False, default=False)
+    avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
-    def set_password(self, raw_password): 
-        self.password = generate_password_hash(raw_password) 
-        
-    def check_password(self, raw_password): 
+    def set_password(self, raw_password):
+        self.password = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password):
         return check_password_hash(self.password, raw_password)
 
     def serialize(self):
@@ -57,6 +59,7 @@ class Delivery(db.Model):
             "lastname": self.lastname,
             "email": self.email,
             "identificacion": self.identificacion,
+            "avatar_url": self.avatar_url,
             "role": self.role,
             "is_approved": self.is_approved
         }
@@ -99,6 +102,7 @@ class Provider(db.Model):
         nullable=False,
         index=True
     )
+    avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -112,6 +116,7 @@ class Provider(db.Model):
             "name": self.name,
             "email": self.email,
             "telefono": self.telefono,
+            "avatar_url": self.avatar_url,
             "documento": self.documento
         }
 
@@ -260,7 +265,7 @@ class CartBook(db.Model):
         }
 
 
-# MODELO ADDRESS
+
 class Address(db.Model):
     __tablename__ = "addresses"
 
@@ -301,7 +306,7 @@ class Address(db.Model):
         }
 
 
-# MODELO PROVIDERBOOK
+
 class ProviderBook(db.Model):
     __tablename__ = "provider_book"
 
@@ -378,7 +383,6 @@ class Book(db.Model):
         }
 
 
-# Shipment - para delivery layla
 
 
 class Shipment(db.Model):
@@ -504,7 +508,9 @@ class UserCategoryPreference(db.Model):
             "preference": self.preference,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-    }
+        }
+
+
 
 class Author(db.Model):
     __tablename__ = "author"
@@ -521,7 +527,8 @@ class Author(db.Model):
             "nombre": self.nombre,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-    }
+        }
+
 
 class UserAuthorPreference(db.Model):
     __tablename__ = "user_author_preferences"

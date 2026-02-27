@@ -8,7 +8,7 @@ export const ProviderPanelButtons = () => {
       <div className="d-flex gap-2 flex-wrap">
         <button
           type="button"
-          className="btn btn-secondary"
+          style={styles.btnNeutral}
           onClick={() => navigate("/provider/me")}
         >
           Volver al panel
@@ -16,7 +16,7 @@ export const ProviderPanelButtons = () => {
 
         <button
           type="button"
-          className="btn btn-primary"
+          style={styles.btnPrimary}
           onClick={() => navigate("/provider/books")}
         >
           Gestionar Libros
@@ -24,7 +24,7 @@ export const ProviderPanelButtons = () => {
 
         <button
           type="button"
-          className="btn btn-success"
+          style={styles.btnSecondary}
           onClick={() => navigate("/provider/orders")}
         >
           Ver Pedidos
@@ -34,4 +34,34 @@ export const ProviderPanelButtons = () => {
       <hr />
     </div>
   );
+};
+
+const styles = {
+  btnPrimary: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "none",
+    background: "#2563eb",
+    color: "#ffffff",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  btnSecondary: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "none",
+    background: "#1d4ed8",
+    color: "#ffffff",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
+  btnNeutral: {
+    padding: "8px 16px",
+    borderRadius: 8,
+    border: "1px solid #cbd5e1",
+    background: "#f8fafc",
+    color: "#475569",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
 };

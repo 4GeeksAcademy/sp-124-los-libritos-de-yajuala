@@ -13,7 +13,7 @@ export default function PaymentSuccessPage() {
         const pay = async () => {
             if (!store.user) return;
 
-            // Si viene de PayPal, el carrito ya está pagado — solo limpiamos
+            
             if (fromPaypal) {
                 actions.clearCart();
                 localStorage.removeItem("cart");
