@@ -190,6 +190,7 @@ export const router = createBrowserRouter(
                                 <Route path="user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
                                 <Route path="user/favorite-categories" element={<ProtectedRoute><FavoriteCategoriesPage /></ProtectedRoute>} />
                                 <Route path="/user/select-categories" element={<SelectCategoriesPage />} />
+                                <Route path="user/edit" element={<ProtectedRoute><EditClientPage /></ProtectedRoute>} />
 
                                 {/* Auth proveedores */}
                                 <Route path="login/provider" element={<LoginProviderPage />} />
