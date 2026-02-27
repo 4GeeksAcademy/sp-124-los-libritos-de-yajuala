@@ -91,7 +91,7 @@ export default function LoggedProveedorPage() {
   return (
     <div className="container mt-4" style={{ maxWidth: "700px" }}>
 
-      {/* Cabecera perfil */}
+      
       <div className="d-flex align-items-center gap-4 mb-4">
         <div style={{ position: "relative" }}>
           <img
@@ -198,7 +198,7 @@ export default function LoggedProveedorPage() {
         </div>
       </div>
 
-      {/* Acciones */}
+      
       <div className="d-flex flex-wrap gap-3">
         <button className="btn" style={{background:"#2563eb", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/books")}>
           Gestionar Libros

@@ -110,7 +110,7 @@ export default function LoggedDelivery() {
   return (
     <div className="container mt-4" style={{ maxWidth: "700px" }}>
 
-      {/* Cabecera perfil */}
+      
       <div className="d-flex align-items-center gap-4 mb-4">
         <div style={{ position: "relative" }}>
           <img
@@ -164,7 +164,7 @@ export default function LoggedDelivery() {
         </div>
       )}
 
-      {/* Sección editar perfil */}
+      
       <div className="card mb-4">
         <div className="card-header d-flex justify-content-between align-items-center">
           <span>Datos del perfil</span>
@@ -218,7 +218,7 @@ export default function LoggedDelivery() {
         </div>
       </div>
 
-      {/* Lista de pedidos */}
+      
       <div className="card">
         <div className="card-header">
           <span>🚴‍♂️ Pedidos asignados</span>
