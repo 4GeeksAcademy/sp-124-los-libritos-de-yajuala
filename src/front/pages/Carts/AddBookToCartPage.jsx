@@ -30,7 +30,7 @@ export default function AddBookToCartPage() {
     if (name === "id_libro") {
       const selectedBook = books.find(b => b.id === parseInt(value));
 
-      // Tomamos el primer proveedor disponible
+     
       const firstProvider = selectedBook?.proveedores?.[0];
 
       setForm({

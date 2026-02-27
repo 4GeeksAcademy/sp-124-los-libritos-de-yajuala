@@ -265,7 +265,7 @@ class CartBook(db.Model):
         }
 
 
-# MODELO ADDRESS
+
 class Address(db.Model):
     __tablename__ = "addresses"
 
@@ -306,7 +306,7 @@ class Address(db.Model):
         }
 
 
-# MODELO PROVIDERBOOK
+
 class ProviderBook(db.Model):
     __tablename__ = "provider_book"
 
@@ -383,7 +383,6 @@ class Book(db.Model):
         }
 
 
-# Shipment - para delivery layla
 
 
 class Shipment(db.Model):
@@ -435,7 +434,7 @@ class Shipment(db.Model):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
 
-# Efecto tinder
+
 
 
 class UserBookPreference(db.Model):
@@ -455,7 +454,7 @@ class UserBookPreference(db.Model):
         nullable=False
     )
 
-    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    preference = db.Column(db.Integer, nullable=False)  
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 
@@ -494,7 +493,7 @@ class UserCategoryPreference(db.Model):
         nullable=False
     )
 
-    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    preference = db.Column(db.Integer, nullable=False)  
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 
@@ -516,7 +515,7 @@ class UserCategoryPreference(db.Model):
         }
 
 
-# CCrear tabla Author para poder tener id_autor
+
 class Author(db.Model):
     __tablename__ = "author"
 
@@ -552,7 +551,7 @@ class UserAuthorPreference(db.Model):
         nullable=False
     )
 
-    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    preference = db.Column(db.Integer, nullable=False)  
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 

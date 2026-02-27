@@ -145,7 +145,7 @@ export const ProviderBookEdit = () => {
       <div className="card">
         <div className="card-body">
 
-          {/* Portada */}
+          
           <label className="form-label">Portada</label>
           <div className="mb-3">
             <div style={{ position: "relative", display: "inline-block" }}>

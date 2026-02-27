@@ -345,7 +345,7 @@ def delete_provider(provider_id):
 
     return jsonify({"msg": "Provider deleted"}), 200
 
-# CRUD libros layla---------------------------------
+
 
 
 @api.route("/books", methods=["GET"])
@@ -362,7 +362,7 @@ def get_book(id):
     return jsonify(book.serialize()), 200
 
 
-# POST /books para proveedores
+
 @api.route("/books", methods=["POST"])
 @jwt_required()
 def create_book():
@@ -505,7 +505,7 @@ def delete_book(book_id):
 @api.route("/books/search")
 def search_books():
     query = request.args.get("q", "").strip()
-    search_type = request.args.get("type", "title")  # "title" o "author"
+    search_type = request.args.get("type", "title")  
 
     if not query:
         return jsonify([]), 200
@@ -602,7 +602,7 @@ def import_book():
         db.session.add(new_book)
         db.session.commit()
 
-        # Añado registro de autor que no estaba(Layla)
+       
         autor_raw = (autor or "").strip()
         if autor_raw:
             for n in autor_raw.split(","):
@@ -613,7 +613,7 @@ def import_book():
                     db.session.add(Author(nombre=n))
             db.session.commit()
 
-        # Guardar categorias en Categorias y Categoria_Libro
+        
         for nombre_cat in categorias_list:
             if not nombre_cat:
                 continue
@@ -755,7 +755,7 @@ def delete_categoria_libro(categoria_id, libro_id):
     return jsonify({"msg": "Relación eliminada correctamente"}), 200
 
 
-# CRUD Categorias
+
 
 
 @api.route("/categorias", methods=["GET"])
@@ -938,7 +938,7 @@ def delete_cart(cart_id):
     return jsonify({"msg": "Carrito eliminado"}), 200
 
 
-# Pay Cart
+
 @api.route("/carts/<int:cart_id>/pay", methods=["POST"])
 def pay_cart(cart_id):
 
@@ -968,7 +968,7 @@ def pay_cart(cart_id):
     if address.id_usuario != cart.id_cliente:
         return jsonify({"msg": "Esa dirección no pertenece al cliente"}), 403
 
-    # Calcular total
+    
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
 
     #  Validar stock
@@ -998,7 +998,7 @@ def pay_cart(cart_id):
     cart.estado = "pagado"
     db.session.commit()
 
-    # provisional test layla aqui abjo:
+    # provisional test layla aqui abjo
     print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
     # Verificar que no exista ya un shipment para este cart
@@ -1488,7 +1488,7 @@ def admin_users():
     return jsonify([u.serialize() for u in usuarios]), 200
 
 
-# Login proveedores Layla abajo
+
 
 
 @api.route("/login/provider", methods=["POST"])
@@ -1524,7 +1524,7 @@ def login_provider():
 @api.route("/delivery/pedidos", methods=["GET"])
 @jwt_required()
 def delivery_pedidos():
-    delivery_id = get_jwt_identity()  # esto es un int
+    delivery_id = get_jwt_identity()  
     delivery = Delivery.query.get(delivery_id)
 
     if not delivery:
@@ -1558,7 +1558,7 @@ def validate():
     }), 200
 
 
-# ENDPOINTS PROVIDER BOOKS
+
 
 @api.route("/provider/books", methods=["GET"])
 @jwt_required()
@@ -1586,7 +1586,7 @@ def get_provider_books():
         for link in links
     ]), 200
 
-# ________________ Endpoint de la importacion de libros desde la APi ________________
+
 
 
 @api.route("/provider/books/<int:provider_book_id>", methods=["GET"])
@@ -1666,7 +1666,7 @@ def update_provider_book(provider_book_id):
         "libro": book.serialize()
     }), 200
 
-# ________________ Fin Endpoint de la importacion de libros desde la APi ________________
+
 
 
 @api.route("/provider/<int:provider_id>/add_book", methods=["POST"])
@@ -1816,7 +1816,7 @@ def edit_provider_book(provider_book_id):
     return jsonify({"msg": "Libro actualizado"}), 200
 
 
-# Pedidos del proveedor
+
 
 
 @api.route("/provider/orders", methods=["GET"])
@@ -1851,7 +1851,7 @@ def get_provider_orders():
                 "id_cliente": cart.id_cliente,
                 "items": []
             }
-        orders[cart.id]["items"].append({  # 👈 dentro del for
+        orders[cart.id]["items"].append({  
             "cart_book_id": cartbook.id,
             "id_libro": book.id,
             "titulo": book.titulo,
@@ -1863,7 +1863,7 @@ def get_provider_orders():
 
     return jsonify(list(orders.values())), 200
 
-# Delivery Layla
+
 
 
 @api.route("/delivery/orders/available", methods=["GET"])
@@ -1928,7 +1928,7 @@ def delivery_orders_mine():
     return jsonify(orders), 200
 
 
-# endpoint para claim
+
 
 
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
@@ -2041,7 +2041,7 @@ def delivery_order_detail(cart_id):
 def create_shipment_from_paid_cart(cart_id):
     identity = get_jwt_identity()
 
-    # Solo cliente/admin (no provider/delivery)
+   
     if identity.get("role") in ("provider", "delivery"):
         return jsonify({"msg": "No autorizado"}), 403
 
@@ -2055,11 +2055,11 @@ def create_shipment_from_paid_cart(cart_id):
     if not cart:
         return jsonify({"msg": "Carrito no encontrado"}), 404
 
-    # El carrito debe ser del usuario logueado
+
     if cart.id_cliente != identity.get("id"):
         return jsonify({"msg": "No autorizado"}), 403
 
-    # Solo se crea shipment si el carrito ya está pagado
+
     if cart.estado != "pagado":
         return jsonify({"msg": "El carrito no está pagado"}), 400
 
@@ -2067,11 +2067,11 @@ def create_shipment_from_paid_cart(cart_id):
     if not address:
         return jsonify({"msg": "Dirección no encontrada"}), 404
 
-    # La address debe pertenecer al usuario
+   
     if address.id_usuario != identity.get("id"):
         return jsonify({"msg": "Esa dirección no es tuya"}), 403
 
-    # si ya existe lo devolvemos
+   
     existing = Shipment.query.filter_by(cart_id=cart_id).first()
     if existing:
         return jsonify({
@@ -2106,7 +2106,7 @@ def create_shipment_from_paid_cart(cart_id):
         }
     }), 201
 
-# Endpints Google Pay -layla
+
 
 
 @api.route("/payments/google/confirm", methods=["POST"])
