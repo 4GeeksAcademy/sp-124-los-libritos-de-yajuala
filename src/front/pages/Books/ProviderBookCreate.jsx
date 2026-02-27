@@ -11,7 +11,7 @@ export const ProviderBookCreate = () => {
     descripcion: "",
     precio: "",
     cantidad: "",
-    categorias: []   // ← NUEVO
+    categorias: [] 
   });
   const [portadaFile, setPortadaFile] = useState(null);
   const [portadaPreview, setPortadaPreview] = useState(null);
@@ -24,7 +24,6 @@ export const ProviderBookCreate = () => {
   const { store } = useGlobalReducer();
   const backendUrl = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
 
-  // Cargar categorías al iniciar
   useEffect(() => {
     fetch(`${backendUrl}/api/categorias`)
       .then(res => res.json())
@@ -38,6 +37,7 @@ export const ProviderBookCreate = () => {
         ? prev.categorias.filter(c => c !== id)
         : [...prev.categorias, id]
     }));
+  };
   const handlePortadaChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -53,7 +53,6 @@ export const ProviderBookCreate = () => {
 
     setUploading(true);
 
-    // 1. Crear el libro primero (sin portada)
     const resp = await fetch(`${backendUrl}/api/books/import`, {
       method: "POST",
       headers: {
@@ -79,7 +78,6 @@ export const ProviderBookCreate = () => {
 
     const bookId = data.id;
 
-    // 2. Si hay portada, subirla a Cloudinary
     if (portadaFile) {
       const formData = new FormData();
       formData.append("portada", portadaFile);
@@ -94,7 +92,6 @@ export const ProviderBookCreate = () => {
       }
     }
 
-    // 3. Asociar al proveedor
     await fetch(`${backendUrl}/api/provider/${store.user.id}/add_book`, {
       method: "POST",
       headers: {
