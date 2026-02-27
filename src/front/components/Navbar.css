@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@300;400;700&display=swap");
 
+/* ── Variables ───────────────────────────────────────────────────────────────── */
 :root {
   --primary: #e63946;
   --primary-dark: #c1121f;
@@ -10,6 +11,7 @@
   --text: #2b2b2b;
   --white: #fff;
 
+  /* Sidebar */
   --sb-width: 260px;
   --sb-width-collapsed: 68px;
   --sb-bg: #1d3557;
@@ -21,10 +23,19 @@
   --sb-transition: 0.25s ease;
 }
 
+/* ════════════════════════════════════════════════════════════
+   LAYOUT WRAPPER  — se aplica en Layout.jsx
+   ════════════════════════════════════════════════════════════ */
 .bk-layout {
   display: flex;
   min-height: 100vh;
   font-family: "Lato", sans-serif;
+}
+
+/* Sin sidebar el wrapper no necesita flex ni min-height, solo deja fluir el contenido */
+.bk-layout.no-sidebar {
+  display: block;
+  min-height: unset;
 }
 
 .bk-layout-main {
@@ -38,6 +49,12 @@
 
 .bk-layout.collapsed .bk-layout-main {
   margin-left: var(--sb-width-collapsed);
+}
+
+/* Sin sidebar (usuario no logueado): el contenido ocupa todo el ancho sin transición */
+.bk-layout.no-sidebar .bk-layout-main {
+  margin-left: 0;
+  transition: none; /* evita el hueco blanco al desloguearse */
 }
 
 .bk-sidebar {
@@ -54,11 +71,11 @@
   overflow: hidden;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
 }
-
 .bk-sidebar.collapsed {
   width: var(--sb-width-collapsed);
 }
 
+/* ── Cabecera: logo + botón colapsar ───────────────────────── */
 .bk-sb-header {
   display: flex;
   align-items: center;
@@ -101,16 +118,15 @@
   opacity: 1;
   transition: opacity var(--sb-transition);
 }
-
 .bk-sb-logo-text span {
   color: var(--accent);
 }
-
 .bk-sidebar.collapsed .bk-sb-logo-text {
   opacity: 0;
   pointer-events: none;
 }
 
+/* Botón colapsar */
 .bk-sb-toggle {
   width: 30px;
   height: 30px;
@@ -127,22 +143,20 @@
     background 0.15s,
     color 0.15s;
 }
-
 .bk-sb-toggle:hover {
   background: var(--sb-bg-active);
   color: white;
 }
-
 .bk-sb-toggle svg {
   width: 16px;
   height: 16px;
   transition: transform var(--sb-transition);
 }
-
 .bk-sidebar.collapsed .bk-sb-toggle svg {
   transform: rotate(180deg);
 }
 
+/* ── Bloque de perfil ──────────────────────────────────────── */
 .bk-sb-profile {
   display: flex;
   align-items: center;
@@ -173,7 +187,6 @@
   transition: opacity var(--sb-transition);
   white-space: nowrap;
 }
-
 .bk-sidebar.collapsed .bk-sb-profile-info {
   opacity: 0;
   pointer-events: none;
@@ -186,7 +199,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .bk-sb-profile-role {
   font-size: 10px;
   color: var(--accent);
@@ -195,6 +207,7 @@
   font-weight: 700;
 }
 
+/* ── Navegación (lista de items) ───────────────────────────── */
 .bk-sb-nav {
   flex: 1;
   overflow-y: auto;
@@ -203,16 +216,15 @@
   scrollbar-width: thin;
   scrollbar-color: var(--sb-border) transparent;
 }
-
 .bk-sb-nav::-webkit-scrollbar {
   width: 3px;
 }
-
 .bk-sb-nav::-webkit-scrollbar-thumb {
   background: var(--sb-border);
   border-radius: 2px;
 }
 
+/* Etiqueta de grupo */
 .bk-sb-section-label {
   padding: 14px 18px 5px;
   font-size: 9.5px;
@@ -226,13 +238,13 @@
     opacity var(--sb-transition),
     padding var(--sb-transition);
 }
-
 .bk-sidebar.collapsed .bk-sb-section-label {
   opacity: 0;
   padding-top: 6px;
   padding-bottom: 3px;
 }
 
+/* Item individual */
 .bk-sb-item {
   position: relative;
   list-style: none;
@@ -261,18 +273,17 @@
   white-space: nowrap;
   overflow: hidden;
 }
-
 .bk-sb-link:hover {
   background: var(--sb-bg-hover);
   color: var(--sb-text-active);
 }
-
 .bk-sb-link.active {
   background: var(--sb-bg-active);
   color: var(--sb-text-active);
   border-left-color: var(--accent);
 }
 
+/* Icono */
 .bk-sb-icon {
   width: 20px;
   height: 20px;
@@ -281,12 +292,12 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .bk-sb-icon svg {
   width: 20px;
   height: 20px;
 }
 
+/* Texto */
 .bk-sb-text {
   flex: 1;
   opacity: 1;
@@ -294,13 +305,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .bk-sidebar.collapsed .bk-sb-text {
   opacity: 0;
   pointer-events: none;
   width: 0;
 }
 
+/* Badge (p.ej. nº items carrito) */
 .bk-sb-badge {
   min-width: 20px;
   height: 20px;
@@ -315,11 +326,11 @@
   padding: 0 5px;
   transition: opacity var(--sb-transition);
 }
-
 .bk-sidebar.collapsed .bk-sb-badge {
   opacity: 0;
 }
 
+/* Tooltip al estar colapsado */
 .bk-sb-tooltip {
   display: none;
   position: absolute;
@@ -337,7 +348,6 @@
   z-index: 9999;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
-
 .bk-sb-tooltip::before {
   content: "";
   position: absolute;
@@ -347,17 +357,18 @@
   border: 5px solid transparent;
   border-right-color: #0d1b2a;
 }
-
 .bk-sidebar.collapsed .bk-sb-item:hover .bk-sb-tooltip {
   display: block;
 }
 
+/* Separador horizontal */
 .bk-sb-sep {
   height: 1px;
   background: var(--sb-border);
   margin: 6px 16px;
 }
 
+/* ── Footer: logout ────────────────────────────────────────── */
 .bk-sb-footer {
   padding: 6px 0;
   border-top: 1px solid var(--sb-border);
@@ -384,18 +395,19 @@
   white-space: nowrap;
   overflow: hidden;
 }
-
 .bk-sb-logout:hover {
   background: rgba(230, 57, 70, 0.12);
   color: #ff7070;
 }
-
 .bk-sb-logout svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 
+/* ════════════════════════════════════════════════════════════
+   OVERLAY Y BOTÓN HAMBURGUESA (móvil)
+   ════════════════════════════════════════════════════════════ */
 .bk-sb-overlay {
   display: none;
   position: fixed;
@@ -404,7 +416,6 @@
   z-index: 1099;
   backdrop-filter: blur(2px);
 }
-
 .bk-sb-overlay.open {
   display: block;
 }
@@ -426,12 +437,14 @@
   justify-content: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
-
 .bk-sb-mobile-btn svg {
   width: 22px;
   height: 22px;
 }
 
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .bk-sidebar {
     transform: translateX(-100%);
@@ -440,7 +453,6 @@
       transform var(--sb-transition),
       width var(--sb-transition);
   }
-
   .bk-sidebar.mobile-open {
     transform: translateX(0);
   }
@@ -452,5 +464,183 @@
 
   .bk-sb-mobile-btn {
     display: flex;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   HEADER PÚBLICO (usuario no logueado)
+   ════════════════════════════════════════════════════════════ */
+.bk-header-public {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 32px;
+  height: 64px;
+  background: var(--white);
+  border-bottom: 2px solid var(--bg-light);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  font-family: "Lato", sans-serif;
+}
+
+/* Logo */
+.bk-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.bk-header-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.bk-header-logo-text {
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--blue);
+  white-space: nowrap;
+}
+.bk-header-logo-text span {
+  color: var(--primary);
+}
+
+/* Links centrales de navegación */
+.bk-header-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+.bk-header-link {
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.bk-header-link:hover {
+  background: var(--bg-light);
+  color: var(--blue);
+}
+.bk-header-link.active {
+  background: var(--bg-light);
+  color: var(--primary);
+}
+
+/* Zona de botones de acceso */
+.bk-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Botón base */
+.bk-header-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.18s;
+  font-family: "Lato", sans-serif;
+  white-space: nowrap;
+}
+.bk-header-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Cliente — azul */
+.bk-header-btn--client {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+.bk-header-btn--client:hover {
+  background: var(--blue-light);
+  border-color: var(--blue-light);
+}
+
+/* Proveedor — acento naranja */
+.bk-header-btn--provider {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.bk-header-btn--provider:hover {
+  background: var(--accent);
+  color: white;
+}
+
+/* Admin — rojo */
+.bk-header-btn--admin {
+  background: transparent;
+  color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+.bk-header-btn--admin:hover {
+  background: var(--primary-dark);
+  color: white;
+}
+
+/* Repartidor — verde */
+.bk-header-btn--delivery {
+  background: transparent;
+  color: #2a9d8f;
+  border-color: #2a9d8f;
+}
+.bk-header-btn--delivery:hover {
+  background: #2a9d8f;
+  color: white;
+}
+
+/* Responsive: en móvil ocultamos los links y apilamos los botones */
+@media (max-width: 768px) {
+  .bk-header-public {
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .bk-header-links {
+    display: none;
+  }
+  .bk-header-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .bk-header-btn svg {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .bk-header-actions {
+    gap: 4px;
+  }
+  .bk-header-btn {
+    padding: 5px 8px;
+    font-size: 10px;
   }
 }

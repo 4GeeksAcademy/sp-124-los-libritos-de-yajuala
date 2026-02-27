@@ -1,69 +1,98 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import "../../styles/client.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { store, actions } = useGlobalReducer();
-
-  const [form, setForm] = useState({
-    email: "",
-    password: ""
-  });
-
+  const { actions } = useGlobalReducer();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
   const handleSubmit = async () => {
-    const resp = await fetch(`${backendUrl}/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-
-    const data = await resp.json();
-
-
-    if (!resp.ok) {
-      alert(data.msg || "Credenciales incorrectas");
-      return;
+    setError("");
+    setLoading(true);
+    try {
+      const resp = await fetch(`${backendUrl}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await resp.json();
+      if (!resp.ok) { setError(data.msg || "Credenciales incorrectas"); return; }
+      actions.setUser(data.user);
+      actions.setToken(data.token);
+      navigate("/home-client");
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setLoading(false);
     }
-
-    actions.setUser(data.user);
-    actions.setToken(data.token);
-
-
-    navigate("/home-client");
   };
 
+  const handleKey = (e) => { if (e.key === "Enter") handleSubmit(); };
+
   return (
-    <div className="container mt-5">
-      <h1>Iniciar sesión</h1>
+    <div className="cl-login-page">
+      <div className="cl-login-card">
 
-      <div className="card p-4 mt-3">
-        <label>Email</label>
-        <input
-          className="form-control mb-3"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
+        {/* Cabecera */}
+        <div className="cl-login-header">
+          <div className="cl-login-logo">📚</div>
+          <h1 className="cl-login-title">Bienvenido</h1>
+          <p className="cl-login-subtitle">Los Libritos de Yajuala</p>
+        </div>
 
-        <label>Contraseña</label>
-        <input
-          type="password"
-          className="form-control mb-3"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-        />
-        <div className="d-flex">
-          <button className="btn btn-primary" onClick={handleSubmit}>
-            Entrar
-          </button>
-          <button
-            className="btn btn-secondary ms-2"
-            onClick={() => navigate("/")}
-          >
-            Cancelar
-          </button>
+        {/* Cuerpo */}
+        <div className="cl-login-body">
+          {error && <div className="cl-alert cl-alert-error">{error}</div>}
+
+          <div className="cl-form-group">
+            <label className="cl-label">Email</label>
+            <input
+              className="cl-input"
+              type="email"
+              placeholder="tu@email.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onKeyDown={handleKey}
+              autoFocus
+            />
+          </div>
+
+          <div className="cl-form-group">
+            <label className="cl-label">Contraseña</label>
+            <input
+              className="cl-input"
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onKeyDown={handleKey}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+            <button
+              className="cl-btn cl-btn-primary cl-btn-lg"
+              style={{ flex: 1, justifyContent: "center" }}
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+            <button className="cl-btn cl-btn-ghost cl-btn-lg" onClick={() => navigate("/")}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="cl-login-footer">
+          ¿No tienes cuenta?{" "}
+          <Link to="/clients/create">Regístrate gratis</Link>
         </div>
       </div>
     </div>

@@ -155,13 +155,6 @@ export const Home = () => {
                   <h2>Welcome to Bookland</h2>
                   <p>Sign in or create an account to start your reading journey.</p>
                 </div>
-                <div className="bk-role-access">
-                  <Link to="/login" className="bk-role-btn primary">Login Cliente</Link>
-                  <Link to="/login/provider" className="bk-role-btn warning">Login Proveedor</Link>
-                  <Link to="/login/admin" className="bk-role-btn secondary">Login Admin</Link>
-                  <Link to="/logindelivery" className="bk-role-btn info">Login Repartidor</Link>
-                </div>
-                <div className="bk-divider" style={{ margin: "16px 0" }} />
                 <p style={{ textAlign: "center", marginBottom: 12, color: "#888", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: 1 }}>
                   Registro
                 </p>

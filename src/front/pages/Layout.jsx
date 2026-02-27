@@ -7,8 +7,12 @@ import { useEffect, useState } from "react";
 
 // Layout base: mantiene el sidebar, el footer y el scroll to top en todas las páginas
 export const Layout = () => {
-    const { actions } = useGlobalReducer();
+    const { store, actions } = useGlobalReducer();
     const [collapsed, setCollapsed] = useState(false);
+
+    useEffect(() => {
+        if (!store.user) setCollapsed(false);
+    }, [store.user]);
 
     useEffect(() => {
         const savedToken = localStorage.getItem("token");
@@ -17,7 +21,6 @@ export const Layout = () => {
             actions.validateToken(savedToken);
         }
     }, []);
-
     useEffect(() => {
         const handler = (e) => setCollapsed(e.detail.collapsed);
         window.addEventListener("bk-sidebar-toggle", handler);
@@ -26,13 +29,13 @@ export const Layout = () => {
 
     return (
         <ScrollToTop>
-            <div className={`bk-layout${collapsed ? " collapsed" : ""}`}>
-                <Navbar onToggle={(v) => setCollapsed(v)} />
+
+            <Navbar onToggle={(v) => setCollapsed(v)} />
+            <div className={`bk-layout${collapsed ? " collapsed" : ""}${!store.user ? " no-sidebar" : ""}`}>
                 <div className="bk-layout-main">
                     <Outlet />
                     <Footer />
                 </div>
-
             </div>
         </ScrollToTop>
     );
