@@ -1155,7 +1155,8 @@ def login_delivery():
     if not delivery.is_approved:
         return jsonify({"msg": "Tu cuenta está pendiente de aprobación por el administrador."}), 403
 
-    token = create_access_token(identity=delivery.id)
+    # Mismo formato que los demás logins
+    token = create_access_token(identity={"id": delivery.id, "role": "delivery"})
 
     return jsonify({
         "token": token,
@@ -1467,7 +1468,7 @@ def login():
     if user.role == "delivery":
         return jsonify({"msg": "Usa el login de repartidor"}), 403
 
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity={"id": user.id, "role": user.role})
     return jsonify({"token": token, "user": user.serialize()}), 200
 
 
@@ -1508,18 +1509,13 @@ def login_provider():
     provider = Provider.query.filter_by(email=email).first()
     if not provider or not provider.check_password(password):
         return jsonify({"msg": "Credenciales incorrectas"}), 401
-
-    access_token = create_access_token(identity={
-        "id": provider.id,
-        "role": "provider"
-    })
+    access_token = create_access_token(identity={"id": provider.id, "role": "provider"})
 
     return jsonify({
         "msg": "Login correcto",
         "token": access_token,
         "user": {**provider.serialize(), "role": "provider"}
     }), 200
-
 
 @api.route("/delivery/pedidos", methods=["GET"])
 @jwt_required()
@@ -1553,9 +1549,7 @@ def validate():
     if not user:
         return jsonify({"msg": "Usuario no encontrado"}), 404
 
-    return jsonify({
-        "user": user.serialize()
-    }), 200
+    return jsonify({"user": user.serialize()}), 200
 
 
 
