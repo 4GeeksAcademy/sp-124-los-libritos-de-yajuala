@@ -45,10 +45,12 @@ app.config["CORS_HEADERS"] = "Content-Type"
 CORS(
     app,
     resources={r"/api/*": {"origins": "*"}},
-    supports_credentials=False,
+    supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-)
+ )
+
+
 
 
 db_url = os.getenv("DATABASE_URL")
