@@ -568,7 +568,8 @@ def import_book():
         descripcion = body.get("descripcion")
         portada = body.get("portada")
         precio = body.get("precio")
-        categorias = body.get("categorias", [])
+        categorias = body.get("categorias", []) 
+
         if not titulo:
             return jsonify({"msg": "El título es obligatorio"}), 400
 
@@ -592,12 +593,14 @@ def import_book():
             Categoria_Libro.query.filter_by(libro_id=existing.id).delete()
 
             for cat_id in categorias:
-                rel = Categoria_Libro(
-                    libro_id=existing.id, categoria_id=cat_id)
-                db.session.add(rel)
+                if isinstance(cat_id, int):
+                    rel = Categoria_Libro(
+                        libro_id=existing.id,
+                        categoria_id=cat_id
+                    )
+                    db.session.add(rel)
 
             db.session.commit()
-
             return jsonify(existing.serialize()), 200
 
         new_book = Book(
@@ -611,7 +614,6 @@ def import_book():
         db.session.add(new_book)
         db.session.commit()
 
-       
         autor_raw = (autor or "").strip()
         if autor_raw:
             for n in autor_raw.split(","):
@@ -622,20 +624,32 @@ def import_book():
                     db.session.add(Author(nombre=n))
             db.session.commit()
 
-        
-        for nombre_cat in categorias_list:
-            if not nombre_cat:
+        for cat in categorias:
+
+            if isinstance(cat, int):
+                categoria = Categorias.query.get(cat)
+                if categoria:
+                    rel = Categoria_Libro(
+                        categoria_id=categoria.id,
+                        libro_id=new_book.id
+                    )
+                    db.session.add(rel)
                 continue
-            cat = Categorias.query.filter_by(nombre=nombre_cat).first()
-            if not cat:
-                cat = Categorias(nombre=nombre_cat, descripcion=nombre_cat)
-                db.session.add(cat)
-                db.session.commit()
-            existing_rel = Categoria_Libro.query.filter_by(
-                categoria_id=cat.id, libro_id=new_book.id).first()
-            if not existing_rel:
+            if isinstance(cat, str):
+                nombre_cat = cat.strip()
+                if not nombre_cat:
+                    continue
+
+                categoria = Categorias.query.filter_by(nombre=nombre_cat).first()
+                if not categoria:
+                    categoria = Categorias(nombre=nombre_cat, descripcion=nombre_cat)
+                    db.session.add(categoria)
+                    db.session.commit()
+
                 rel = Categoria_Libro(
-                    categoria_id=cat.id, libro_id=new_book.id)
+                    categoria_id=categoria.id,
+                    libro_id=new_book.id
+                )
                 db.session.add(rel)
 
         db.session.commit()
@@ -644,6 +658,7 @@ def import_book():
     except Exception as e:
         print("ERROR IMPORTANDO LIBRO:", e)
         return jsonify({"msg": "Error interno importando libro"}), 500
+
 
 
 @api.route("/categorialibro", methods=["POST"])
@@ -1154,7 +1169,6 @@ def login_delivery():
     if not delivery.is_approved:
         return jsonify({"msg": "Tu cuenta está pendiente de aprobación por el administrador."}), 403
 
-    # Mismo formato que los demás logins
     token = create_access_token(identity={"id": delivery.id, "role": "delivery"})
 
     return jsonify({
@@ -1862,14 +1876,16 @@ def get_provider_orders():
 @api.route("/delivery/orders/available", methods=["GET"])
 @jwt_required()
 def delivery_orders_available():
-    delivery_id = get_jwt_identity()
-    delivery = Delivery.query.get(delivery_id)
+    identity = get_jwt_identity()
+    delivery_id = identity["id"]
 
+    delivery = Delivery.query.get(delivery_id)
     if not delivery:
         return jsonify({"msg": "Repartidor no encontrado"}), 404
 
-    if delivery.role != "delivery":
+    if identity["role"] != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
 
     rows = (
         db.session.query(Shipment, Cart)
@@ -1893,14 +1909,16 @@ def delivery_orders_available():
 @api.route("/delivery/orders", methods=["GET"])
 @jwt_required()
 def delivery_orders_mine():
-    delivery_id = get_jwt_identity()
-    delivery = Delivery.query.get(delivery_id)
+    identity = get_jwt_identity()
+    delivery_id = identity["id"]
 
+    delivery = Delivery.query.get(delivery_id)
     if not delivery:
         return jsonify({"msg": "Repartidor no encontrado"}), 404
 
-    if delivery.role != "delivery":
+    if identity["role"] != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
 
     rows = (
         db.session.query(Shipment, Cart)
@@ -1927,12 +1945,16 @@ def delivery_orders_mine():
 @api.route("/delivery/orders/<int:cart_id>/claim", methods=["POST"])
 @jwt_required()
 def delivery_claim_order(cart_id):
-    delivery_id = get_jwt_identity()
+    identity = get_jwt_identity()
+    delivery_id = identity["id"]
+
     delivery = Delivery.query.get(delivery_id)
     if not delivery:
         return jsonify({"msg": "Repartidor no encontrado"}), 404
-    if delivery.role != "delivery":
+
+    if identity["role"] != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
 
     shipment = Shipment.query.get(cart_id)
     if not shipment:
@@ -1948,14 +1970,16 @@ def delivery_claim_order(cart_id):
 @api.route("/delivery/orders/<int:cart_id>/delivered", methods=["PUT"])
 @jwt_required()
 def delivery_mark_delivered(cart_id):
-    delivery_id = get_jwt_identity()
-    delivery = Delivery.query.get(delivery_id)
+    identity = get_jwt_identity()
+    delivery_id = identity["id"]
 
+    delivery = Delivery.query.get(delivery_id)
     if not delivery:
         return jsonify({"msg": "Repartidor no encontrado"}), 404
 
-    if delivery.role != "delivery":
+    if identity["role"] != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
 
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
     if not shipment:
@@ -1983,14 +2007,16 @@ def delivery_mark_delivered(cart_id):
 @api.route("/delivery/orders/<int:cart_id>", methods=["GET"])
 @jwt_required()
 def delivery_order_detail(cart_id):
-    delivery_id = get_jwt_identity()
-    delivery = Delivery.query.get(delivery_id)
+    identity = get_jwt_identity()
+    delivery_id = identity["id"]
 
+    delivery = Delivery.query.get(delivery_id)
     if not delivery:
         return jsonify({"msg": "Repartidor no encontrado"}), 404
 
-    if delivery.role != "delivery":
+    if identity["role"] != "delivery":
         return jsonify({"msg": "No autorizado"}), 403
+
 
     shipment = Shipment.query.filter_by(cart_id=cart_id).first()
     if not shipment:
@@ -2118,9 +2144,6 @@ def google_pay_confirm():
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
     return pay_cart(int(cart_id))
-
-# _______________________Rutas Paypal____________________________
-
 
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
 
@@ -2259,10 +2282,6 @@ def capture_order(order_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# _______________________Fin Rutas Paypal____________________________
-
-# _______Cloudinary Enpoint___________
 @api.route("/user/<int:user_id>/avatar", methods=["PUT"])
 def update_user_avatar(user_id):
     user = User.query.get(user_id)
@@ -2357,8 +2376,6 @@ def update_book_avatar(book_id):
     db.session.commit()
 
     return jsonify(book.serialize()), 200
-
-# _______Fin Cloudinary Enpoint___________
 
 
 @api.route("/repartidores/pendientes", methods=["GET"])
@@ -2469,8 +2486,6 @@ def swipe_book_vote(user_id, book_id):
     db.session.commit()
     return jsonify(row.serialize()), 200
 
-
-# Categorias
 @api.route("/users/<int:user_id>/swipe/categories", methods=["GET"])
 def swipe_categories_feed(user_id):
     limit = int(request.args.get("limit", 20))
@@ -2518,8 +2533,6 @@ def swipe_category_vote(user_id, category_id):
     db.session.commit()
     return jsonify(row.serialize()), 200
 
-
-# Autores
 @api.route("/users/<int:user_id>/swipe/authors", methods=["GET"])
 def swipe_authors_feed(user_id):
     limit = int(request.args.get("limit", 20))
@@ -2630,7 +2643,9 @@ def send_message(conversation_id):
 
     data = request.get_json()
     user_message = data.get("content", "").strip()
-    user_id = get_jwt_identity()
+    user = get_jwt_identity()
+    user_id = user["id"]
+
 
     msg_user = ChatMessage(
         conversation_id=conversation_id,
@@ -2677,20 +2692,33 @@ def send_message(conversation_id):
 @api.route("/proveedores/notificaciones", methods=["POST"])
 @jwt_required()
 def crear_notificacion_proveedor():
-    data = request.json
-    user_id = get_jwt_identity()
+    try:
+        user = get_jwt_identity()
+        user_id = user["id"] 
 
-    noti = ProveedorNotificacion(
-        libro_titulo=data["titulo"],
-        libro_autor=data.get("autor"),
-        categoria=data.get("categoria"),
-        id_usuario=user_id
-    )
+        data = request.get_json()
 
-    db.session.add(noti)
-    db.session.commit()
+        titulo = data.get("titulo")
+        autor = data.get("autor")
+        categoria = data.get("categoria")
 
-    return jsonify({"msg": "Notificación enviada a proveedores"}), 201
+        noti = ProveedorNotificacion(
+            libro_titulo=titulo,
+            libro_autor=autor,
+            categoria=categoria,
+            id_usuario=user_id,
+            estado="pendiente"
+        )
+
+        db.session.add(noti)
+        db.session.commit()
+
+        return jsonify({"msg": "Notificación creada"}), 201
+
+    except Exception as e:
+        print("ERROR CREANDO NOTIFICACION:", e)
+        return jsonify({"msg": "Error interno creando notificación"}), 500
+
 
 @api.route("/proveedores/notificaciones", methods=["GET"])
 @jwt_required()
@@ -2726,12 +2754,10 @@ def actualizar_notificacion_proveedor(id):
     db.session.commit()
 
     return jsonify({"msg": "Estado actualizado"})
-        db.session.add(row)
+    db.session.add(row)
 
     db.session.commit()
     return jsonify(row.serialize()), 200
-
-# Mis matches (likes)
 
 @api.route("/users/<int:user_id>/matches/books", methods=["GET"])
 def matches_books(user_id):
