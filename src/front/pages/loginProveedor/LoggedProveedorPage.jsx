@@ -47,6 +47,14 @@ export default function LoggedProveedorPage() {
           Buscar e importar libros
         </button>
 
+        <button
+          className="btn btn-warning me-3"
+          onClick={() => navigate("/provider/notifications")}
+        >
+          Solicitudes de Importación
+        </button>
+
+
 
         <button
           className="btn btn-secondary"

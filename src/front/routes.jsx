@@ -110,6 +110,11 @@ import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 import AdminRepartidoresPendientes from "./components/AdminRepartidoresPendientes.jsx";
 
+import FavoriteCategoriesPage from "./pages/categorias/FavoriteCategoriesPage.jsx";
+import SelectCategoriesPage from "./pages/categorias/SelectCategoriesPage.jsx";
+import ChatPage from "./components/chat/ChatPage.jsx";
+import ProviderNotifications from "./pages/proveedores/ProviderNotifications.jsx";
+
 export const router = createBrowserRouter(
         createRoutesFromElements(
                 <>
@@ -131,6 +136,8 @@ export const router = createBrowserRouter(
                                 <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
                                 <Route path="provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
                                 <Route path="provider/me" element={<LoggedProveedorPage />} />
+                                <Route path="/provider/notifications" element={<ProviderNotifications />} />
+
 
                                 {/* Clientes */}
                                 <Route path="clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
@@ -181,6 +188,8 @@ export const router = createBrowserRouter(
                                 <Route path="user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
                                 <Route path="user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
                                 <Route path="user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
+                                <Route path="user/favorite-categories" element={<ProtectedRoute><FavoriteCategoriesPage /></ProtectedRoute>} />
+                                <Route path="/user/select-categories" element={<SelectCategoriesPage />} />
 
                                 {/* Auth proveedores */}
                                 <Route path="login/provider" element={<LoginProviderPage />} />
@@ -207,6 +216,8 @@ export const router = createBrowserRouter(
 
                                 {/* Home clientes */}
                                 <Route path="home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
+                                <Route path="chat" element={<ChatPage />} />
+
 
                         </Route>
 

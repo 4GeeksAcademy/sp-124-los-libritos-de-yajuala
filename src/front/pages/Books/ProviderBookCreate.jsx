@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
@@ -11,12 +11,31 @@ export const ProviderBookCreate = () => {
     descripcion: "",
     portada: "",
     precio: "",
-    cantidad: ""
+    cantidad: "",
+    categorias: []   // ← NUEVO
   });
+
+  const [allCategories, setAllCategories] = useState([]);
 
   const navigate = useNavigate();
   const { store } = useGlobalReducer();
   const backendUrl = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+
+  // Cargar categorías al iniciar
+  useEffect(() => {
+    fetch(`${backendUrl}/api/categorias`)
+      .then(res => res.json())
+      .then(data => setAllCategories(data));
+  }, []);
+
+  const toggleCategory = (id) => {
+    setForm(prev => ({
+      ...prev,
+      categorias: prev.categorias.includes(id)
+        ? prev.categorias.filter(c => c !== id)
+        : [...prev.categorias, id]
+    }));
+  };
 
   const createBook = async () => {
     if (!form.titulo || !form.autor || !form.precio) {
@@ -36,7 +55,8 @@ export const ProviderBookCreate = () => {
         isbn: form.isbn || null,
         descripcion: form.descripcion,
         portada: form.portada,
-        precio: parseFloat(form.precio)
+        precio: parseFloat(form.precio),
+        categorias: form.categorias   // ← NUEVO
       })
     });
 
@@ -72,7 +92,6 @@ export const ProviderBookCreate = () => {
 
       <div className="card mt-3">
         <div className="card-body">
-
           <label className="form-label">Título</label>
           <input className="form-control mb-3" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
 
@@ -93,6 +112,23 @@ export const ProviderBookCreate = () => {
 
           <label className="form-label">Cantidad inicial</label>
           <input type="number" className="form-control mb-3" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
+
+          <label className="form-label">Categorías</label>
+          <div className="mb-3">
+            {allCategories.map(cat => (
+              <div key={cat.id} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={form.categorias.includes(cat.id)}
+                  onChange={() => toggleCategory(cat.id)}
+                />
+                <label className="form-check-label">
+                  {cat.nombre}
+                </label>
+              </div>
+            ))}
+          </div>
 
           <button className="btn btn-success" onClick={createBook}>Crear libro</button>
         </div>

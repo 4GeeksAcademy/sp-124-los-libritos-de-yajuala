@@ -85,7 +85,6 @@ export default function storeReducer(store, action = {}) {
         activeCart: action.payload,
       };
 
-    // Cambiado por layla para no romper la app si llega una action desconocida
     default:
       console.warn("Unknown action:", action);
       return store;

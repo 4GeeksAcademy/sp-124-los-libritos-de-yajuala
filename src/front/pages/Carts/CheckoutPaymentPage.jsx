@@ -17,27 +17,37 @@ export default function CheckoutPaymentPage() {
   useEffect(() => {
     if (!store.user?.id) return;
 
-    const needsCart =
-      !store.activeCart ||
-      store.activeCart.id_cliente !== store.user.id ||
-      store.activeCart.estado !== "pendiente";
+    fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
+      .then((res) => res.json())
+      .then((data) => {
+        dispatch({ type: "set_active_cart", payload: data.cart });
+      });
+  }, [store.user?.id]);
 
-    if (needsCart) {
-      fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
+  useEffect(() => {
+    if (!store.activeCart?.id) return;
+
+    if (!store.activeCart.items) {
+      fetch(`${backendUrl}/api/carts/${store.activeCart.id}`)
         .then((res) => res.json())
         .then((data) => {
-          dispatch({ type: "set_active_cart", payload: data });
+          console.log("CARRITO COMPLETO:", data);
+          dispatch({ type: "set_active_cart", payload: data.cart });
         });
     }
-  }, [store.user?.id]);
+  }, [store.activeCart?.id]);
+
+
 
   useEffect(() => {
     if (!addressId) return;
 
     fetch(`${backendUrl}/api/addresses/${addressId}`)
       .then((res) => res.json())
-      .then((data) => setAddress(data))
-      .catch((err) => console.error(err));
+      .then((data) => {
+        console.log("DIRECCIÓN RECIBIDA:", data);
+        setAddress(data.address || data);
+      });
   }, [addressId]);
 
   const handlePay = async () => {
@@ -46,32 +56,35 @@ export default function CheckoutPaymentPage() {
       return;
     }
 
-    try {
-      const resp = await fetch(
-        `${backendUrl}/api/carts/${store.activeCart.id}/pay`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address_id: addressId, payment_method: paymentMethod })
-        }
-      );
-
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        alert(data.msg || "Error al pagar");
-        return;
+    const resp = await fetch(
+      `${backendUrl}/api/carts/${store.activeCart.id}/pay`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address_id: addressId, payment_method: paymentMethod })
       }
+    );
 
-      dispatch({ type: "set_active_cart", payload: data.nuevo_carrito });
-      navigate("/payment-success");
-    } catch (err) {
-      console.error(err);
-      alert("Error procesando pago");
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      alert(data.msg || "Error al pagar");
+      return;
     }
+
+    dispatch({ type: "set_active_cart", payload: data.cart });
+
+    navigate("/payment-success");
   };
 
-  if (!address || !store.activeCart) return <p>Cargando...</p>;
+  if (!address || !address.direccion || !store.activeCart || !store.activeCart.items) {
+    return <p>Cargando...</p>;
+}
+
+
+
+  console.log("ACTIVE CART EN PANTALLA:", store.activeCart);
+
 
   return (
     <div className="container mt-4">
@@ -79,7 +92,8 @@ export default function CheckoutPaymentPage() {
 
       <h4 className="mt-4">Dirección seleccionada:</h4>
       <div className="border rounded p-3 mt-2">
-        <b>{address.nombre}</b>
+        <b>{address.nombre || "Sin nombre"}</b>
+
         <div>{address.direccion}</div>
         <div>{address.ciudad}, {address.provincia}</div>
         <div>{address.codigo_postal}</div>

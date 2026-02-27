@@ -16,6 +16,7 @@ export default function LoggedClientPage() {
       <p className="text-muted">Panel de Usuario</p>
 
       <div className="mt-4 d-flex flex-wrap gap-3">
+
         <button
           className="btn btn-success"
           onClick={() => navigate("/user/history")}
@@ -37,16 +38,19 @@ export default function LoggedClientPage() {
           Ver libros
         </button>
 
-    
+        <button
+          className="btn btn-success me-3"
+          onClick={() => navigate("/user/cart")}
+        >
+          Ver carrito
+        </button>
 
-      <button
-        className="btn btn-success me-3"
-        onClick={() => navigate("/user/cart")}
-      >
-        Ver carrito
-      </button>
-
-
+        <button
+          className="btn btn-info"
+          onClick={() => navigate("/user/favorite-categories")}
+        >
+          Categorías favoritas
+        </button>
 
         <button
           className="btn btn-outline-secondary"
