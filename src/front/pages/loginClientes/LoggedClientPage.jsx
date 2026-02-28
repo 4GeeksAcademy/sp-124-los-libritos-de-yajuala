@@ -70,7 +70,7 @@ export default function LoggedClientPage() {
   ];
 
   return (
-    <div className="cl-page cl-page-mid">
+    <div className="cl-page cl-page-wide">
 
       {/* Hero del perfil */}
       <div className="cl-profile-hero">
