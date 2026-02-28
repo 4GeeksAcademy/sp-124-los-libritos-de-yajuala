@@ -1,80 +1,27 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Delivery } from "../Delivery/DeliveryList";
+import useGlobalReducer from "../../hooks/useGlobalReducer";
 
 export default function LoggedDelivery() {
+  const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const fileInputRef = useRef(null);
 
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [form, setForm] = useState({
-    name: "",
-    lastname: "",
-    email: "",
-    identificacion: "",
-  });
-
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-
-    if (!token || !storedUser?.id) {
-      navigate("/logindelivery");
+    if (!store.token) {
+      navigate("/login/delivery");
       return;
     }
-
-    if (storedUser.role !== "delivery") {
-      navigate("/");
-      return;
+    if (store.user && store.user.role !== "delivery") {
+      navigate("/login/delivery");
     }
+  }, [store.token, store.user]);
 
-    setUser(storedUser);
-    setForm({
-      name: storedUser.name || "",
-      lastname: storedUser.lastname || "",
-      email: storedUser.email || "",
-      identificacion: storedUser.identificacion || "",
-    });
-    setLoading(false);
-  }, [navigate]);
-
-  if (loading) return <p>Cargando...</p>;
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSaveProfile = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/delivery/${user.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage(data.msg || "Error al guardar");
-        return;
-      }
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setMessage("Perfil actualizado correctamente");
-      setEditMode(false);
-    } catch (err) {
-      setMessage("Error de conexión");
-    } finally {
-      setSaving(false);
-    }
-  };
+  if (!store.token || !store.user) return <div>Cargando...</div>;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
@@ -87,7 +34,7 @@ export default function LoggedDelivery() {
     formData.append("avatar", file);
 
     try {
-      const res = await fetch(`${backendUrl}/api/delivery/${user.id}/avatar`, {
+      const res = await fetch(`${backendUrl}/api/delivery/${store.user.id}/avatar`, {
         method: "PUT",
         body: formData,
       });
@@ -96,9 +43,7 @@ export default function LoggedDelivery() {
         setMessage(data.msg || "Error al subir imagen");
         return;
       }
-      const updatedUser = { ...user, avatar_url: data.avatar_url };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      dispatch({ type: "set_user", payload: data });
       setMessage("Foto de perfil actualizada");
     } catch (err) {
       setMessage("Error subiendo imagen");
@@ -109,21 +54,25 @@ export default function LoggedDelivery() {
 
   return (
     <div className="container mt-4" style={{ maxWidth: "700px" }}>
+      <h2 className="mb-4">Perfil del Repartidor</h2>
 
-      {/* Cabecera perfil */}
       <div className="d-flex align-items-center gap-4 mb-4">
         <div style={{ position: "relative" }}>
           <img
-            src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.name}+${user.lastname}&background=0d6efd&color=fff&size=120`}
+            src={
+              store.user.avatar_url ||
+              `https://ui-avatars.com/api/?name=${store.user.name}&background=2563eb&color=fff&size=120`
+            }
             alt="Avatar"
             style={{
               width: "200px",
               height: "200px",
               borderRadius: "50%",
               objectFit: "cover",
-              border: "3px solid #0d6efd"
+              border: "3px solid #1d4ed8",
             }}
           />
+
           <button
             className="btn btn-sm btn-dark"
             style={{
@@ -134,14 +83,14 @@ export default function LoggedDelivery() {
               width: "60px",
               height: "60px",
               padding: 0,
-              fontSize: "18px"
+              fontSize: "18px",
             }}
             onClick={() => fileInputRef.current.click()}
-            title="Cambiar foto"
             disabled={uploading}
           >
             {uploading ? "..." : "📷"}
           </button>
+
           <input
             type="file"
             ref={fileInputRef}
@@ -152,81 +101,43 @@ export default function LoggedDelivery() {
         </div>
 
         <div>
-          <h2 className="mb-0">{user.name} {user.lastname}</h2>
-          <p className="text-muted mb-0">{user.email}</p>
-          <span className="badge bg-primary">{user.role}</span>
+          <h3 className="mb-0">{store.user.name}</h3>
+          <p className="text-muted mb-0">{store.user.email}</p>
+          <span className="badge bg-primary">{store.user.role}</span>
         </div>
       </div>
 
       {message && (
-        <div className={`alert ${message.includes("Error") ? "alert-danger" : "alert-success"} py-2`}>
+        <div
+          className={`alert ${
+            message.includes("Error") ? "alert-danger" : "alert-success"
+          } py-2`}
+        >
           {message}
         </div>
       )}
 
-      {/* Sección editar perfil */}
       <div className="card mb-4">
         <div className="card-header d-flex justify-content-between align-items-center">
           <span>Datos del perfil</span>
+
           <button
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => {
-              setEditMode(!editMode);
-              setMessage("");
-              setForm({
-                name: user.name,
-                lastname: user.lastname,
-                email: user.email,
-                identificacion: user.identificacion,
-              });
-            }}
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => navigate(`/delivery/${store.user.id}/edit`)}
           >
-            {editMode ? "Cancelar" : "✏️ Editar perfil"}
+            ✏️ Editar perfil
           </button>
         </div>
+
         <div className="card-body">
-          {editMode ? (
-            <>
-              <div className="mb-3">
-                <label className="form-label">Nombre</label>
-                <input type="text" className="form-control" name="name" value={form.name} onChange={handleChange} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Apellido</label>
-                <input type="text" className="form-control" name="lastname" value={form.lastname} onChange={handleChange} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Email</label>
-                <input type="email" className="form-control" name="email" value={form.email} onChange={handleChange} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Identificación</label>
-                <input type="text" className="form-control" name="identificacion" value={form.identificacion} onChange={handleChange} />
-              </div>
-              <button className="btn btn-success" onClick={handleSaveProfile} disabled={saving}>
-                {saving ? "Guardando..." : "Guardar cambios"}
-              </button>
-            </>
-          ) : (
-            <>
-              <p><strong>Nombre:</strong> {user.name}</p>
-              <p><strong>Apellido:</strong> {user.lastname}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p className="mb-0"><strong>Identificación:</strong> {user.identificacion}</p>
-            </>
-          )}
+          <p><strong>Nombre:</strong> {store.user.name}</p>
+          <p><strong>Email:</strong> {store.user.email}</p>
+          <p><strong>Teléfono:</strong> {store.user.telefono || "—"}</p>
+          <p className="mb-0"><strong>Documento:</strong> {store.user.documento}</p>
         </div>
       </div>
 
-      {/* Lista de pedidos */}
-      <div className="card">
-        <div className="card-header">
-          <span>🚴‍♂️ Pedidos asignados</span>
-        </div>
-        <div className="card-body">
-          <Delivery />
-        </div>
-      </div>
+      
     </div>
   );
 }

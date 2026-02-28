@@ -111,19 +111,37 @@ import AdminCartEdit from "./pages/admin/carts/AdminCartEdit.jsx";
 import ProviderBookSearch from "./components/ProviderBookSearch.jsx";
 import AdminRepartidoresPendientes from "./components/AdminRepartidoresPendientes.jsx";
 
+import FavoriteCategoriesPage from "./pages/categorias/FavoriteCategoriesPage.jsx";
+import SelectCategoriesPage from "./pages/categorias/SelectCategoriesPage.jsx";
+import ChatPage from "./components/chat/ChatPage.jsx";
+import ProviderNotifications from "./pages/proveedores/ProviderNotifications.jsx";
 import ProviderLayout from "./pages/proveedores/ProviderLayout.jsx";
-
-
+import DeliveryHistory from "./pages/Delivery/DeliveryHistory.jsx";
 
 export const router = createBrowserRouter(
         createRoutesFromElements(
                 <>
-                        {/* ── Rutas con Layout (Navbar/Footer) ── */}
+                        
                         <Route path="/" element={<Layout />} errorElement={<h1>Not found!</h1>}>
                                 <Route index element={<Home />} />
                                 <Route path="single/:theId" element={<Single />} />
                                 <Route path="demo" element={<Demo />} />
                                 <Route path="/swipe" element={<ProtectedRoute><Swipe /></ProtectedRoute>} />
+
+                                {/* Proveedores */}
+                                <Route path="provider" element={<AdminRoute><Provider /></AdminRoute>} />
+                                <Route path="provider/create" element={<AddProvider />} />
+                                <Route path="provider/edit/:providerId" element={<AdminRoute><AddProvider /></AdminRoute>} />
+                                <Route path="provider/view/:providerId" element={<AdminRoute><ViewProvider /></AdminRoute>} />
+                                <Route path="provider/books/search" element={<ProviderBookSearch />} />
+                                <Route path="provider/books" element={<ProtectedRoute><ProviderBooks /></ProtectedRoute>} />
+                                <Route path="provider/books/new" element={<ProtectedRoute><ProviderBookCreate /></ProtectedRoute>} />
+                                <Route path="provider/books/:id" element={<ProviderBookDetail />} />
+                                <Route path="provider/books/:id/edit" element={<ProtectedRoute><ProviderBookEdit /></ProtectedRoute>} />
+                                <Route path="provider/orders" element={<ProtectedRoute><ProviderOrders /></ProtectedRoute>} />
+                                <Route path="provider/me" element={<LoggedProveedorPage />} />
+                                <Route path="/provider/notifications" element={<ProviderNotifications />} />
+
 
                                 {/* Clientes */}
                                 <Route path="clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
@@ -132,13 +150,13 @@ export const router = createBrowserRouter(
                                 <Route path="provider/create" element={<AddProvider />} />
                                 <Route path="clients/:id/edit" element={<EditClientPage />} />
 
-                                {/* Libros */}
+                                
                                 <Route path="books" element={<Books />} />
                                 <Route path="books/new" element={<BookCreate />} />
                                 <Route path="books/:id" element={<BookDetail />} />
                                 <Route path="books/:id/edit" element={<BookEdit />} />
 
-                                {/* Carritos */}
+                                
                                 <Route path="carts" element={<CartsPage />} />
                                 <Route path="carts/create" element={<AddCartPage />} />
                                 <Route path="carts/:id" element={<CartDetailPage />} />
@@ -146,66 +164,69 @@ export const router = createBrowserRouter(
                                 <Route path="carts/:id/add-book" element={<AddBookToCartPage />} />
                                 <Route path="cart-books/:id/edit" element={<EditCartBookPage />} />
 
-                                {/* Delivery */}
-                                <Route path="delivery" element={<AdminRoute><Delivery /></AdminRoute>} />
+                                
+                                <Route path="delivery" element={<Delivery />} />
                                 <Route path="delivery/register" element={<DeliveryCreate />} />
                                 <Route path="delivery/new" element={<DeliveryCreate />} />
                                 <Route path="delivery/:id" element={<DeliveryDetail />} />
-                                <Route path="delivery/:id/edit" element={<AdminRoute><DeliveryEdit /></AdminRoute>} />
-
-                                {/* Reviews */}
+                                <Route path="delivery/:id/edit" element={<DeliveryEdit />} />
+                                <Route path="delivery/history" element={<DeliveryHistory />} />
+                                
                                 <Route path="reviews" element={<Reviews />} />
                                 <Route path="reviews/new" element={<ProtectedRoute><ReviewCreate /></ProtectedRoute>} />
                                 <Route path="reviews/:id" element={<ReviewDetail />} />
                                 <Route path="reviews/:id/edit" element={<ProtectedRoute><ReviewEdit /></ProtectedRoute>} />
 
-                                {/* Categorías */}
+                                
                                 <Route path="categorias" element={<Categorias />} />
                                 <Route path="categorias/new" element={<AddCategorias />} />
                                 <Route path="categorias/view/:categoriaId" element={<ViewCategorias />} />
 
-                                {/* Categoría Libro */}
+                               
                                 <Route path="categorialibro" element={<CategoriaLibro />} />
                                 <Route path="categorialibro/new" element={<AddCategoriaLibro />} />
                                 <Route path="categorialibro/view/:categoriaId/:libroId" element={<ViewCategoriaLibro />} />
                                 <Route path="categorialibro/edit/:categoriaId/:libroId" element={<EditCategoriaLibro />} />
 
-                                {/* Auth clientes */}
+                                
                                 <Route path="login" element={<LoginPage />} />
                                 <Route path="user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
                                 <Route path="user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
                                 <Route path="user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
+                                <Route path="user/favorite-categories" element={<ProtectedRoute><FavoriteCategoriesPage /></ProtectedRoute>} />
+                                <Route path="/user/select-categories" element={<SelectCategoriesPage />} />
                                 <Route path="user/edit" element={<ProtectedRoute><EditClientPage /></ProtectedRoute>} />
 
-                                {/* Auth proveedores */}
+                                
                                 <Route path="login/provider" element={<LoginProviderPage />} />
 
-                                {/* Auth admin */}
+                                
                                 <Route path="login/admin" element={<LoginAdminPage />} />
                                 <Route path="admin/me" element={<AdminRoute><LoggedAdminPage /></AdminRoute>} />
 
-                                {/* Auth delivery */}
+                                
                                 <Route path="logindelivery" element={<LoginDelivery />} />
                                 <Route path="loggeddelivery" element={<LoggedDelivery />} />
 
-                                {/* Checkout */}
+                             
                                 <Route path="payment-success" element={<PaymentSuccessPage />} />
                                 <Route path="checkout/address" element={<CheckoutAddressPage />} />
                                 <Route path="checkout/payment" element={<CheckoutPaymentPage />} />
                                 <Route path="checkout/payment-method" element={<CheckoutPaymentMethodPage />} />
                                 <Route path="checkout/google" element={<CheckoutGooglePayPage />} />
 
-                                {/* Direcciones */}
+                               
                                 <Route path="addresses" element={<AddressesPage />} />
                                 <Route path="addresses/create" element={<CreateAddressPage />} />
                                 <Route path="addresses/:id/edit" element={<EditAddressPage />} />
 
-                                {/* Home clientes */}
                                 <Route path="home-client" element={<ProtectedRoute><HomeClients /></ProtectedRoute>} />
+                                <Route path="chat" element={<ChatPage />} />
+
 
                         </Route>
 
-                        {/* ── Admin con su propio layout ── */}
+                        
                         <Route path="/admin" element={<AdminLayout />}>
                                 <Route path="dashboard" element={<AdminDashboard />} />
                                 <Route path="repartidores" element={<AdminRepartidoresPendientes />} />
@@ -244,7 +265,7 @@ export const router = createBrowserRouter(
                                 <Route path="reviews/:id" element={<AdminReviewDetail />} />
                         </Route>
 
-                        {/* ── Provider con su propio layout ── */}
+                        
                         <Route path="/provider" element={<ProtectedRoute><ProviderLayout /></ProtectedRoute>}>
                                 <Route index element={<LoggedProveedorPage />} />
                                 <Route path="me" element={<LoggedProveedorPage />} />

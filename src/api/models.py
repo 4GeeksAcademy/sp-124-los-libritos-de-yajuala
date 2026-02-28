@@ -211,6 +211,15 @@ class Cart(db.Model):
         cascade="all, delete"
     )
 
+    id_repartidor = db.Column(
+        db.Integer,
+        db.ForeignKey("delivery.id"),
+        nullable=True
+    )
+
+    repartidor = db.relationship("Delivery", backref="pedidos")
+
+
     def serialize(self):
         return {
             "id": self.id,
@@ -265,7 +274,7 @@ class CartBook(db.Model):
         }
 
 
-# MODELO ADDRESS
+
 class Address(db.Model):
     __tablename__ = "addresses"
 
@@ -306,7 +315,7 @@ class Address(db.Model):
         }
 
 
-# MODELO PROVIDERBOOK
+
 class ProviderBook(db.Model):
     __tablename__ = "provider_book"
 
@@ -383,7 +392,6 @@ class Book(db.Model):
         }
 
 
-# Shipment - para delivery layla
 
 
 class Shipment(db.Model):
@@ -435,9 +443,6 @@ class Shipment(db.Model):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
 
-# Efecto tinder
-
-
 class UserBookPreference(db.Model):
     __tablename__ = "user_book_preferences"
 
@@ -455,7 +460,7 @@ class UserBookPreference(db.Model):
         nullable=False
     )
 
-    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    preference = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 
@@ -467,15 +472,14 @@ class UserBookPreference(db.Model):
     )
 
     def serialize(self):
-        return {
-            "id": self.id,
-            "id_usuario": self.id_usuario,
-            "id_libro": self.id_libro,
-            "preference": self.preference,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        }
-
+     return {
+        "id": self.id,
+        "id_usuario": self.id_usuario,
+        "id_libro": self.id_libro,
+        "preference": self.preference,
+        "created_at": self.created_at.isoformat() if self.created_at else None,
+        "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+    }
 
 class UserCategoryPreference(db.Model):
     __tablename__ = "user_category_preferences"
@@ -494,7 +498,7 @@ class UserCategoryPreference(db.Model):
         nullable=False
     )
 
-    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    preference = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 
@@ -516,7 +520,7 @@ class UserCategoryPreference(db.Model):
         }
 
 
-# CCrear tabla Author para poder tener id_autor
+
 class Author(db.Model):
     __tablename__ = "author"
 
@@ -552,7 +556,7 @@ class UserAuthorPreference(db.Model):
         nullable=False
     )
 
-    preference = db.Column(db.Integer, nullable=False)  # 1 like, -1 dislike
+    preference = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 
@@ -571,6 +575,74 @@ class UserAuthorPreference(db.Model):
             "preference": self.preference,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+    }
+
+class ChatConversation(db.Model):
+    __tablename__ = "chat_conversations"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    title = db.Column(db.String(255), nullable=True)
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    user = db.relationship("User", backref=db.backref("chat_conversations", cascade="all, delete"))
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "title": self.title,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
-    
-    
+
+class ChatMessage(db.Model):
+    __tablename__ = "chat_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    conversation_id = db.Column(
+        db.Integer,
+        db.ForeignKey("chat_conversations.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    sender = db.Column(db.String(20), nullable=False)  # "user" o "bot"
+    content = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+
+    conversation = db.relationship("ChatConversation", backref=db.backref("messages", cascade="all, delete"))
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "conversation_id": self.conversation_id,
+            "sender": self.sender,
+            "content": self.content,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+class ProveedorNotificacion(db.Model):
+    __tablename__ = "proveedor_notificaciones"
+
+    id = db.Column(db.Integer, primary_key=True)
+    libro_titulo = db.Column(db.String(255), nullable=False)
+    libro_autor = db.Column(db.String(255), nullable=True)
+    categoria = db.Column(db.String(255), nullable=True)
+    id_usuario = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    estado = db.Column(db.String(50), default="pendiente")  # pendiente, visto, aceptado, rechazado
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
+
+    usuario = db.relationship("User")

@@ -32,7 +32,9 @@ export default function CheckoutPaymentPage() {
           .then((data) => dispatch({ type: "set_active_cart", payload: data }));
       }
     }
-  }, [store.user?.id]);
+  }, [store.activeCart?.id]);
+
+
 
   useEffect(() => {
     if (addressId) {

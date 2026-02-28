@@ -9,7 +9,7 @@ export default function ProviderSidebar() {
       <div style={styles.brand}>
         <div style={styles.logo}>LL</div>
         <div>
-          <div style={styles.brandTitle}>Los Libritos</div>
+          <div style={styles.brandTitle}>Los Libritos de Yajuala</div>
           <div style={styles.brandSub}>Panel proveedor</div>
         </div>
       </div>
@@ -44,7 +44,7 @@ export default function ProviderSidebar() {
       </nav>
 
       <div style={styles.footerHint}>
-        Mantener el panel simple y consistente.
+        Los Libritos de Yajuala.
       </div>
 
       <style>{css}</style>

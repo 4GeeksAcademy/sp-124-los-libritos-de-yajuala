@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
@@ -10,17 +10,34 @@ export const ProviderBookCreate = () => {
     isbn: "",
     descripcion: "",
     precio: "",
-    cantidad: ""
+    cantidad: "",
+    categorias: [] 
   });
   const [portadaFile, setPortadaFile] = useState(null);
   const [portadaPreview, setPortadaPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  const [allCategories, setAllCategories] = useState([]);
+
   const navigate = useNavigate();
   const { store } = useGlobalReducer();
   const backendUrl = import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
 
+  useEffect(() => {
+    fetch(`${backendUrl}/api/categorias`)
+      .then(res => res.json())
+      .then(data => setAllCategories(data));
+  }, []);
+
+  const toggleCategory = (id) => {
+    setForm(prev => ({
+      ...prev,
+      categorias: prev.categorias.includes(id)
+        ? prev.categorias.filter(c => c !== id)
+        : [...prev.categorias, id]
+    }));
+  };
   const handlePortadaChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -36,7 +53,6 @@ export const ProviderBookCreate = () => {
 
     setUploading(true);
 
-    // 1. Crear el libro primero (sin portada)
     const resp = await fetch(`${backendUrl}/api/books/import`, {
       method: "POST",
       headers: {
@@ -62,7 +78,6 @@ export const ProviderBookCreate = () => {
 
     const bookId = data.id;
 
-    // 2. Si hay portada, subirla a Cloudinary
     if (portadaFile) {
       const formData = new FormData();
       formData.append("portada", portadaFile);
@@ -77,7 +92,6 @@ export const ProviderBookCreate = () => {
       }
     }
 
-    // 3. Asociar al proveedor
     await fetch(`${backendUrl}/api/provider/${store.user.id}/add_book`, {
       method: "POST",
       headers: {
@@ -102,7 +116,6 @@ export const ProviderBookCreate = () => {
 
       <div className="card mt-3">
         <div className="card-body">
-
           <label className="form-label">Título</label>
           <input className="form-control mb-3" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
 
@@ -146,6 +159,23 @@ export const ProviderBookCreate = () => {
 
           <label className="form-label">Cantidad inicial</label>
           <input type="number" className="form-control mb-3" value={form.cantidad} onChange={(e) => setForm({ ...form, cantidad: e.target.value })} />
+
+          <label className="form-label">Categorías</label>
+          <div className="mb-3">
+            {allCategories.map(cat => (
+              <div key={cat.id} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={form.categorias.includes(cat.id)}
+                  onChange={() => toggleCategory(cat.id)}
+                />
+                <label className="form-check-label">
+                  {cat.nombre}
+                </label>
+              </div>
+            ))}
+          </div>
 
           <button className="btn btn-success" onClick={createBook} disabled={uploading}>
             {uploading ? "Creando..." : "Crear libro"}

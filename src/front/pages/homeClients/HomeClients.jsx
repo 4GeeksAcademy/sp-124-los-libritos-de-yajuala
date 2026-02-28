@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import "../../styles/client.css";
 
-// Paleta de colores para portadas sin imagen (igual que BookCoverFallback)
 const COVER_COLORS = [
     ["#1d3557", "#457b9d"],
     ["#e63946", "#c1121f"],
@@ -35,23 +34,29 @@ const CoverPlaceholder = ({ title, index }) => {
 };
 
 export default function HomeClients() {
-    const { store } = useGlobalReducer();
+    const { store, dispatch } = useGlobalReducer();
     const navigate = useNavigate();
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
     const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [addingId, setAddingId] = useState(null); // id del libro que se está añadiendo
+    const [addingId, setAddingId] = useState(null);
 
     const addToCart = async (book) => {
         setAddingId(book.id);
         try {
+            const providerBookId = book.proveedores?.[0]?.provider_book_id;
+            if (!providerBookId) {
+                alert("Este libro no tiene inventario disponible");
+                return;
+            }
+
+            // Obtener o crear carrito activo
             const resCart = await fetch(`${backendUrl}/api/clients/${store.user.id}/carts/active`);
             const dataCart = await resCart.json();
 
             let cartId = null;
-
             if (!dataCart.active) {
                 const resNew = await fetch(`${backendUrl}/api/carts`, {
                     method: "POST",
@@ -64,19 +69,14 @@ export default function HomeClients() {
                 cartId = dataCart.cart.id;
             }
 
-            const provider_book_id = book?.proveedores?.[0]?.provider_book_id;
-            if (!provider_book_id) {
-                alert("Este libro no tiene inventario disponible");
-                return;
-            }
-
+            // Añadir libro al carrito
             const resAdd = await fetch(`${backendUrl}/api/cart-books`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     id_carrito: cartId,
                     id_libro: book.id,
-                    provider_book_id,
+                    provider_book_id: providerBookId,
                     cantidad: 1,
                     precio: book.precio,
                 }),
@@ -84,14 +84,19 @@ export default function HomeClients() {
             const dataAdd = await resAdd.json();
             if (!resAdd.ok) { alert(dataAdd.msg || "Error al añadir al carrito"); return; }
 
-            // Feedback visual sin alert
+            // Actualizar el carrito en el store (versión develop)
+            const resFull = await fetch(`${backendUrl}/api/carts/${cartId}`);
+            const fullCart = await resFull.json();
+            dispatch({ type: "set_active_cart", payload: fullCart });
+
+            // Feedback visual sin alert (versión HEAD)
             setBooks((prev) => prev.map((b) => b.id === book.id ? { ...b, _added: true } : b));
             setTimeout(() => {
                 setBooks((prev) => prev.map((b) => b.id === book.id ? { ...b, _added: false } : b));
             }, 2000);
 
         } catch (err) {
-            console.error(err);
+            console.error("Error añadiendo al carrito:", err);
             alert("Error inesperado");
         } finally {
             setAddingId(null);

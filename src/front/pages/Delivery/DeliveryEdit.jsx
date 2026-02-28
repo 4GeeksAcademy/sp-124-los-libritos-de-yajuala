@@ -84,7 +84,7 @@ export const DeliveryEdit = () => {
         <h1 className="m-0">Editar Repartidor</h1>
         <button
           className="btn btn-secondary"
-          onClick={() => navigate(`/delivery/${id}`)}
+          onClick={() => navigate(`/loggeddelivery`)}
         >
           Volver
         </button>
@@ -133,7 +133,7 @@ export const DeliveryEdit = () => {
           <div className="d-flex gap-2">
             <button
               className="btn btn-secondary"
-              onClick={() => navigate(`/delivery/${id}`)}
+              onClick={() => navigate(`/loggeddelivery`)}
             >
               Cancelar
             </button>

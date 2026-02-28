@@ -61,12 +61,13 @@ export default function LoggedClientPage() {
   };
 
   const acciones = [
-    { icon: "🛒", label: "Mi carrito", to: "/user/cart" },
-    { icon: "📦", label: "Mis pedidos", to: "/user/history" },
-    { icon: "📚", label: "Ver libros", to: "/home-client" },
-    { icon: "⭐", label: "Mis reseñas", to: "/reviews" },
-    { icon: "💘", label: "Mis matches", to: "/swipe" },
-    { icon: "📍", label: "Direcciones", to: "/addresses" },
+    { icon: "🛒", label: "Mi carrito",          to: "/user/cart" },
+    { icon: "📦", label: "Mis pedidos",          to: "/user/history" },
+    { icon: "📚", label: "Ver libros",           to: "/home-client" },
+    { icon: "⭐", label: "Mis reseñas",          to: "/reviews" },
+    { icon: "💘", label: "Mis matches",          to: "/swipe" },
+    { icon: "📍", label: "Direcciones",          to: "/addresses" },
+    { icon: "❤️", label: "Categorías favoritas", to: "/user/favorite-categories" },
   ];
 
   return (
@@ -88,7 +89,13 @@ export default function LoggedClientPage() {
           >
             {uploading ? "⏳" : "📷"}
           </button>
-          <input type="file" ref={fileInputRef} accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleAvatarChange}
+          />
         </div>
         <div>
           <h2 className="cl-profile-name">{store.user.name} {store.user.lastname}</h2>
@@ -150,9 +157,18 @@ export default function LoggedClientPage() {
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {[["Nombre", store.user.name], ["Apellido", store.user.lastname], ["Email", store.user.email]].map(([label, val]) => (
+              {[
+                ["Nombre",   store.user.name],
+                ["Apellido", store.user.lastname],
+                ["Email",    store.user.email],
+              ].map(([label, val]) => (
                 <div key={label} style={{ display: "flex", gap: "12px", fontSize: "14px" }}>
-                  <span style={{ color: "var(--cl-text-muted)", minWidth: "80px", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px", paddingTop: "2px" }}>{label}</span>
+                  <span style={{
+                    color: "var(--cl-text-muted)", minWidth: "80px", fontWeight: 700,
+                    fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px", paddingTop: "2px"
+                  }}>
+                    {label}
+                  </span>
                   <span style={{ color: "var(--cl-text)" }}>{val}</span>
                 </div>
               ))}

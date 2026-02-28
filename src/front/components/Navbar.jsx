@@ -55,6 +55,7 @@ const MENU_CLIENTE = {
   ],
 };
 
+<<<<<<< HEAD
 // ── Admin ─────────────────────────────────────────────────────
 const MENU_ADMIN = {
   secciones: [
@@ -84,6 +85,29 @@ const MENU_ADMIN = {
     },
   ],
 };
+=======
+const MENU_DELIVERY = {
+  secciones: [
+    {
+      Label: "Reparto",
+      items: [
+        { label: "Pedidos asignados", to: "/delivery", icon: <IcoCart /> },
+        { label: "Historial de reparto", to: "/delivery/history", icon: <IcoHistory /> },
+      ],
+    },
+    {
+      label: "Mi cuenta",
+      items: [
+        { label: "Mi perfil", to: "/loggeddelivery", icon: <IcoUser /> }
+      ],
+    }
+  ]
+}
+
+// ── Aquí añadirás los menús de otros roles ───────────────────
+// const MENU_ADMIN    = { secciones: [...] };
+// const MENU_PROVIDER = { secciones: [...] };
+>>>>>>> develop
 
 // ── Proveedor ─────────────────────────────────────────────────
 const MENU_PROVIDER = {
@@ -164,6 +188,7 @@ export const Navbar = ({ onToggle }) => {
   const user = store.user;
   const role = user?.role;
 
+<<<<<<< HEAD
   // Sin usuario logueado → mostramos el header público con accesos a login
   if (!user) return (
     <header className="bk-header-public">
@@ -212,6 +237,29 @@ export const Navbar = ({ onToggle }) => {
   const inicial = user.name ? user.name[0].toUpperCase() : "?";
 
   // Comprueba si un link está activo
+=======
+  // Elige el menú según el rol
+  // Cuando el usuario no está logueado mostramos solo la sección "Tienda"
+  const menu = user ? (isDelivery ? MENU_DELIVERY : MENU_CLIENTE) : {
+    secciones: [
+      {
+        label: "Tienda",
+        items: [
+          { label: "Inicio", to: "/", icon: <IcoHome /> },
+          { label: "Libros", to: "/books", icon: <IcoBooks /> },
+          { label: "Reseñas", to: "/reviews", icon: <IcoReviews /> },
+        ],
+      },
+    ],
+  };
+
+  
+
+  // Etiqueta del rol para mostrar debajo del nombre
+  const rolLabel = isCliente ? "Cliente" : isDelivery ? "Repartidor" : "Invitado";
+  
+  const inicial = user?.name ? user.name[0].toUpperCase() : "?";
+>>>>>>> develop
   const isActive = (to) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
 
