@@ -40,7 +40,7 @@ export default function LoginDelivery() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.delivery));
 
-      navigate("/loggeddelivery");
+      navigate("/delivery");
 
     } catch (err) {
       console.error(err);
