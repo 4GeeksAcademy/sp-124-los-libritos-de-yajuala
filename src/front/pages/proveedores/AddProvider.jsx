@@ -5,7 +5,7 @@ import { ProviderPanelButtons } from "./ProviderPanelButtons";
 const API_BASE = import.meta.env.VITE_BACKEND_URL;
 
 const AddProvider = () => {
-    const { providerId } = useParams(); 
+    const { providerId } = useParams();
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
@@ -81,7 +81,6 @@ const AddProvider = () => {
 
     return (
         <div className="container mt-4">
-            <ProviderPanelButtons />
             <h1>{isEdit ? "Editar Proveedor" : "Nuevo Proveedor"}</h1>
 
             <form onSubmit={handleSubmit} className="mt-3">

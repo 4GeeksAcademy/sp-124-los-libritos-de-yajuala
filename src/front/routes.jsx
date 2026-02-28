@@ -147,6 +147,7 @@ export const router = createBrowserRouter(
                                 <Route path="clients" element={<AdminRoute><ClientsPage /></AdminRoute>} />
                                 <Route path="clients/:id" element={<AdminRoute><ClientDetailPage /></AdminRoute>} />
                                 <Route path="clients/create" element={<AddNewClient />} />
+                                <Route path="provider/create" element={<AddProvider />} />
                                 <Route path="clients/:id/edit" element={<EditClientPage />} />
 
                                 

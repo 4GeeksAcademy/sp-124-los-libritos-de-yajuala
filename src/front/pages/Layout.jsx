@@ -7,22 +7,21 @@ import { useEffect, useState } from "react";
 import ChatBotButton from "../components/chat/ChatBotButton";
 
 export const Layout = () => {
-  const { actions, store } = useGlobalReducer();
+  const { store, actions } = useGlobalReducer();
   const location = useLocation();
-
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!store.user) setCollapsed(false);
+  }, [store.user]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     console.log("TOKEN EN LAYOUT:", savedToken);
-
     if (savedToken) {
       actions.validateToken(savedToken);
     }
   }, []);
-
-  const isChatPage =
-    location.pathname === "/chat" || location.pathname === "/chat/";
 
   useEffect(() => {
     const handler = (e) => setCollapsed(e.detail.collapsed);
@@ -30,17 +29,18 @@ export const Layout = () => {
     return () => window.removeEventListener("bk-sidebar-toggle", handler);
   }, []);
 
+  const isChatPage = location.pathname === "/chat" || location.pathname === "/chat/";
+
   return (
     <ScrollToTop>
-      <div className={`bk-layout${collapsed ? " collapsed" : ""}`}>
-        <Navbar onToggle={(v) => setCollapsed(v)} />
+      <Navbar onToggle={(v) => setCollapsed(v)} />
 
+      <div className={`bk-layout${collapsed ? " collapsed" : ""}${!store.user ? " no-sidebar" : ""}`}>
         <div className="bk-layout-main">
           <Outlet />
-
-          {store.user &&
-            store.user.role === "client" &&
-            !isChatPage && <ChatBotButton />}
+          {store.user && store.user.role === "client" && !isChatPage && (
+            <ChatBotButton />
+          )}
 
           <Footer />
         </div>

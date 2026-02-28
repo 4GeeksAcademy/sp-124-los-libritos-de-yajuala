@@ -1,0 +1,1215 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap");
+
+/* ── Variables (mismas que Home/Navbar) ─────────────────────── */
+:root {
+  --cl-primary: #e63946;
+  --cl-primary-dark: #c1121f;
+  --cl-blue: #1d3557;
+  --cl-blue-light: #457b9d;
+  --cl-accent: #f4a261;
+  --cl-accent-dark: #e76f51;
+  --cl-bg: #f8f4ef;
+  --cl-bg-card: #ffffff;
+  --cl-text: #2b2b2b;
+  --cl-text-muted: #7a7a7a;
+  --cl-border: #e8e0d5;
+  --cl-success: #2a9d8f;
+  --cl-shadow-sm: 0 2px 8px rgba(29, 53, 87, 0.08);
+  --cl-shadow-md: 0 4px 20px rgba(29, 53, 87, 0.12);
+  --cl-shadow-lg: 0 8px 40px rgba(29, 53, 87, 0.16);
+  --cl-radius: 12px;
+  --cl-radius-sm: 8px;
+  --cl-transition: 0.2s ease;
+}
+
+/* ── Reset base para todas las páginas cliente ──────────────── */
+.cl-page {
+  min-height: 100vh;
+  background: var(--cl-bg);
+  font-family: "Lato", sans-serif;
+  color: var(--cl-text);
+  padding: 40px 24px 80px;
+}
+
+.cl-page-narrow {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.cl-page-mid {
+  max-width: 1020px;
+  margin: 0 auto;
+}
+.cl-page-wide {
+  max-width: 1260px;
+  margin: 0 auto;
+}
+
+/* ════════════════════════════════════════════════════════════
+   TIPOGRAFÍA
+   ════════════════════════════════════════════════════════════ */
+.cl-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  color: var(--cl-blue);
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+.cl-subtitle {
+  font-size: 0.9rem;
+  color: var(--cl-text-muted);
+  margin: 0 0 32px;
+}
+.cl-section-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.2rem;
+  color: var(--cl-blue);
+  margin: 0 0 16px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   CABECERA DE PÁGINA (título + acción principal)
+   ════════════════════════════════════════════════════════════ */
+.cl-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cl-page-header-left {
+  flex: 1;
+}
+
+/* Breadcrumb decorativo */
+.cl-breadcrumb {
+  font-size: 12px;
+  color: var(--cl-text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cl-breadcrumb a {
+  color: var(--cl-blue-light);
+  text-decoration: none;
+}
+.cl-breadcrumb a:hover {
+  color: var(--cl-blue);
+}
+.cl-breadcrumb span {
+  opacity: 0.4;
+}
+
+/* ════════════════════════════════════════════════════════════
+   BOTONES
+   ════════════════════════════════════════════════════════════ */
+.cl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: var(--cl-radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: "Lato", sans-serif;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--cl-transition);
+  white-space: nowrap;
+  line-height: 1;
+}
+.cl-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Primario — azul sólido */
+.cl-btn-primary {
+  background: var(--cl-blue);
+  color: white;
+  border-color: var(--cl-blue);
+}
+.cl-btn-primary:hover {
+  background: var(--cl-blue-light);
+  border-color: var(--cl-blue-light);
+  color: white;
+}
+
+/* Acento — naranja (acción principal de compra) */
+.cl-btn-accent {
+  background: var(--cl-accent);
+  color: white;
+  border-color: var(--cl-accent);
+}
+.cl-btn-accent:hover {
+  background: var(--cl-accent-dark);
+  border-color: var(--cl-accent-dark);
+  color: white;
+}
+
+/* Éxito — verde */
+.cl-btn-success {
+  background: var(--cl-success);
+  color: white;
+  border-color: var(--cl-success);
+}
+.cl-btn-success:hover {
+  background: #228b7e;
+  border-color: #228b7e;
+  color: white;
+}
+
+/* Peligro */
+.cl-btn-danger {
+  background: transparent;
+  color: var(--cl-primary);
+  border-color: var(--cl-primary);
+}
+.cl-btn-danger:hover {
+  background: var(--cl-primary);
+  color: white;
+}
+
+/* Ghost / secundario */
+.cl-btn-ghost {
+  background: transparent;
+  color: var(--cl-text-muted);
+  border-color: var(--cl-border);
+}
+.cl-btn-ghost:hover {
+  background: var(--cl-bg);
+  color: var(--cl-blue);
+  border-color: var(--cl-blue-light);
+}
+
+/* Tamaños */
+.cl-btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+.cl-btn-lg {
+  padding: 13px 28px;
+  font-size: 15px;
+}
+
+/* Botón full-width */
+.cl-btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ════════════════════════════════════════════════════════════
+   CARDS
+   ════════════════════════════════════════════════════════════ */
+.cl-card {
+  background: var(--cl-bg-card);
+  border-radius: var(--cl-radius);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-sm);
+  overflow: hidden;
+}
+.cl-card-body {
+  padding: 24px;
+}
+.cl-card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--cl-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cl-bg);
+}
+.cl-card-header-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cl-blue);
+}
+.cl-card-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--cl-border);
+  background: var(--cl-bg);
+}
+
+/* ════════════════════════════════════════════════════════════
+   FORMULARIOS
+   ════════════════════════════════════════════════════════════ */
+.cl-form-group {
+  margin-bottom: 20px;
+}
+
+.cl-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cl-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.cl-input,
+.cl-select,
+.cl-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--cl-border);
+  border-radius: var(--cl-radius-sm);
+  font-size: 14px;
+  font-family: "Lato", sans-serif;
+  color: var(--cl-text);
+  background: white;
+  transition:
+    border-color var(--cl-transition),
+    box-shadow var(--cl-transition);
+  outline: none;
+  box-sizing: border-box;
+}
+.cl-input:focus,
+.cl-select:focus,
+.cl-textarea:focus {
+  border-color: var(--cl-blue-light);
+  box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.15);
+}
+.cl-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ALERTAS / MENSAJES
+   ════════════════════════════════════════════════════════════ */
+.cl-alert {
+  padding: 12px 16px;
+  border-radius: var(--cl-radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  border-left: 4px solid;
+}
+.cl-alert-success {
+  background: #f0faf8;
+  color: var(--cl-success);
+  border-color: var(--cl-success);
+}
+.cl-alert-error {
+  background: #fff5f5;
+  color: var(--cl-primary);
+  border-color: var(--cl-primary);
+}
+.cl-alert-info {
+  background: #f0f5ff;
+  color: var(--cl-blue);
+  border-color: var(--cl-blue-light);
+}
+
+/* ════════════════════════════════════════════════════════════
+   GRID DE LIBROS
+   ════════════════════════════════════════════════════════════ */
+.cl-books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.cl-book-card {
+  background: var(--cl-bg-card);
+  border-radius: var(--cl-radius);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-sm);
+  overflow: hidden;
+  transition:
+    transform var(--cl-transition),
+    box-shadow var(--cl-transition);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+.cl-book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--cl-shadow-md);
+}
+
+.cl-book-cover {
+  height: 200px;
+  background: linear-gradient(
+    135deg,
+    var(--cl-blue) 0%,
+    var(--cl-blue-light) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.cl-book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cl-book-cover-placeholder {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.cl-book-price-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--cl-accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.cl-book-info {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cl-book-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+  color: var(--cl-blue);
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cl-book-author {
+  font-size: 12px;
+  color: var(--cl-text-muted);
+  margin: 0;
+}
+.cl-book-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cl-primary);
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.cl-book-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--cl-border);
+  display: flex;
+  gap: 8px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ESTRELLAS (reseñas)
+   ════════════════════════════════════════════════════════════ */
+.cl-stars {
+  display: flex;
+  gap: 2px;
+}
+.cl-star {
+  font-size: 16px;
+  color: #ddd;
+}
+.cl-star.filled {
+  color: var(--cl-accent);
+}
+.cl-star-input {
+  font-size: 28px;
+  cursor: pointer;
+  color: #ddd;
+  transition: color 0.1s;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+.cl-star-input.active,
+.cl-star-input:hover {
+  color: var(--cl-accent);
+}
+
+/* ════════════════════════════════════════════════════════════
+   REVIEW CARDS
+   ════════════════════════════════════════════════════════════ */
+.cl-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.cl-review-card {
+  background: var(--cl-bg-card);
+  border-radius: var(--cl-radius);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cl-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cl-review-book {
+  font-family: "Playfair Display", serif;
+  font-size: 0.95rem;
+  color: var(--cl-blue);
+  font-weight: 700;
+}
+.cl-review-comment {
+  font-size: 13px;
+  color: var(--cl-text);
+  line-height: 1.6;
+  font-style: italic;
+  border-left: 3px solid var(--cl-accent);
+  padding-left: 12px;
+}
+.cl-review-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PERFIL DE USUARIO
+   ════════════════════════════════════════════════════════════ */
+.cl-profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  background: linear-gradient(
+    135deg,
+    var(--cl-blue) 0%,
+    var(--cl-blue-light) 100%
+  );
+  border-radius: var(--cl-radius);
+  padding: 32px;
+  margin-bottom: 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.cl-profile-hero::before {
+  content: "📚";
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 80px;
+  opacity: 0.1;
+}
+.cl-profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.cl-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+}
+.cl-profile-avatar-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cl-accent);
+  border: 2px solid white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background var(--cl-transition);
+}
+.cl-profile-avatar-btn:hover {
+  background: var(--cl-accent-dark);
+}
+.cl-profile-name {
+  font-family: "Playfair Display", serif;
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+}
+.cl-profile-email {
+  font-size: 13px;
+  opacity: 0.75;
+  margin: 0 0 10px;
+}
+.cl-profile-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* Acciones rápidas del perfil */
+.cl-profile-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.cl-profile-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px;
+  background: var(--cl-bg-card);
+  border: 1.5px solid var(--cl-border);
+  border-radius: var(--cl-radius);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--cl-blue);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "Lato", sans-serif;
+  text-align: center;
+  transition: all var(--cl-transition);
+  box-shadow: var(--cl-shadow-sm);
+}
+.cl-profile-action-btn:hover {
+  border-color: var(--cl-blue-light);
+  box-shadow: var(--cl-shadow-md);
+  transform: translateY(-2px);
+  color: var(--cl-blue);
+}
+.cl-profile-action-btn .cl-action-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════════════════════
+   CARRITO
+   ════════════════════════════════════════════════════════════ */
+.cl-cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .cl-cart-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cl-cart-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--cl-border);
+}
+.cl-cart-item:last-child {
+  border-bottom: none;
+}
+
+.cl-cart-item-cover {
+  width: 64px;
+  height: 80px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--cl-blue), var(--cl-blue-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cl-cart-item-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cl-cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.cl-cart-item-title {
+  font-family: "Playfair Display", serif;
+  font-size: 0.95rem;
+  color: var(--cl-blue);
+  margin: 0 0 4px;
+}
+.cl-cart-item-author {
+  font-size: 12px;
+  color: var(--cl-text-muted);
+  margin: 0 0 8px;
+}
+.cl-cart-item-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cl-primary);
+}
+.cl-cart-item-discount {
+  font-size: 11px;
+  color: var(--cl-success);
+  font-weight: 700;
+  margin-left: 6px;
+}
+.cl-cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Resumen del pedido (columna derecha) */
+.cl-order-summary {
+  background: var(--cl-bg-card);
+  border-radius: var(--cl-radius);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-sm);
+  overflow: hidden;
+  position: sticky;
+  top: 24px;
+}
+.cl-order-summary-header {
+  padding: 16px 20px;
+  background: var(--cl-blue);
+  color: white;
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+}
+.cl-order-summary-body {
+  padding: 20px;
+}
+.cl-order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--cl-text-muted);
+}
+.cl-order-summary-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cl-blue);
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 2px solid var(--cl-border);
+}
+
+/* ════════════════════════════════════════════════════════════
+   CHECKOUT — PASOS
+   ════════════════════════════════════════════════════════════ */
+.cl-checkout-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 36px;
+}
+.cl-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.cl-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--cl-border);
+  color: var(--cl-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--cl-transition);
+}
+.cl-step.active .cl-step-num {
+  background: var(--cl-blue);
+  color: white;
+}
+.cl-step.done .cl-step-num {
+  background: var(--cl-success);
+  color: white;
+}
+.cl-step-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cl-text-muted);
+}
+.cl-step.active .cl-step-label {
+  color: var(--cl-blue);
+}
+.cl-step-line {
+  height: 2px;
+  flex: 1;
+  background: var(--cl-border);
+  margin: 0 4px;
+}
+
+/* Dirección card en checkout */
+.cl-address-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 2px solid var(--cl-border);
+  border-radius: var(--cl-radius-sm);
+  cursor: pointer;
+  transition: all var(--cl-transition);
+  margin-bottom: 12px;
+}
+.cl-address-option:hover {
+  border-color: var(--cl-blue-light);
+}
+.cl-address-option.selected {
+  border-color: var(--cl-blue);
+  background: #f0f4f8;
+}
+.cl-address-option input[type="radio"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--cl-blue);
+}
+.cl-address-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cl-blue);
+  margin-bottom: 4px;
+}
+.cl-address-detail {
+  font-size: 12px;
+  color: var(--cl-text-muted);
+  line-height: 1.6;
+}
+
+/* Métodos de pago */
+.cl-payment-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 2px solid var(--cl-border);
+  border-radius: var(--cl-radius-sm);
+  cursor: pointer;
+  transition: all var(--cl-transition);
+  margin-bottom: 12px;
+}
+.cl-payment-option:hover {
+  border-color: var(--cl-blue-light);
+}
+.cl-payment-option.selected {
+  border-color: var(--cl-blue);
+  background: #f0f4f8;
+}
+.cl-payment-icon {
+  font-size: 24px;
+  width: 36px;
+  text-align: center;
+}
+.cl-payment-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cl-blue);
+}
+
+/* ════════════════════════════════════════════════════════════
+   HISTORIAL DE PEDIDOS
+   ════════════════════════════════════════════════════════════ */
+.cl-order-card {
+  background: var(--cl-bg-card);
+  border-radius: var(--cl-radius);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-sm);
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: box-shadow var(--cl-transition);
+}
+.cl-order-card:hover {
+  box-shadow: var(--cl-shadow-md);
+}
+.cl-order-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--cl-bg);
+  border-bottom: 1px solid var(--cl-border);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cl-order-id {
+  font-family: "Playfair Display", serif;
+  font-size: 1rem;
+  color: var(--cl-blue);
+}
+.cl-order-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cl-status-pendiente {
+  background: #fff8e1;
+  color: #f4a261;
+}
+.cl-status-pagado {
+  background: #e8f5e9;
+  color: #2a9d8f;
+}
+.cl-status-enviado {
+  background: #e3f2fd;
+  color: #1d3557;
+}
+.cl-status-entregado {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+.cl-status-cancelado {
+  background: #ffebee;
+  color: #e63946;
+}
+
+.cl-order-card-body {
+  padding: 16px 20px;
+}
+.cl-order-meta {
+  font-size: 12px;
+  color: var(--cl-text-muted);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cl-order-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cl-primary);
+}
+
+/* ════════════════════════════════════════════════════════════
+   DIRECCIONES
+   ════════════════════════════════════════════════════════════ */
+.cl-addresses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+.cl-address-card {
+  background: var(--cl-bg-card);
+  border-radius: var(--cl-radius);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-sm);
+  overflow: hidden;
+  transition: all var(--cl-transition);
+}
+.cl-address-card:hover {
+  box-shadow: var(--cl-shadow-md);
+  transform: translateY(-2px);
+}
+.cl-address-card-icon {
+  height: 80px;
+  background: linear-gradient(135deg, var(--cl-blue), var(--cl-blue-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+.cl-address-card-body {
+  padding: 16px;
+}
+.cl-address-card-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cl-blue);
+  margin-bottom: 6px;
+}
+.cl-address-card-detail {
+  font-size: 12px;
+  color: var(--cl-text-muted);
+  line-height: 1.7;
+}
+.cl-address-card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--cl-border);
+  display: flex;
+  gap: 8px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ESTADO VACÍO
+   ════════════════════════════════════════════════════════════ */
+.cl-empty {
+  text-align: center;
+  padding: 64px 24px;
+}
+.cl-empty-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+.cl-empty-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.3rem;
+  color: var(--cl-blue);
+  margin-bottom: 8px;
+}
+.cl-empty-text {
+  font-size: 14px;
+  color: var(--cl-text-muted);
+  margin-bottom: 24px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LOGIN PAGE
+   ════════════════════════════════════════════════════════════ */
+.cl-login-page {
+  min-height: 100vh;
+  background: var(--cl-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: "Lato", sans-serif;
+}
+.cl-login-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: var(--cl-radius);
+  box-shadow: var(--cl-shadow-lg);
+  overflow: hidden;
+}
+.cl-login-header {
+  background: linear-gradient(135deg, var(--cl-blue), var(--cl-blue-light));
+  padding: 36px 32px 28px;
+  text-align: center;
+  color: white;
+}
+.cl-login-logo {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+.cl-login-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.5rem;
+  margin: 0 0 4px;
+}
+.cl-login-subtitle {
+  font-size: 13px;
+  opacity: 0.75;
+  margin: 0;
+}
+.cl-login-body {
+  padding: 32px;
+}
+.cl-login-footer {
+  padding: 16px 32px;
+  background: var(--cl-bg);
+  border-top: 1px solid var(--cl-border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--cl-text-muted);
+}
+.cl-login-footer a {
+  color: var(--cl-blue-light);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* ════════════════════════════════════════════════════════════
+   DETALLE DE LIBRO
+   ════════════════════════════════════════════════════════════ */
+.cl-book-detail-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+@media (max-width: 700px) {
+  .cl-book-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+.cl-book-detail-cover {
+  border-radius: var(--cl-radius);
+  overflow: hidden;
+  box-shadow: var(--cl-shadow-lg);
+  background: linear-gradient(135deg, var(--cl-blue), var(--cl-blue-light));
+  aspect-ratio: 2/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+}
+.cl-book-detail-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cl-book-detail-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--cl-blue);
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+.cl-book-detail-author {
+  font-size: 14px;
+  color: var(--cl-text-muted);
+  margin: 0 0 16px;
+}
+.cl-book-detail-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--cl-primary);
+  margin-bottom: 20px;
+}
+.cl-book-detail-meta {
+  margin-bottom: 24px;
+}
+.cl-book-detail-meta-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--cl-border);
+}
+.cl-book-detail-meta-label {
+  color: var(--cl-text-muted);
+  min-width: 80px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-top: 1px;
+}
+.cl-book-detail-desc {
+  font-size: 14px;
+  color: var(--cl-text);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PAGO EXITOSO
+   ════════════════════════════════════════════════════════════ */
+.cl-success-page {
+  min-height: 100vh;
+  background: var(--cl-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: "Lato", sans-serif;
+}
+.cl-success-card {
+  max-width: 480px;
+  width: 100%;
+  background: white;
+  border-radius: var(--cl-radius);
+  box-shadow: var(--cl-shadow-lg);
+  text-align: center;
+  overflow: hidden;
+}
+.cl-success-header {
+  background: linear-gradient(135deg, var(--cl-success), #1a7a6e);
+  padding: 48px 32px;
+  color: white;
+}
+.cl-success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+.cl-success-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.8rem;
+  margin: 0 0 8px;
+}
+.cl-success-body {
+  padding: 32px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LOADER
+   ════════════════════════════════════════════════════════════ */
+.cl-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--cl-text-muted);
+  font-size: 14px;
+  gap: 12px;
+}
+.cl-loader::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--cl-border);
+  border-top-color: var(--cl-blue);
+  border-radius: 50%;
+  animation: cl-spin 0.8s linear infinite;
+}
+@keyframes cl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   DIVISOR DECORATIVO
+   ════════════════════════════════════════════════════════════ */
+.cl-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--cl-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.cl-divider::before,
+.cl-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--cl-border);
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .cl-page {
+    padding: 24px 16px 60px;
+  }
+  .cl-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cl-profile-hero {
+    flex-direction: column;
+    text-align: center;
+  }
+  .cl-profile-hero::before {
+    display: none;
+  }
+}

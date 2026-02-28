@@ -7,6 +7,8 @@ from flask_migrate import Migrate
 from flask_swagger import swagger
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from datetime import timedelta
+
 
 from api.utils import APIException, generate_sitemap
 from api.models import db
@@ -27,19 +29,19 @@ app.url_map.strict_slashes = False
 
 app.config["JWT_SECRET_KEY"] = "super-secret-key"
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)
 
 jwt = JWTManager(app)
 app.config["JWT_IDENTITY_CLAIM"] = "identity"
 app.config["CORS_HEADERS"] = "Content-Type"
 
-#CORS(
+# CORS(
 #    app,
 #    resources={r"/*": {"origins": "*"}},
 #    supports_credentials=True,
 #    allow_headers="*",
 #    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-#)
+# )
 
 
 CORS(
@@ -48,9 +50,7 @@ CORS(
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
- )
-
-
+)
 
 
 db_url = os.getenv("DATABASE_URL")

@@ -1,141 +1,159 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import useGlobalReducer from "../../hooks/useGlobalReducer.jsx";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useGlobalReducer from '../../hooks/useGlobalReducer.jsx';
+import '../../styles/client.css';
 
 export const ReviewCreate = () => {
   const navigate = useNavigate();
-  const backendUrl = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
-
+  const backendUrl = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
   const { store } = useGlobalReducer();
 
-  const [form, setForm] = useState({
-    id_libro: "",
-    puntuacion: "",
-    comentario: "",
-  });
-
+  const [form, setForm] = useState({ id_libro: '', puntuacion: 0, comentario: '' });
   const [libros, setLibros] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [hover, setHover] = useState(0);
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const res = await fetch(`${backendUrl}/api/books`);
-        if (!res.ok) throw new Error("Error al cargar libros");
-        const data = await res.json();
-        setLibros(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBooks();
-  }, [backendUrl]);
-
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+    fetch(`${backendUrl}/api/books`)
+      .then((r) => r.json())
+      .then((data) => setLibros(Array.isArray(data) ? data : []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!form.id_libro || !form.puntuacion) {
-      alert("Faltan campos obligatorios");
+      alert('Selecciona libro y puntuación');
       return;
     }
-
-    const body = {
-      id_libro: Number(form.id_libro),
-      puntuacion: Number(form.puntuacion),
-      comentario: form.comentario || null,
-    };
-
+    setSaving(true);
     try {
       const resp = await fetch(`${backendUrl}/api/reviews`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${store.token}`,
-        },
-        body: JSON.stringify(body),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${store.token}` },
+        body: JSON.stringify({
+          id_libro: Number(form.id_libro),
+          puntuacion: Number(form.puntuacion),
+          comentario: form.comentario || null,
+        }),
       });
-
       const data = await resp.json();
       if (!resp.ok) {
-        alert(data.msg || "Error creando review");
+        alert(data.msg || 'Error creando reseña');
         return;
       }
-
-      navigate("/reviews");
+      navigate('/reviews');
     } catch {
-      alert("Error de red");
+      alert('Error de red');
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) return <p>Cargando libros...</p>;
+  if (loading)
+    return (
+      <div className="cl-page">
+        <div className="cl-loader">Cargando libros</div>
+      </div>
+    );
 
   return (
-    <div className="container mt-5">
-      <h1 className="mb-4">Crear Review</h1>
-
-      <form onSubmit={handleSubmit} className="card p-4">
-        <div className="mb-3">
-          <label className="form-label">Libro</label>
-          <select
-            name="id_libro"
-            className="form-select"
-            value={form.id_libro}
-            onChange={handleChange}
-            required
-          >
-            <option value="">-- Selecciona libro --</option>
-            {libros.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.titulo} ({l.autor})
-              </option>
-            ))}
-          </select>
+    <div className="cl-page cl-page-narrow">
+      <div className="cl-page-header">
+        <div className="cl-page-header-left">
+          <div className="cl-breadcrumb">
+            <span onClick={() => navigate('/reviews')} style={{ cursor: 'pointer' }}>
+              Reseñas
+            </span>
+            <span>›</span>
+            <span>Nueva reseña</span>
+          </div>
+          <h1 className="cl-title">Escribir reseña</h1>
+          <p className="cl-subtitle">Comparte tu opinión con otros lectores</p>
         </div>
+      </div>
 
-        <div className="mb-3">
-          <label className="form-label">Puntuación (1–5)</label>
-          <input
-            type="number"
-            name="puntuacion"
-            className="form-control"
-            min="1"
-            max="5"
-            value={form.puntuacion}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      <div className="cl-card">
+        <div className="cl-card-body">
+          <form onSubmit={handleSubmit}>
+            {/* Selector de libro */}
+            <div className="cl-form-group">
+              <label className="cl-label">Libro</label>
+              <select
+                className="cl-select"
+                value={form.id_libro}
+                onChange={(e) => setForm({ ...form, id_libro: e.target.value })}
+                required
+              >
+                <option value="">— Selecciona un libro —</option>
+                {libros.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.titulo} · {l.autor}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="mb-3">
-          <label className="form-label">Comentario</label>
-          <textarea
-            name="comentario"
-            className="form-control"
-            rows="3"
-            value={form.comentario}
-            onChange={handleChange}
-          />
-        </div>
+            {/* Puntuación con estrellas */}
+            <div className="cl-form-group">
+              <label className="cl-label">Puntuación</label>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`cl-star-input${i <= (hover || form.puntuacion) ? ' active' : ''}`}
+                    onMouseEnter={() => setHover(i)}
+                    onMouseLeave={() => setHover(0)}
+                    onClick={() => setForm({ ...form, puntuacion: i })}
+                  >
+                    ★
+                  </button>
+                ))}
+                {form.puntuacion > 0 && (
+                  <span
+                    style={{ fontSize: '13px', color: 'var(--cl-text-muted)', marginLeft: '8px' }}
+                  >
+                    {form.puntuacion}/5
+                  </span>
+                )}
+              </div>
+            </div>
 
-        <div className="d-flex gap-2">
-          <button type="submit" className="btn btn-success">
-            Guardar
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => navigate("/reviews")}
-          >
-            Cancelar
-          </button>
+            {/* Comentario */}
+            <div className="cl-form-group">
+              <label className="cl-label">
+                Comentario{' '}
+                <span style={{ opacity: 0.5, textTransform: 'none', letterSpacing: 0 }}>
+                  (opcional)
+                </span>
+              </label>
+              <textarea
+                className="cl-textarea"
+                rows={4}
+                placeholder="¿Qué te ha parecido el libro?"
+                value={form.comentario}
+                onChange={(e) => setForm({ ...form, comentario: e.target.value })}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" className="cl-btn cl-btn-accent cl-btn-lg" disabled={saving}>
+                {saving ? 'Publicando...' : 'Publicar reseña'}
+              </button>
+              <button
+                type="button"
+                className="cl-btn cl-btn-ghost cl-btn-lg"
+                onClick={() => navigate('/reviews')}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
