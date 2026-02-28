@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
-import "../../styles/client.css";
+import { faCamera, faHourglassHalf } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function LoggedClientPage() {
   const { store, dispatch } = useGlobalReducer();
@@ -60,123 +61,126 @@ export default function LoggedClientPage() {
     finally { setUploading(false); }
   };
 
-  const acciones = [
-    { icon: "🛒", label: "Mi carrito",          to: "/user/cart" },
-    { icon: "📦", label: "Mis pedidos",          to: "/user/history" },
-    { icon: "📚", label: "Ver libros",           to: "/home-client" },
-    { icon: "⭐", label: "Mis reseñas",          to: "/reviews" },
-    { icon: "💘", label: "Mis matches",          to: "/swipe" },
-    { icon: "📍", label: "Direcciones",          to: "/addresses" },
-    { icon: "❤️", label: "Categorías favoritas", to: "/user/favorite-categories" },
-  ];
 
   return (
-    <div className="cl-page cl-page-wide">
-
-      {/* Hero del perfil */}
-      <div className="cl-profile-hero">
-        <div className="cl-profile-avatar-wrap">
+    <div className="container-fluid py-4">
+      <div className="d-flex align-items-center gap-4 mb-4 p-4 bg-light rounded shadow-sm">
+        <div className="position-relative">
           <img
-            className="cl-profile-avatar"
-            src={store.user.avatar_url || `https://ui-avatars.com/api/?name=${store.user.name}+${store.user.lastname}&background=1d3557&color=fff&size=120`}
-            alt="Avatar"
+            src={
+              store.user.avatar_url ||
+              `https://ui-avatars.com/api/?name=${store.user.name}+${store.user.lastname}&background=1d3557&color=fff&size=120`
+            }
+            className="rounded-circle border"
+            style={{ width: "120px", height: "120px", objectFit: "cover" }}
           />
+
           <button
-            className="cl-profile-avatar-btn"
+            className="btn btn-sm btn-primary position-absolute bottom-0 end-0"
             onClick={() => fileInputRef.current.click()}
             disabled={uploading}
-            title="Cambiar foto"
           >
-            {uploading ? "⏳" : "📷"}
+            {uploading ? <FontAwesomeIcon icon={faHourglassHalf} /> : <FontAwesomeIcon icon={faCamera} />}
           </button>
+
           <input
             type="file"
             ref={fileInputRef}
             accept="image/*"
-            style={{ display: "none" }}
+            className="d-none"
             onChange={handleAvatarChange}
           />
         </div>
+
         <div>
-          <h2 className="cl-profile-name">{store.user.name} {store.user.lastname}</h2>
-          <p className="cl-profile-email">{store.user.email}</p>
-          <span className="cl-profile-badge">Cliente</span>
+          <h2 className="fw-bold mb-1">
+            {store.user.name} {store.user.lastname}
+          </h2>
+          <p className="text-muted mb-1">{store.user.email}</p>
+          <span className="badge bg-primary">Cliente</span>
         </div>
       </div>
 
-      {/* Acciones rápidas */}
-      <div className="cl-profile-actions">
-        {acciones.map((a) => (
-          <button key={a.to} className="cl-profile-action-btn" onClick={() => navigate(a.to)}>
-            <span className="cl-action-icon">{a.icon}</span>
-            {a.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Mensaje feedback */}
       {message && (
-        <div className={`cl-alert ${message.includes("Error") ? "cl-alert-error" : "cl-alert-success"}`}>
+        <div
+          className={`alert ${message.includes("Error") ? "alert-danger" : "alert-success"
+            }`}
+        >
           {message}
         </div>
       )}
 
-      {/* Card de datos del perfil */}
-      <div className="cl-card">
-        <div className="cl-card-header">
-          <span className="cl-card-header-title">Datos del perfil</span>
+      <div className="card shadow-sm">
+        <div className="card-header d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">Datos del perfil</h5>
+
           <button
-            className="cl-btn cl-btn-ghost cl-btn-sm"
+            className="btn btn-sm btn-outline-secondary"
             onClick={() => {
               setEditMode(!editMode);
               setMessage("");
-              setForm({ name: store.user.name, lastname: store.user.lastname, email: store.user.email });
+              setForm({
+                name: store.user.name,
+                lastname: store.user.lastname,
+                email: store.user.email,
+              });
             }}
           >
             {editMode ? "Cancelar" : "✏️ Editar"}
           </button>
         </div>
-        <div className="cl-card-body">
+
+        <div className="card-body">
           {editMode ? (
             <>
-              <div className="cl-form-group">
-                <label className="cl-label">Nombre</label>
-                <input className="cl-input" name="name" value={form.name} onChange={handleChange} />
+              <div className="mb-3">
+                <label className="form-label">Nombre</label>
+                <input
+                  className="form-control"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                />
               </div>
-              <div className="cl-form-group">
-                <label className="cl-label">Apellido</label>
-                <input className="cl-input" name="lastname" value={form.lastname} onChange={handleChange} />
+
+              <div className="mb-3">
+                <label className="form-label">Apellido</label>
+                <input
+                  className="form-control"
+                  name="lastname"
+                  value={form.lastname}
+                  onChange={handleChange}
+                />
               </div>
-              <div className="cl-form-group">
-                <label className="cl-label">Email</label>
-                <input className="cl-input" type="email" name="email" value={form.email} onChange={handleChange} />
+
+              <div className="mb-3">
+                <label className="form-label">Email</label>
+                <input
+                  className="form-control"
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                />
               </div>
-              <button className="cl-btn cl-btn-success" onClick={handleSaveProfile} disabled={saving}>
+
+              <button
+                className="btn btn-success"
+                onClick={handleSaveProfile}
+                disabled={saving}
+              >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>
             </>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {[
-                ["Nombre",   store.user.name],
-                ["Apellido", store.user.lastname],
-                ["Email",    store.user.email],
-              ].map(([label, val]) => (
-                <div key={label} style={{ display: "flex", gap: "12px", fontSize: "14px" }}>
-                  <span style={{
-                    color: "var(--cl-text-muted)", minWidth: "80px", fontWeight: 700,
-                    fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px", paddingTop: "2px"
-                  }}>
-                    {label}
-                  </span>
-                  <span style={{ color: "var(--cl-text)" }}>{val}</span>
-                </div>
-              ))}
+            <div className="d-flex flex-column gap-2">
+              <div><strong>Nombre:</strong> {store.user.name}</div>
+              <div><strong>Apellido:</strong> {store.user.lastname}</div>
+              <div><strong>Email:</strong> {store.user.email}</div>
             </div>
           )}
         </div>
       </div>
-
     </div>
   );
 }

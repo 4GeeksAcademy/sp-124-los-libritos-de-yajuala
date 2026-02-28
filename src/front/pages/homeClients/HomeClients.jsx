@@ -52,7 +52,6 @@ export default function HomeClients() {
                 return;
             }
 
-            // Obtener o crear carrito activo
             const resCart = await fetch(`${backendUrl}/api/clients/${store.user.id}/carts/active`);
             const dataCart = await resCart.json();
 
@@ -69,7 +68,6 @@ export default function HomeClients() {
                 cartId = dataCart.cart.id;
             }
 
-            // Añadir libro al carrito
             const resAdd = await fetch(`${backendUrl}/api/cart-books`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -84,12 +82,10 @@ export default function HomeClients() {
             const dataAdd = await resAdd.json();
             if (!resAdd.ok) { alert(dataAdd.msg || "Error al añadir al carrito"); return; }
 
-            // Actualizar el carrito en el store (versión develop)
             const resFull = await fetch(`${backendUrl}/api/carts/${cartId}`);
             const fullCart = await resFull.json();
             dispatch({ type: "set_active_cart", payload: fullCart });
 
-            // Feedback visual sin alert (versión HEAD)
             setBooks((prev) => prev.map((b) => b.id === book.id ? { ...b, _added: true } : b));
             setTimeout(() => {
                 setBooks((prev) => prev.map((b) => b.id === book.id ? { ...b, _added: false } : b));
@@ -120,85 +116,99 @@ export default function HomeClients() {
     if (loading) return <div className="cl-page"><div className="cl-loader">Cargando libros</div></div>;
 
     return (
-        <div className="cl-page cl-page-wide">
+        <div className="container-fluid py-4">
 
-            {/* Cabecera */}
-            <div className="cl-page-header">
-                <div className="cl-page-header-left">
-                    <h1 className="cl-title">Hola, {store.user?.name || store.user?.email} 👋</h1>
-                    <p className="cl-subtitle">{books.length} libros disponibles para ti</p>
+            <div className="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 className="h3 mb-1">Hola, {store.user?.name || store.user?.email} 👋</h1>
+                    <p className="text-muted">{books.length} libros disponibles para ti</p>
                 </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                    <button className="cl-btn cl-btn-ghost" onClick={() => navigate("/user/cart")}>
+
+                <div className="d-flex gap-2">
+                    <button className="btn btn-outline-secondary" onClick={() => navigate("/user/cart")}>
                         🛒 Mi carrito
                     </button>
-                    <button className="cl-btn cl-btn-primary" onClick={() => navigate("/user")}>
+                    <button className="btn btn-primary" onClick={() => navigate("/user")}>
                         Mi cuenta
                     </button>
                 </div>
             </div>
 
-            {/* Buscador */}
-            <div style={{ marginBottom: "28px" }}>
+            <div className="mb-4">
                 <input
-                    className="cl-input"
+                    type="text"
+                    className="form-control"
                     style={{ maxWidth: "420px" }}
                     placeholder="🔍  Buscar por título o autor..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
             </div>
-
-            {/* Grid de libros */}
             {filtered.length === 0 ? (
-                <div className="cl-empty">
-                    <div className="cl-empty-icon">📚</div>
-                    <p className="cl-empty-title">Sin resultados</p>
-                    <p className="cl-empty-text">No hay libros que coincidan con tu búsqueda.</p>
+                <div className="text-center py-5">
+                    <div className="fs-1">📚</div>
+                    <h3>Sin resultados</h3>
+                    <p className="text-muted">No hay libros que coincidan con tu búsqueda.</p>
                 </div>
             ) : (
-                <div className="cl-books-grid">
+                <div className="row g-4">
                     {filtered.map((book, index) => (
-                        <div key={book.id} className="cl-book-card">
+                        <div key={book.id} className="col-12 col-sm-6 col-md-4 col-lg-3">
+                            <div className="card h-100 shadow-sm">
 
-                            {/* Portada */}
-                            <div
-                                className="cl-book-cover"
-                                onClick={() => navigate(`/books/${book.id}`)}
-                                style={{ cursor: "pointer" }}
-                            >
-                                {book.portada ? (
-                                    <img src={book.portada} alt={book.titulo} />
-                                ) : (
-                                    <CoverPlaceholder title={book.titulo} index={index} />
-                                )}
-                                <span className="cl-book-price-badge">{book.precio} €</span>
-                            </div>
-
-                            {/* Info */}
-                            <div className="cl-book-info" onClick={() => navigate(`/books/${book.id}`)} style={{ cursor: "pointer" }}>
-                                <h3 className="cl-book-title">{book.titulo}</h3>
-                                <p className="cl-book-author">{book.autor}</p>
-                            </div>
-
-                            {/* Acciones */}
-                            <div className="cl-book-actions">
-                                <button
-                                    className={`cl-btn cl-btn-sm ${book._added ? "cl-btn-success" : "cl-btn-accent"}`}
-                                    style={{ flex: 1, justifyContent: "center" }}
-                                    onClick={() => addToCart(book)}
-                                    disabled={addingId === book.id}
-                                >
-                                    {book._added ? "✓ Añadido" : addingId === book.id ? "..." : "🛒 Añadir"}
-                                </button>
-                                <button
-                                    className="cl-btn cl-btn-ghost cl-btn-sm"
+                                <div
+                                    className="position-relative"
+                                    style={{ cursor: "pointer" }}
                                     onClick={() => navigate(`/books/${book.id}`)}
                                 >
-                                    Ver más
-                                </button>
-                            </div>
+                                    {book.portada ? (
+                                        <img
+                                            src={book.portada}
+                                            alt={book.titulo}
+                                            className="card-img-top"
+                                            style={{ height: "260px", objectFit: "cover" }}
+                                        />
+                                    ) : (
+                                        <div
+                                            className="d-flex justify-content-center align-items-center"
+                                            style={{ height: "260px" }}
+                                        >
+                                            <CoverPlaceholder title={book.titulo} index={index} />
+                                        </div>
+                                    )}
 
+                                    <span className="badge bg-primary position-absolute top-0 end-0 m-2">
+                                        {book.precio} €
+                                    </span>
+                                </div>
+
+                                <div
+                                    className="card-body"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => navigate(`/books/${book.id}`)}
+                                >
+                                    <h5 className="card-title">{book.titulo}</h5>
+                                    <p className="card-text text-muted">{book.autor}</p>
+                                </div>
+
+                                <div className="card-footer bg-white border-0 d-flex gap-2">
+                                    <button
+                                        className={`btn btn-sm w-100 ${book._added ? "btn-success" : "btn-warning"}`}
+                                        onClick={() => addToCart(book)}
+                                        disabled={addingId === book.id}
+                                    >
+                                        {book._added ? "✓ Añadido" : addingId === book.id ? "..." : "🛒 Añadir"}
+                                    </button>
+
+                                    <button
+                                        className="btn btn-outline-secondary btn-sm"
+                                        onClick={() => navigate(`/books/${book.id}`)}
+                                    >
+                                        Ver más
+                                    </button>
+                                </div>
+
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -206,4 +216,5 @@ export default function HomeClients() {
 
         </div>
     );
+
 }

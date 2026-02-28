@@ -3,6 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import CheckoutPaypalPay from "./CheckoutPaypalPay";
 import "../../styles/client.css";
+import React from "react";
+import { faCcVisa, faCcPaypal, faGooglePay, faMoneyBillWave, faBitcoin } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
 
 const METHOD_LABELS = {
   card: "Tarjeta de crédito / débito",
@@ -11,7 +15,7 @@ const METHOD_LABELS = {
   cash: "Contra reembolso",
   crypto: "Criptomonedas",
 };
-const METHOD_ICONS = { card: "💳", paypal: "🅿️", google_test: "🔵", cash: "💵", crypto: "₿" };
+const METHOD_ICONS = { card: <FontAwesomeIcon icon={faCcVisa} />, paypal: <FontAwesomeIcon icon={faCcPaypal} />, google_test: <FontAwesomeIcon icon={faGooglePay} />, cash: <FontAwesomeIcon icon={faMoneyBillWave} />, crypto: <FontAwesomeIcon icon={faBitcoin} /> };
 
 export default function CheckoutPaymentPage() {
   const { store, dispatch } = useGlobalReducer();
@@ -29,7 +33,7 @@ export default function CheckoutPaymentPage() {
       if (needsCart) {
         fetch(`${backendUrl}/api/users/${store.user.id}/active-cart`)
           .then((r) => r.json())
-          .then((data) => dispatch({ type: "set_active_cart", payload: data }));
+          .then((data) => dispatch({ type: "set_active_cart", payload: data.cart }));
       }
     }
   }, [store.activeCart?.id]);
@@ -66,75 +70,93 @@ export default function CheckoutPaymentPage() {
   const total = store.activeCart.monto_total ?? 0;
 
   return (
-    <div className="cl-page cl-page-narrow">
+    <div className="container-fluid py-4">
 
-      {/* Pasos */}
-      <div className="cl-checkout-steps" style={{ marginBottom: "32px" }}>
-        {["Dirección", "Pago", "Confirmación"].map((s, i) => (
-          <React.Fragment key={s}>
-            {i > 0 && <div className="cl-step-line" />}
-            <div className={`cl-step${i < 2 ? " done" : " active"}`}>
-              <div className="cl-step-num">{i < 2 ? "✓" : i + 1}</div>
-              <span className="cl-step-label">{s}</span>
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
-
-      <h1 className="cl-title">Confirmar pedido</h1>
-      <p className="cl-subtitle">Revisa los detalles antes de pagar</p>
-
-      {/* Resumen dirección */}
-      <div className="cl-card" style={{ marginBottom: "16px" }}>
-        <div className="cl-card-header">
-          <span className="cl-card-header-title">📍 Dirección de entrega</span>
-          <button className="cl-btn cl-btn-ghost cl-btn-sm" onClick={() => navigate(-1)}>Cambiar</button>
+      <div className="d-flex align-items-center justify-content-center gap-3 mb-4">
+        <div className="text-center opacity-50">
+          <div className="rounded-circle bg-light text-dark fw-bold d-flex align-items-center justify-content-center"
+            style={{ width: 36, height: 36 }}>
+            ✓
+          </div>
+          <small className="d-block mt-1">Dirección</small>
         </div>
-        <div className="cl-card-body">
-          <p style={{ margin: 0, fontWeight: 700, color: "var(--cl-blue)", marginBottom: "4px" }}>{address.nombre}</p>
-          <p style={{ margin: 0, fontSize: "13px", color: "var(--cl-text-muted)", lineHeight: 1.6 }}>
-            {address.direccion}<br />
+
+        <div className="flex-grow-1 border-top" />
+
+        <div className="text-center opacity-50">
+          <div className="rounded-circle bg-light text-dark fw-bold d-flex align-items-center justify-content-center"
+            style={{ width: 36, height: 36 }}>
+            ✓
+          </div>
+          <small className="d-block mt-1">Pago</small>
+        </div>
+
+        <div className="flex-grow-1 border-top" />
+
+        <div className="text-center">
+          <div className="rounded-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center"
+            style={{ width: 36, height: 36 }}>
+            3
+          </div>
+          <small className="d-block mt-1">Confirmación</small>
+        </div>
+      </div>
+      <h1 className="h3 mb-1">Confirmar pedido</h1>
+      <p className="text-muted mb-4">Revisa los detalles antes de pagar</p>
+      <div className="card shadow-sm mb-3">
+        <div className="card-header bg-white d-flex justify-content-between align-items-center">
+          <strong><FontAwesomeIcon icon={faLocationDot} /> Dirección de entrega</strong>
+          <button className="btn btn-outline-secondary btn-sm" onClick={() => navigate(-1)}>
+            Cambiar
+          </button>
+        </div>
+
+        <div className="card-body">
+          <h5 className="fw-bold text-primary mb-1">{address.nombre}</h5>
+          <p className="text-muted mb-0" style={{ whiteSpace: "pre-line" }}>
+            {address.direccion}
+            {"\n"}
             {address.ciudad}, {address.provincia} {address.codigo_postal}
-            {address.telefono && <><br />Tel: {address.telefono}</>}
+            {address.telefono ? `\nTel: ${address.telefono}` : ""}
           </p>
         </div>
       </div>
-
-      {/* Resumen método de pago */}
-      <div className="cl-card" style={{ marginBottom: "24px" }}>
-        <div className="cl-card-header">
-          <span className="cl-card-header-title">{METHOD_ICONS[paymentMethod]} Método de pago</span>
+      <div className="card shadow-sm mb-3">
+        <div className="card-header bg-white">
+          <strong>{METHOD_ICONS[paymentMethod]} Método de pago</strong>
         </div>
-        <div className="cl-card-body">
-          <p style={{ margin: 0, fontWeight: 700, color: "var(--cl-blue)" }}>
+
+        <div className="card-body">
+          <h5 className="fw-bold text-primary mb-0">
             {METHOD_LABELS[paymentMethod] || paymentMethod}
-          </p>
+          </h5>
         </div>
       </div>
+      <div className="card shadow-sm mb-4">
+        <div className="card-header bg-white">
+          <strong>Resumen del pedido</strong>
+        </div>
 
-      {/* Total */}
-      <div className="cl-order-summary" style={{ marginBottom: "24px" }}>
-        <div className="cl-order-summary-header">Resumen del pedido</div>
-        <div className="cl-order-summary-body">
-          <div className="cl-order-summary-total">
+        <div className="card-body">
+          <div className="d-flex justify-content-between fs-5 fw-bold">
             <span>Total a pagar</span>
             <span>{Number(total).toFixed(2)} €</span>
           </div>
         </div>
       </div>
-
-      {/* Acción */}
       {paymentMethod === "paypal" ? (
         <CheckoutPaypalPay addressId={addressId} />
       ) : (
         <button
-          className="cl-btn cl-btn-success cl-btn-lg cl-btn-block"
+          className="btn btn-success btn-lg w-100"
           onClick={handlePay}
           disabled={paying}
         >
           {paying ? "Procesando..." : "✓ Confirmar y pagar"}
         </button>
       )}
+
     </div>
   );
+
 }

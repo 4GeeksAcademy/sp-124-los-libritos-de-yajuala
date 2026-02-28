@@ -76,8 +76,6 @@ const Categorias = () => {
             )}
                 
             </div>
-
-            {/* Buscador */}
             <input
                 type="text"
                 className="form-control mt-3"

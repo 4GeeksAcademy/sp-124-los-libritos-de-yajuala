@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import "../../styles/client.css";
+import { faBookOpenReader, faCartArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const BookDetail = () => {
   const [book, setBook] = useState(null);
@@ -23,7 +25,6 @@ export const BookDetail = () => {
   return (
     <div className="cl-page cl-page-wide">
 
-      {/* Breadcrumb */}
       <div className="cl-breadcrumb" style={{ marginBottom: "28px" }}>
         <span onClick={() => navigate("/")} style={{ cursor: "pointer" }}>Inicio</span>
         <span>›</span>
@@ -34,15 +35,13 @@ export const BookDetail = () => {
 
       <div className="cl-book-detail-layout">
 
-        {/* Portada */}
         <div className="cl-book-detail-cover">
           {book.portada
             ? <img src={book.portada} alt={book.titulo} />
-            : "📖"
+            : <FontAwesomeIcon icon={faBookOpenReader} />
           }
         </div>
 
-        {/* Info */}
         <div>
           <h1 className="cl-book-detail-title">{book.titulo}</h1>
           <p className="cl-book-detail-author">por {book.autor}</p>
@@ -52,7 +51,6 @@ export const BookDetail = () => {
             <p className="cl-book-detail-desc">{book.descripcion}</p>
           )}
 
-          {/* Metadatos */}
           <div className="cl-book-detail-meta">
             {book.isbn && (
               <div className="cl-book-detail-meta-row">
@@ -80,19 +78,13 @@ export const BookDetail = () => {
             )}
           </div>
 
-          {/* Acciones */}
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             {isClient && (
               <button
                 className="cl-btn cl-btn-accent cl-btn-lg"
                 onClick={() => navigate("/user/cart")}
               >
-                🛒 Añadir al carrito
-              </button>
-            )}
-            {!isClient && (
-              <button className="cl-btn cl-btn-primary cl-btn-lg" onClick={() => navigate(`/books/${book.id}/edit`)}>
-                ✏️ Editar libro
+                <FontAwesomeIcon icon={faCartArrowDown} /> Añadir al carrito
               </button>
             )}
             <button className="cl-btn cl-btn-ghost cl-btn-lg" onClick={() => navigate("/books")}>

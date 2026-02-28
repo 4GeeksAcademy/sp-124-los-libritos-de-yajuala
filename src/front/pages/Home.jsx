@@ -3,22 +3,13 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import "./Home.css";
 
-// ─── Componentes reutilizables (carpeta components) ───────────────────────────
 import BookCoverFallback, { BOOK_COLORS } from "../components/BookCoverFallback";
 import BookCard from "../components/BookCard";
 import TestimonialCard from "../components/TestimonialCard";
+import HeroSection from "../components/HeroSection.jsx";
+import RecommendedBooks from "../components/RecommendedBooks.jsx";
+import LatestBooks from "../components/LatestBooks.jsx";
 
-// ─── Datos estáticos del Home ─────────────────────────────────────────────────
-const BOOKS_RECOMMENDED = [
-  { id: 1, title: "Take Out Tango", author: "A. Lorenz", price: "$9.5", stars: "★★★★☆", colorIdx: 0 },
-  { id: 2, title: "The Missadventure", author: "J. Park", price: "$12.0", stars: "★★★★★", colorIdx: 1 },
-  { id: 3, title: "Seconds [Part I]", author: "M. Chen", price: "$8.5", stars: "★★★☆☆", colorIdx: 2 },
-  { id: 4, title: "Terrible Madness", author: "R. Voss", price: "$11.0", stars: "★★★★☆", colorIdx: 3 },
-  { id: 5, title: "Battle Drive", author: "K. Stone", price: "$9.5", stars: "★★★★★", colorIdx: 4 },
-  { id: 6, title: "Real Life", author: "T. Walsh", price: "$15.0", stars: "★★★★☆", colorIdx: 5 },
-  { id: 7, title: "Heavy Lift", author: "D. Moore", price: "$7.5", stars: "★★★☆☆", colorIdx: 6 },
-  { id: 8, title: "Adventure", author: "S. Hill", price: "$18.0", stars: "★★★★★", colorIdx: 7 },
-];
 
 const TESTIMONIALS = [
   { name: "Jason Huang", role: "Book Lover", stars: "★★★★★", text: "Very impressive store. Your book made studying for the ABC certification exams a breeze. Thank you very much!" },
@@ -26,20 +17,41 @@ const TESTIMONIALS = [
   { name: "Steve Henry", role: "Book Lover", stars: "★★★☆☆", text: "Very impressive store. Your book made studying for the ABC certification exams a breeze. Thank you very much!" },
 ];
 
-// ─── Componente principal ─────────────────────────────────────────────────────
 export const Home = () => {
   const { store, dispatch } = useGlobalReducer();
   const navigate = useNavigate();
 
-  // Libros en oferta desde la BD
   const [saleBooks, setSaleBooks] = useState([]);
   const [saleLoading, setSaleLoading] = useState(true);
   const [saleError, setSaleError] = useState(null);
 
-  // Email del newsletter
   const [email, setEmail] = useState("");
 
-  // ── Lógica original ──────────────────────────────────────────────────────────
+  const [stats, setStats] = useState({ clients: 0, books: 0, authors: 0 });
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState("");
+
+  useEffect(() => {
+    fetch(`${backendUrl}/api/stats/home`)
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(() => { });
+  }, []);
+
+  useEffect(() => {
+    fetch(`${backendUrl}/api/reviews/latest`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setReviews(data);
+        else setReviews([]);
+      })
+      .catch(() => setReviewsError("No se pudieron cargar los testimonios."))
+      .finally(() => setReviewsLoading(false));
+  }, []);
+
   const loadMessage = async () => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -52,7 +64,6 @@ export const Home = () => {
     }
   };
 
-  // ── Carga los libros desde /api/books ────────────────────────────────────────
   const loadBooks = async () => {
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -85,45 +96,13 @@ export const Home = () => {
     if (isAdmin) navigate("/admin/dashboard");
   }, [isAdmin]);
 
-  // Redirige a la vista de libros al pulsar comprar
   const handleBuyBook = () => navigate("/books");
 
-  // ── Renderizado ──────────────────────────────────────────────────────────────
   return (
     <div className="bk-home">
 
-      {/* ── HÉROE ── */}
-      <section className="bk-hero">
-        <div className="bk-container">
-          <div className="bk-hero-content">
-            <div className="bk-hero-text">
-              <span className="bk-hero-badge">Best Management</span>
-              <h1 className="bk-hero-title">Think and<br />Grow Rich</h1>
-              <p className="bk-hero-desc">
-                Discover thousands of books across every genre. From bestsellers to hidden gems — find your next great read today.
-              </p>
-              <div className="bk-hero-price">
-                <span className="current">$17.20</span>
-                <span className="old">$20.00</span>
-                <span className="badge-off">15% OFF</span>
-              </div>
-              <div className="bk-hero-btns">
-                <Link to="/books" className="bk-btn bk-btn-primary">🛒 Buy Now</Link>
-                <Link to="/books" className="bk-btn bk-btn-outline">See Details</Link>
-              </div>
-            </div>
-
-            <div className="bk-hero-book">
-              <div className="bk-hero-book-cover">
-                <div className="bk-hero-book-title">Think and Grow Rich</div>
-                <div className="bk-hero-book-author">by Napoleon Hill</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── BARRA DE CARACTERÍSTICAS ── */}
+      <HeroSection />
+      
       <section className="bk-features-bar">
         <div className="bk-container">
           <div className="bk-features-bar-inner">
@@ -145,15 +124,14 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* ── ACCESO POR ROL / AUTENTICACIÓN ── */}
       {(!user || isProvider || isClient || isDelivery) && (
         <section className="bk-section" style={{ paddingTop: 40, paddingBottom: 40 }}>
           <div className="bk-container">
             {!user && (
               <div style={{ textAlign: "center" }}>
                 <div className="bk-section-head" style={{ marginBottom: 20 }}>
-                  <h2>Welcome to Bookland</h2>
-                  <p>Sign in or create an account to start your reading journey.</p>
+                  <h2>Bienvenido a los Libritos de Yajuala</h2>
+                  <p>Reegistrate para continuar con tu aventura de lectura</p>
                 </div>
                 <p style={{ textAlign: "center", marginBottom: 12, color: "#888", fontWeight: 700, fontSize: 13, textTransform: "uppercase", letterSpacing: 1 }}>
                   Registro
@@ -193,115 +171,72 @@ export const Home = () => {
 
       <div className="bk-divider" />
 
-      {/* ── RECOMENDADOS (estáticos) ── */}
-      <section className="bk-section bk-section-grey">
-        <div className="bk-container">
-          <div className="bk-section-head">
-            <h2>Recommended For You</h2>
-            <p>Handpicked titles based on what readers like you are enjoying right now.</p>
-          </div>
-          <div className="bk-books-grid">
-            {BOOKS_RECOMMENDED.map(b => (
-              <div className="bk-book-card" key={b.id} onClick={() => navigate("/books")}>
-                {/* Usamos BookCoverFallback directamente porque estos libros son estáticos */}
-                <BookCoverFallback title={b.title} colorIdx={b.colorIdx} height={180} />
-                <div className="bk-book-info">
-                  <div className="bk-book-name">{b.title}</div>
-                  <div className="bk-book-author">por {b.author}</div>
-                  <div className="bk-book-footer">
-                    <span className="bk-book-price">{b.price}</span>
-                    <span className="bk-stars">{b.stars}</span>
-                  </div>
-                  <button className="bk-add-btn" onClick={e => { e.stopPropagation(); navigate("/books"); }}>
-                    🛒 Añadir al carrito
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── LIBROS EN OFERTA (desde la BD) ── */}
-      <section className="bk-section">
-        <div className="bk-container">
-          <div className="bk-section-header">
-            <h2>Books on Sale</h2>
-            <Link to="/books" className="bk-section-link">Ver todos →</Link>
-          </div>
-
-          {saleLoading && (
-            <div className="bk-sale-loading">⏳ Cargando libros…</div>
-          )}
-
-          {saleError && !saleLoading && (
-            <div className="bk-sale-error">⚠️ {saleError}</div>
-          )}
-
-          {!saleLoading && !saleError && saleBooks.length === 0 && (
-            <div className="bk-sale-empty">📭 No hay libros disponibles en este momento.</div>
-          )}
-
-          {!saleLoading && !saleError && saleBooks.length > 0 && (
-            <div className="bk-sale-grid">
-              {saleBooks.map((book, idx) => (
-                // BookCard con variant="sale" → tarjeta horizontal compacta
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  colorIdx={idx % BOOK_COLORS.length}
-                  onBuy={handleBuyBook}
-                  variant="sale"
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ── ESTADÍSTICAS ── */}
+      <RecommendedBooks />
+      
+      <LatestBooks />
+      
       <section className="bk-section bk-section-grey">
         <div className="bk-container">
           <div className="bk-stats-grid">
-            {[
-              { icon: "😊", num: "125,663", label: "Clientes felices" },
-              { icon: "📚", num: saleBooks.length > 0 ? saleBooks.length.toLocaleString() : "50,672", label: "Libros disponibles" },
-              { icon: "🏪", num: "1,562", label: "Tiendas" },
-              { icon: "✍️", num: "457", label: "Autores famosos" },
-            ].map((s, i) => (
-              <div className="bk-stat-card" key={i}>
-                <div className="bk-stat-icon">{s.icon}</div>
-                <div className="bk-stat-num">{s.num}</div>
-                <div className="bk-stat-label">{s.label}</div>
-              </div>
-            ))}
+
+            <div className="bk-stat-card">
+              <div className="bk-stat-icon">😊</div>
+              <div className="bk-stat-num">{stats.clients.toLocaleString()}</div>
+              <div className="bk-stat-label">Clientes felices</div>
+            </div>
+
+            <div className="bk-stat-card">
+              <div className="bk-stat-icon">📚</div>
+              <div className="bk-stat-num">{stats.books.toLocaleString()}</div>
+              <div className="bk-stat-label">Libros disponibles</div>
+            </div>
+
+            <div className="bk-stat-card">
+              <div className="bk-stat-icon">✍️</div>
+              <div className="bk-stat-num">{stats.authors.toLocaleString()}</div>
+              <div className="bk-stat-label">Autores</div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIOS ── */}
       <section className="bk-section">
         <div className="bk-container">
           <div className="bk-section-head">
             <h2>Lo que dicen los lectores</h2>
-            <p>Miles de amantes de los libros confían en Bookland para sus lecturas.</p>
+            <p>Miles de amantes de los libros confían en Los Libritos de Yajuala.</p>
           </div>
-          <div className="bk-testimonials-grid">
-            {/* Usamos TestimonialCard para cada testimonio */}
-            {TESTIMONIALS.map((t, i) => (
-              <TestimonialCard
-                key={i}
-                name={t.name}
-                role={t.role}
-                stars={t.stars}
-                text={t.text}
-              />
-            ))}
-          </div>
+
+          {reviewsLoading && (
+            <div className="bk-sale-loading">⏳ Cargando testimonios…</div>
+          )}
+
+          {reviewsError && !reviewsLoading && (
+            <div className="bk-sale-error">⚠️ {reviewsError}</div>
+          )}
+
+          {!reviewsLoading && !reviewsError && reviews.length === 0 && (
+            <div className="bk-sale-empty">📭 Aún no hay testimonios.</div>
+          )}
+
+          {!reviewsLoading && !reviewsError && reviews.length > 0 && (
+            <div className="bk-testimonials-grid">
+              {reviews.map((r, i) => (
+                <TestimonialCard
+                  key={i}
+                  name={`Cliente #${r.id_cliente}`}
+                  role="Lector verificado"
+                  stars={"★".repeat(r.puntuacion) + "☆".repeat(5 - r.puntuacion)}
+                  text={r.comentario || "Sin comentario"}
+                />
+              ))}
+            </div>
+          )}
+
         </div>
       </section>
 
-      {/* ── NEWSLETTER ── */}
       <section className="bk-newsletter">
         <div className="bk-container">
           <div className="bk-newsletter-inner">
@@ -323,7 +258,6 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* ── ACCESOS RÁPIDOS (DESARROLLO) ── */}
       <section className="bk-section">
         <div className="bk-container">
           <div className="bk-dev-panel">

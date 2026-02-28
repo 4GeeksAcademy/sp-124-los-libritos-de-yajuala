@@ -14,17 +14,43 @@ export default function LoginPage() {
   const handleSubmit = async () => {
     setError("");
     setLoading(true);
+
     try {
       const resp = await fetch(`${backendUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+
       const data = await resp.json();
-      if (!resp.ok) { setError(data.msg || "Credenciales incorrectas"); return; }
+
+      if (!resp.ok) {
+        setError(data.msg || "Credenciales incorrectas");
+        return;
+      }
+
       actions.setUser(data.user);
       actions.setToken(data.token);
-      navigate("/home-client");
+
+      switch (data.user.role) {
+        case "admin":
+          navigate("/admin/dashboard");
+          break;
+
+        case "provider":
+          navigate("/provider/me");
+          break;
+
+        case "delivery":
+          navigate("/loggeddelivery");
+          break;
+
+        case "client":
+        default:
+          navigate("/home-client");
+          break;
+      }
+
     } catch {
       setError("Error de conexión");
     } finally {
@@ -32,20 +58,19 @@ export default function LoginPage() {
     }
   };
 
+
   const handleKey = (e) => { if (e.key === "Enter") handleSubmit(); };
 
   return (
     <div className="cl-login-page">
       <div className="cl-login-card">
 
-        {/* Cabecera */}
         <div className="cl-login-header">
           <div className="cl-login-logo">📚</div>
           <h1 className="cl-login-title">Bienvenido</h1>
           <p className="cl-login-subtitle">Los Libritos de Yajuala</p>
         </div>
 
-        {/* Cuerpo */}
         <div className="cl-login-body">
           {error && <div className="cl-alert cl-alert-error">{error}</div>}
 
@@ -89,7 +114,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="cl-login-footer">
           ¿No tienes cuenta?{" "}
           <Link to="/clients/create">Regístrate gratis</Link>

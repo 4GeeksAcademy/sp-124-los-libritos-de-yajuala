@@ -70,7 +70,6 @@ const Provider = () => {
         </button>
       </div>
 
-      {/* Buscador */}
       <input
         type="text"
         className="form-control mt-3"

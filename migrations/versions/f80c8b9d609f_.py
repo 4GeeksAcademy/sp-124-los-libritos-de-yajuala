@@ -1,14 +1,8 @@
 """empty message
 
-<<<<<<<< HEAD:migrations/versions/0fd013dc283b_.py
-Revision ID: 0fd013dc283b
+Revision ID: f80c8b9d609f
 Revises: 
-Create Date: 2026-02-28 01:02:50.850620
-========
-Revision ID: 625195f96fa5
-Revises: 
-Create Date: 2026-02-27 11:31:05.274736
->>>>>>>> develop:migrations/versions/625195f96fa5_.py
+Create Date: 2026-02-28 10:33:25.288885
 
 """
 from alembic import op
@@ -16,11 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-<<<<<<<< HEAD:migrations/versions/0fd013dc283b_.py
-revision = '0fd013dc283b'
-========
-revision = '625195f96fa5'
->>>>>>>> develop:migrations/versions/625195f96fa5_.py
+revision = 'f80c8b9d609f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -46,7 +36,7 @@ def upgrade():
     sa.Column('descripcion', sa.Text(), nullable=True),
     sa.Column('portada', sa.String(length=300), nullable=True),
     sa.Column('categorias', sa.String(length=300), nullable=True),
-    sa.Column('fecha_publicacion', sa.String(length=20), nullable=True),
+    sa.Column('fecha_publicacion', sa.DateTime(), nullable=True),
     sa.Column('precio', sa.Float(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('isbn')
@@ -95,7 +85,7 @@ def upgrade():
     sa.Column('name', sa.String(length=120), nullable=False),
     sa.Column('lastname', sa.String(length=120), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
-    sa.Column('password', sa.String(length=200), nullable=False),
+    sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('avatar_url', sa.String(length=300), nullable=True),
     sa.Column('role', sa.String(length=20), server_default='client', nullable=False),
     sa.PrimaryKeyConstraint('id'),
@@ -121,7 +111,9 @@ def upgrade():
     sa.Column('fecha', sa.DateTime(), nullable=False),
     sa.Column('monto_total', sa.Float(), nullable=False),
     sa.Column('estado', sa.String(length=50), nullable=False),
+    sa.Column('id_repartidor', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['id_cliente'], ['user.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['id_repartidor'], ['delivery.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('categoria_libro',
@@ -159,6 +151,12 @@ def upgrade():
     sa.Column('cantidad', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id_libro'], ['book.id'], ),
     sa.ForeignKeyConstraint(['id_proveedor'], ['provider.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('recommended_books',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('book_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['book_id'], ['book.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('review',
@@ -255,6 +253,7 @@ def downgrade():
     op.drop_table('user_book_preferences')
     op.drop_table('user_author_preferences')
     op.drop_table('review')
+    op.drop_table('recommended_books')
     op.drop_table('provider_book')
     op.drop_table('proveedor_notificaciones')
     op.drop_table('chat_conversations')

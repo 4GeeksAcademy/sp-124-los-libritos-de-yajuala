@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+import { faCamera } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const ProviderBookDetail = () => {
   const [row, setRow] = useState(null);
@@ -98,7 +100,6 @@ export const ProviderBookDetail = () => {
       <div className="card">
         <div className="card-body">
 
-          {/* Portada con botón de cámara */}
           <div className="mb-4" style={{ position: "relative", display: "inline-block" }}>
             <img
               src={portadaPreview || book.portada || "https://via.placeholder.com/150x200?text=Sin+portada"}
@@ -112,7 +113,7 @@ export const ProviderBookDetail = () => {
               disabled={uploading}
               title="Cambiar portada"
             >
-              {uploading ? "..." : "📷"}
+              {uploading ? "..." : <FontAwesomeIcon icon={faCamera} />}
             </button>
             <input
               type="file"

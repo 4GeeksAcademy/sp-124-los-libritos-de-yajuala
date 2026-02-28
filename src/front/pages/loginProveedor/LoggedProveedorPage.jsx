@@ -197,35 +197,6 @@ export default function LoggedProveedorPage() {
           )}
         </div>
       </div>
-
-      
-      <div className="d-flex flex-wrap gap-3">
-        <button className="btn" style={{background:"#2563eb", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/books")}>
-          Gestionar Libros
-        </button>
-        <button className="btn" style={{background:"#1d4ed8", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/orders")}>
-          Ver Pedidos
-        </button>
-        <button className="btn" style={{background:"#2563eb", color:"#fff", fontWeight:600}} onClick={() => navigate("/provider/books/search")}>
-          Buscar e importar libros
-        </button>
-
-        <button
-          className="btn btn-warning me-3"
-          onClick={() => navigate("/provider/notifications")}
-        >
-          Solicitudes de Importación
-        </button>
-
-
-
-        <button
-          className="btn btn-secondary"
-          onClick={() => navigate("/provider/me")}
-        >
-          Volver al panel
-        </button>
-      </div>
     </div>
   );
 }

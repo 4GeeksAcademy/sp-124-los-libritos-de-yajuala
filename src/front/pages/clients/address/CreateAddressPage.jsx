@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../../hooks/useGlobalReducer";
 import "../../../styles/client.css";
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function CreateAddressPage() {
   const { store } = useGlobalReducer();
@@ -103,37 +105,30 @@ export default function CreateAddressPage() {
   ];
 
   return (
-    <div className="cl-page cl-page-narrow">
+    <div className="container-fluid py-4">
+      <nav className="breadcrumb mb-3">
+        <span className="breadcrumb-item" style={{ cursor: "pointer" }} onClick={() => navigate("/user")}>
+          Mi cuenta
+        </span>
+        <span className="breadcrumb-item" style={{ cursor: "pointer" }} onClick={() => navigate("/addresses")}>
+          Direcciones
+        </span>
+        <span className="breadcrumb-item active">Nueva</span>
+      </nav>
+      <h1 className="h3 mb-1">Añadir dirección</h1>
+      <p className="text-muted mb-4">La dirección se localizará automáticamente en el mapa</p>
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <div className="row g-3">
 
-      {/* Cabecera */}
-      <div className="cl-page-header">
-        <div className="cl-page-header-left">
-          <div className="cl-breadcrumb">
-            <span onClick={() => navigate("/user")} style={{ cursor: "pointer" }}>Mi cuenta</span>
-            <span>›</span>
-            <span onClick={() => navigate("/addresses")} style={{ cursor: "pointer" }}>Direcciones</span>
-            <span>›</span>
-            <span>Nueva</span>
-          </div>
-          <h1 className="cl-title">Añadir dirección</h1>
-          <p className="cl-subtitle">La dirección se localizará automáticamente en el mapa</p>
-        </div>
-      </div>
-
-      <div className="cl-card">
-        <div className="cl-card-body">
-
-          {/* Formulario */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             {fields.map((f) => (
               <div
                 key={f.name}
-                className="cl-form-group"
-                style={{ gridColumn: f.name === "nombre" || f.name === "direccion" || f.name === "telefono" ? "1 / -1" : "auto", marginBottom: 0 }}
+                className={`col-12 ${["ciudad", "provincia", "codigo_postal"].includes(f.name) ? "col-md-6" : ""}`}
               >
-                <label className="cl-label">{f.placeholder.split(" (")[0]}</label>
+                <label className="form-label">{f.placeholder.split(" (")[0]}</label>
                 <input
-                  className="cl-input"
+                  className="form-control"
                   name={f.name}
                   placeholder={f.placeholder}
                   value={form[f.name]}
@@ -142,31 +137,41 @@ export default function CreateAddressPage() {
                 />
               </div>
             ))}
-          </div>
 
-          {/* Mapa */}
-          <div style={{ marginTop: "24px" }}>
-            <label className="cl-label">
+          </div>
+          <div className="mt-4">
+            <label className="form-label">
               Ubicación en el mapa
-              {geocoding && <span style={{ color: "var(--cl-text-muted)", fontWeight: 400, marginLeft: "8px" }}>Localizando...</span>}
+              {geocoding && (
+                <span className="text-muted ms-2">Localizando…</span>
+              )}
             </label>
+
             <div
               ref={mapRef}
-              style={{ width: "100%", height: "280px", borderRadius: "var(--cl-radius-sm)", border: "1.5px solid var(--cl-border)", marginTop: "6px" }}
+              className="rounded border"
+              style={{ width: "100%", height: "300px" }}
             />
+
             {form.latitud && (
-              <p style={{ fontSize: "11px", color: "var(--cl-text-muted)", marginTop: "6px" }}>
-                📍 {form.latitud.toFixed(5)}, {form.longitud.toFixed(5)}
+              <p className="text-muted small mt-2">
+                <FontAwesomeIcon icon={faLocationDot} /> {form.latitud.toFixed(5)}, {form.longitud.toFixed(5)}
               </p>
             )}
           </div>
-
-          {/* Acciones */}
-          <div style={{ display: "flex", gap: "12px", marginTop: "28px" }}>
-            <button className="cl-btn cl-btn-accent cl-btn-lg" onClick={handleSubmit} disabled={saving}>
+          <div className="d-flex gap-3 mt-4">
+            <button
+              className="btn btn-success btn-lg"
+              onClick={handleSubmit}
+              disabled={saving}
+            >
               {saving ? "Guardando..." : "Guardar dirección"}
             </button>
-            <button className="cl-btn cl-btn-ghost cl-btn-lg" onClick={() => navigate("/addresses")}>
+
+            <button
+              className="btn btn-outline-secondary btn-lg"
+              onClick={() => navigate("/addresses")}
+            >
               Cancelar
             </button>
           </div>
@@ -176,4 +181,5 @@ export default function CreateAddressPage() {
 
     </div>
   );
+
 }

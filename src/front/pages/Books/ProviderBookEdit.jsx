@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import { ProviderPanelButtons } from "../proveedores/ProviderPanelButtons";
+import { faCamera } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const ProviderBookEdit = () => {
   const { id } = useParams();
@@ -162,7 +164,7 @@ export const ProviderBookEdit = () => {
                 disabled={uploading}
                 title="Cambiar portada"
               >
-                {uploading ? "..." : "📷"}
+                {uploading ? "..." : <FontAwesomeIcon icon={faCamera} />}
               </button>
             </div>
             <input
