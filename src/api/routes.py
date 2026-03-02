@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book, Author, UserBookPreference, UserCategoryPreference, UserAuthorPreference, ChatConversation, ChatMessage, UserCategoryPreference, ProveedorNotificacion
+from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book, Author, UserBookPreference, UserCategoryPreference, UserAuthorPreference, ChatConversation, ChatMessage, UserCategoryPreference, ProveedorNotificacion, RecommendedBook
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import and_
 import requests
@@ -28,9 +28,6 @@ from api.models import Author, UserBookPreference, UserCategoryPreference, UserA
 
 api = Blueprint('api', __name__)
 
-# Allow CORS requests to this API
-# CORS(api)
-CORS(api, origins="*")
 
 # Configura cloudinary
 cloudinary.config(
@@ -148,9 +145,6 @@ def update_user(user_id):
 
     return jsonify(user.serialize()), 200
 
-
-# ENDPOINTS DE ADDRESS
-
 @api.route("/users/<int:user_id>/addresses", methods=["GET"])
 def get_addresses(user_id):
     addresses = Address.query.filter_by(id_usuario=user_id).all()
@@ -221,7 +215,6 @@ def get_address(address_id):
     return jsonify(address.serialize()), 200
 
 
-# ENDPOINT ACTIVE CART
 @api.route("/users/<int:user_id>/active-cart", methods=["GET"])
 def get_user_active_cart(user_id):
     cart = Cart.query.filter_by(id_cliente=user_id, estado="pendiente").first()
@@ -301,7 +294,8 @@ def create_provider():
         name=body["name"],
         email=body.get("email"),
         telefono=body.get("telefono"),
-        documento=body.get("documento")
+        documento=body.get("documento"),
+        role="provider"
     )
 
     provider.set_password(body["password"])
@@ -958,18 +952,19 @@ def delete_cart(cart_id):
 
 
 @api.route("/carts/<int:cart_id>/pay", methods=["POST"])
-def pay_cart(cart_id):
-
-    print("ENTRANDO A PAY_CART PARA:", cart_id)
+def pay_cart(cart_id, address_id=None, payment_method=None, payment_token=None):
 
     body = request.get_json(silent=True) or {}
     address_id = body.get("address_id")
+    payment_method = body.get("payment_method")
 
     if not address_id:
-        return jsonify({"msg": "Falta address_id para crear el envío"}), 400
+        return jsonify({"msg": "Falta address_id"}), 400
+
+    if not payment_method:
+        return jsonify({"msg": "Falta payment_method"}), 400
 
     cart = Cart.query.get(cart_id)
-
     if not cart:
         return jsonify({"msg": "Carrito no encontrado"}), 404
 
@@ -1001,18 +996,18 @@ def pay_cart(cart_id):
 
     db.session.commit()
 
-    total = 0
-    for item in items:
-        precio_con_descuento = item.precio * (1 - item.descuento)
-        total += precio_con_descuento * item.cantidad
+    total = sum(
+        (item.precio * (1 - item.descuento)) * item.cantidad
+        for item in items
+    )
 
     cart.monto_total = total
     cart.estado = "pagado"
+    cart.payment_method = payment_method
     db.session.commit()
-    print("CREANDO SHIPMENT PARA CART:", cart.id, "ESTADO:", cart.estado)
 
-    existing_shipment = Shipment.query.filter_by(cart_id=cart.id).first()
-    if not existing_shipment:
+    shipment = Shipment.query.filter_by(cart_id=cart.id).first()
+    if not shipment:
         shipment = Shipment(
             cart_id=cart.id,
             address_id=address_id,
@@ -1021,8 +1016,6 @@ def pay_cart(cart_id):
         )
         db.session.add(shipment)
         db.session.commit()
-    else:
-        shipment = existing_shipment
 
     new_cart = Cart(
         id_cliente=cart.id_cliente,
@@ -1033,14 +1026,9 @@ def pay_cart(cart_id):
     db.session.commit()
 
     return jsonify({
-        "msg": "Pago realizado con éxito. Pedido creado.",
+        "msg": "Pago realizado con éxito",
         "cart_pagado": cart.serialize(),
-        "shipment": shipment.serialize() if hasattr(shipment, 'serialize') else {
-            "id": shipment.id,
-            "cart_id": shipment.cart_id,
-            "address_id": shipment.address_id,
-            "status": shipment.status
-        },
+        "shipment": shipment.serialize(),
         "nuevo_carrito": new_cart.serialize()
     }), 200
 
@@ -1462,22 +1450,25 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
-    if not email or not password:
-        return jsonify({"msg": "Email y contraseña son obligatorios"}), 400
-
     user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        token = create_access_token(
+            identity={"id": user.id, "role": user.role})
+        return jsonify({"token": token, "user": user.serialize()}), 200
 
-    if not user:
-        return jsonify({"msg": "Credenciales incorrectas"}), 401
+    provider = Provider.query.filter_by(email=email).first()
+    if provider and provider.check_password(password):
+        token = create_access_token(
+            identity={"id": provider.id, "role": "provider"})
+        return jsonify({"token": token, "user": provider.serialize()}), 200
 
-    if not check_password_hash(user.password, password):
-        return jsonify({"msg": "Credenciales incorrectas"}), 401
+    delivery = Delivery.query.filter_by(email=email).first()
+    if delivery and delivery.check_password(password):
+        token = create_access_token(
+            identity={"id": delivery.id, "role": "delivery"})
+        return jsonify({"token": token, "user": delivery.serialize()}), 200
 
-    if user.role == "delivery":
-        return jsonify({"msg": "Usa el login de repartidor"}), 403
-
-    token = create_access_token(identity={"id": user.id, "role": user.role})
-    return jsonify({"token": token, "user": user.serialize()}), 200
+    return jsonify({"msg": "Credenciales incorrectas"}), 401
 
 
 @api.route("/usuarios/<int:user_id>/carritos", methods=["GET"])
@@ -2153,6 +2144,7 @@ def google_pay_confirm():
 
     cart_id = body.get("cart_id")
     address_id = body.get("address_id")
+    paymentData = body.get("paymentData", {})
 
     if not cart_id:
         return jsonify({"msg": "Falta cart_id"}), 400
@@ -2160,9 +2152,28 @@ def google_pay_confirm():
     if not address_id:
         return jsonify({"msg": "Falta address_id"}), 400
 
+    token = (
+        paymentData.get("paymentMethodData", {})
+        .get("tokenizationData", {})
+        .get("token")
+    ) or "TEST_TOKEN"
+
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
-    return pay_cart(int(cart_id))
+    payload = {
+        "address_id": address_id,
+        "payment_method": "google_pay",
+        "payment_token": token
+    }
+
+    import requests
+
+    backend_url = request.host_url.rstrip("/")
+    url = f"{backend_url}/api/carts/{cart_id}/pay"
+
+    resp = requests.post(url, json=payload)
+
+    return (resp.text, resp.status_code, resp.headers.items())
 
 
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
@@ -2427,12 +2438,13 @@ def count_repartidores_pendientes():
 
 @api.route("/users/<int:user_id>/favorite-categories", methods=["GET"])
 def get_favorite_categories(user_id):
-    prefs = UserCategoryPreference.query.filter_by(
-        id_usuario=user_id,
-        preference=1
-    ).all()
+    prefs = (db.session.query(Categorias)
+             .join(UserCategoryPreference, UserCategoryPreference.id_categoria == Categorias.id)
+             .filter(UserCategoryPreference.id_usuario == user_id,
+                     UserCategoryPreference.preference == 1)
+             .all())
 
-    return jsonify([p.categoria.serialize() for p in prefs]), 200
+    return jsonify([c.serialize() for c in prefs]), 200
 
 
 @api.route("/users/<int:user_id>/favorite-categories", methods=["POST"])
@@ -2816,3 +2828,146 @@ def matches_authors(user_id):
                     UserAuthorPreference.preference == 1)
             .all())
     return jsonify([a.serialize() for a in rows]), 200
+
+
+@api.route("/books/best-seller", methods=["GET"])
+def best_seller():
+    result = db.session.query(
+        CartBook.id_libro,
+        db.func.sum(CartBook.cantidad).label("total")
+    ).group_by(CartBook.id_libro).order_by(db.desc("total")).first()
+
+    if not result:
+        return jsonify(None), 200
+
+    book = Book.query.get(result.id_libro)
+    return jsonify(book.serialize()), 200
+
+
+@api.route("/books/recommended", methods=["GET"])
+def get_recommended_books():
+    recs = RecommendedBook.query.all()
+    return jsonify([r.serialize() for r in recs]), 200
+
+
+@api.route("/admin/recommended", methods=["POST"])
+@jwt_required()
+def set_recommended_books():
+    identity = get_jwt_identity()
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    data = request.json.get("book_ids", [])
+
+    RecommendedBook.query.delete()
+
+    for book_id in data:
+        db.session.add(RecommendedBook(book_id=book_id))
+
+    db.session.commit()
+
+    return jsonify({"msg": "Recomendados actualizados"}), 200
+
+
+@api.route("/admin/book-sales", methods=["GET"])
+@jwt_required()
+def book_sales():
+    identity = get_jwt_identity()
+    if identity["role"] != "admin":
+        return jsonify([]), 200
+
+    results = db.session.query(
+        Book.id,
+        Book.titulo,
+        Book.autor,
+        Book.portada,
+        db.func.sum(CartBook.cantidad).label("ventas")
+    ).join(CartBook, CartBook.id_libro == Book.id)\
+     .group_by(Book.id)\
+     .order_by(db.desc("ventas"))\
+     .all()
+
+    data = [
+        {
+            "id": r[0],
+            "titulo": r[1],
+            "autor": r[2],
+            "portada": r[3],
+            "ventas": r[4]
+        }
+        for r in results
+    ]
+
+    return jsonify(data), 200
+
+
+@api.route("/admin/recommended/add", methods=["POST"])
+@jwt_required()
+def add_recommended():
+    identity = get_jwt_identity()
+    if identity["role"] != "admin":
+        return jsonify({"msg": "No autorizado"}), 403
+
+    book_id = request.json.get("book_id")
+
+    exists = RecommendedBook.query.filter_by(book_id=book_id).first()
+    if exists:
+        return jsonify({"msg": "Ya está en recomendados"}), 200
+
+    db.session.add(RecommendedBook(book_id=book_id))
+    db.session.commit()
+
+    return jsonify({"msg": "Añadido a recomendados"}), 200
+
+
+@api.route("/books/latest", methods=["GET"])
+def get_latest_books():
+    books = Book.query.order_by(Book.fecha_publicacion.desc()).limit(3).all()
+    return jsonify([b.serialize() for b in books]), 200
+
+
+@api.route("/stats/home", methods=["GET"])
+def home_stats():
+    total_clients = User.query.filter_by(role="client").count()
+
+    total_books = Book.query.count()
+
+    total_authors = db.session.query(Book.autor).distinct().count()
+
+    return jsonify({
+        "clients": total_clients,
+        "books": total_books,
+        "authors": total_authors
+    }), 200
+
+
+@api.route("/reviews/latest", methods=["GET"])
+def get_latest_reviews():
+    reviews = Review.query.order_by(Review.id.desc()).limit(6).all()
+    reviews_list = [r.serialize() for r in reviews]
+    return jsonify(reviews_list), 200
+
+
+@api.route("/users/<int:user_id>/favorite-categories/add", methods=["POST"])
+def add_favorite_category(user_id):
+    data = request.get_json()
+    category_id = data.get("category_id")
+
+    if not category_id:
+        return jsonify({"msg": "Missing category_id"}), 400
+
+    exists = UserCategoryPreference.query.filter_by(
+        id_usuario=user_id,
+        id_categoria=category_id
+    ).first()
+
+    if not exists:
+        pref = UserCategoryPreference(
+            id_usuario=user_id,
+            id_categoria=category_id,
+            preference=1
+        )
+        db.session.add(pref)
+        db.session.commit()
+
+    return jsonify({"msg": "added"}), 200

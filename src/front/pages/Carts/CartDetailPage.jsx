@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import "../../styles/client.css";
+import { faBookOpen, faCartArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function CartDetailPage() {
   const { id } = useParams();
@@ -27,8 +29,6 @@ export default function CartDetailPage() {
 
   return (
     <div className="cl-page cl-page-wide">
-
-      {/* Cabecera */}
       <div className="cl-page-header">
         <div className="cl-page-header-left">
           <div className="cl-breadcrumb">
@@ -48,8 +48,6 @@ export default function CartDetailPage() {
       </div>
 
       <div className="cl-cart-layout">
-
-        {/* Lista de items */}
         <div className="cl-card">
           <div className="cl-card-header">
             <span className="cl-card-header-title">Libros en el carrito</span>
@@ -58,14 +56,14 @@ export default function CartDetailPage() {
           <div className="cl-card-body">
             {items.length === 0 ? (
               <div className="cl-empty">
-                <div className="cl-empty-icon">🛒</div>
+                <div className="cl-empty-icon"><FontAwesomeIcon icon={faCartArrowDown} /></div>
                 <p className="cl-empty-title">Carrito vacío</p>
                 <p className="cl-empty-text">No hay libros en este carrito.</p>
               </div>
             ) : (
               items.map((item) => (
                 <div key={item.id} className="cl-cart-item">
-                  <div className="cl-cart-item-cover">📖</div>
+                  <div className="cl-cart-item-cover"><FontAwesomeIcon icon={faBookOpen} /></div>
                   <div className="cl-cart-item-info">
                     <p className="cl-cart-item-title">{item.libro?.titulo || "Libro"}</p>
                     <p className="cl-cart-item-author">{item.libro?.autor}</p>
@@ -93,8 +91,6 @@ export default function CartDetailPage() {
             )}
           </div>
         </div>
-
-        {/* Resumen del pedido */}
         <div>
           <div className="cl-order-summary">
             <div className="cl-order-summary-header">Resumen del pedido</div>

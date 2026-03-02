@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from datetime import datetime
 
 
 db = SQLAlchemy()
@@ -16,11 +16,17 @@ class User(db.Model):
     lastname: Mapped[str] = mapped_column(String(120), nullable=False)
     email: Mapped[str] = mapped_column(
         String(120), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(String(200), nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
     avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
     role: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default="client")
+    
+    def set_password(self, password): 
+        self.password = generate_password_hash(password) 
+        
+    def check_password(self, password): 
+        return check_password_hash(self.password, password)
 
     def serialize(self):
         return {
@@ -103,6 +109,7 @@ class Provider(db.Model):
         index=True
     )
     avatar_url: Mapped[str] = mapped_column(String(300), nullable=True)
+    role = db.Column(db.String(20), default="provider")
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -117,7 +124,8 @@ class Provider(db.Model):
             "email": self.email,
             "telefono": self.telefono,
             "avatar_url": self.avatar_url,
-            "documento": self.documento
+            "documento": self.documento,
+            "role": self.role
         }
 
     def __repr__(self):
@@ -365,7 +373,7 @@ class Book(db.Model):
     descripcion = db.Column(db.Text, nullable=True)
     portada = db.Column(db.String(300), nullable=True)
     categorias = db.Column(db.String(300), nullable=True)
-    fecha_publicacion = db.Column(db.String(20), nullable=True)
+    fecha_publicacion = db.Column(db.DateTime, default=datetime.utcnow)
     precio = db.Column(db.Float, nullable=False, default=0)
 
     def serialize(self):
@@ -615,7 +623,7 @@ class ChatMessage(db.Model):
         nullable=False
     )
 
-    sender = db.Column(db.String(20), nullable=False)  # "user" o "bot"
+    sender = db.Column(db.String(20), nullable=False) 
     content = db.Column(db.Text, nullable=False)
 
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
@@ -646,3 +654,14 @@ class ProveedorNotificacion(db.Model):
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now(), nullable=False)
 
     usuario = db.relationship("User")
+
+class RecommendedBook(db.Model):
+    __tablename__ = "recommended_books"
+
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey("book.id"), nullable=False)
+
+    book = db.relationship("Book")
+
+    def serialize(self):
+        return self.book.serialize()

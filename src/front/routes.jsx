@@ -117,6 +117,7 @@ import ChatPage from "./components/chat/ChatPage.jsx";
 import ProviderNotifications from "./pages/proveedores/ProviderNotifications.jsx";
 import ProviderLayout from "./pages/proveedores/ProviderLayout.jsx";
 import DeliveryHistory from "./pages/Delivery/DeliveryHistory.jsx";
+import AdminRecommendations from "./pages/admin/AdminRecommendations.jsx";
 
 export const router = createBrowserRouter(
         createRoutesFromElements(
@@ -193,7 +194,7 @@ export const router = createBrowserRouter(
                                 <Route path="user" element={<ProtectedRoute><LoggedClientPage /></ProtectedRoute>} />
                                 <Route path="user/cart" element={<ProtectedRoute><LoggedActiveCartClientPage /></ProtectedRoute>} />
                                 <Route path="user/history" element={<ProtectedRoute><LoggedCartClientPage /></ProtectedRoute>} />
-                                <Route path="user/favorite-categories" element={<ProtectedRoute><FavoriteCategoriesPage /></ProtectedRoute>} />
+                                <Route path="user/favorite-categories" element={<FavoriteCategoriesPage />} />
                                 <Route path="/user/select-categories" element={<SelectCategoriesPage />} />
                                 <Route path="user/edit" element={<ProtectedRoute><EditClientPage /></ProtectedRoute>} />
 
@@ -244,6 +245,8 @@ export const router = createBrowserRouter(
                                 <Route path="books/create" element={<AdminBookCreate />} />
                                 <Route path="books/:id" element={<AdminBookDetail />} />
                                 <Route path="books/:id/edit" element={<AdminBookEdit />} />
+                                <Route path="recommendations" element={<AdminRecommendations />} />
+
 
                                 <Route path="categories" element={<AdminCategoriesList />} />
                                 <Route path="categories/create" element={<AdminCategoryCreate />} />

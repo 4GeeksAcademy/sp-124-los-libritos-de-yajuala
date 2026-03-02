@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../../hooks/useGlobalReducer";
 import "../../../styles/client.css";
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function AddressesPage() {
   const { store } = useGlobalReducer();
@@ -31,75 +33,102 @@ export default function AddressesPage() {
   if (loading) return <div className="cl-page"><div className="cl-loader">Cargando direcciones</div></div>;
 
   return (
-    <div className="cl-page cl-page-wide">
+    <div className="container-fluid py-4">
+      <div className="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <nav className="breadcrumb">
+            <span
+              className="breadcrumb-item"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/user")}
+            >
+              Mi cuenta
+            </span>
+            <span className="breadcrumb-item active">Mis direcciones</span>
+          </nav>
 
-      {/* Cabecera */}
-      <div className="cl-page-header">
-        <div className="cl-page-header-left">
-          <div className="cl-breadcrumb">
-            <span onClick={() => navigate("/user")} style={{ cursor: "pointer" }}>Mi cuenta</span>
-            <span>›</span>
-            <span>Mis direcciones</span>
-          </div>
-          <h1 className="cl-title">Mis direcciones</h1>
-          <p className="cl-subtitle">{addresses.length} {addresses.length === 1 ? "dirección guardada" : "direcciones guardadas"}</p>
+          <h1 className="h3 mb-1">Mis direcciones</h1>
+          <p className="text-muted">
+            {addresses.length}{" "}
+            {addresses.length === 1 ? "dirección guardada" : "direcciones guardadas"}
+          </p>
         </div>
-        <button className="cl-btn cl-btn-accent" onClick={() => navigate("/addresses/create")}>
+
+        <button
+          className="btn btn-success"
+          onClick={() => navigate("/addresses/create")}
+        >
           + Añadir dirección
         </button>
       </div>
-
-      {/* Lista vacía */}
       {addresses.length === 0 ? (
-        <div className="cl-empty">
-          <div className="cl-empty-icon">📍</div>
-          <p className="cl-empty-title">Sin direcciones</p>
-          <p className="cl-empty-text">Añade una dirección para poder hacer pedidos.</p>
-          <button className="cl-btn cl-btn-accent cl-btn-lg" onClick={() => navigate("/addresses/create")}>
+        <div className="text-center py-5">
+          <div className="fs-1"><FontAwesomeIcon icon={faLocationDot} /></div>
+          <h4 className="mt-3">Sin direcciones</h4>
+          <p className="text-muted">Añade una dirección para poder hacer pedidos.</p>
+
+          <button
+            className="btn btn-success btn-lg mt-3"
+            onClick={() => navigate("/addresses/create")}
+          >
             Añadir primera dirección
           </button>
         </div>
       ) : (
-        <div className="cl-addresses-grid">
+        <div className="row g-4">
           {addresses.map((a) => (
-            <div key={a.id} className="cl-address-card">
-              <div className="cl-address-card-icon">📍</div>
-              <div className="cl-address-card-body">
-                <p className="cl-address-card-name">{a.nombre}</p>
-                <p className="cl-address-card-detail">
-                  {a.direccion}<br />
-                  {a.ciudad}, {a.provincia}<br />
-                  {a.codigo_postal}
-                  {a.telefono && <><br />Tel: {a.telefono}</>}
-                </p>
-              </div>
-              <div className="cl-address-card-footer">
-                <button
-                  className="cl-btn cl-btn-primary cl-btn-sm"
-                  style={{ flex: 1, justifyContent: "center" }}
-                  onClick={() => navigate(`/addresses/${a.id}/edit`)}
-                >
-                  Editar
-                </button>
-                <button
-                  className="cl-btn cl-btn-danger cl-btn-sm"
-                  onClick={() => deleteAddress(a.id)}
-                >
-                  Eliminar
-                </button>
+            <div key={a.id} className="col-12 col-md-6 col-lg-4">
+              <div className="card shadow-sm h-100">
+
+                <div className="card-body">
+                  <div className="d-flex align-items-start gap-3">
+                    <div className="fs-3"><FontAwesomeIcon icon={faLocationDot} /></div>
+
+                    <div>
+                      <h5 className="mb-1">{a.nombre}</h5>
+                      <p className="text-muted mb-0" style={{ whiteSpace: "pre-line" }}>
+                        {a.direccion}
+                        {"\n"}
+                        {a.ciudad}, {a.provincia}
+                        {"\n"}
+                        {a.codigo_postal}
+                        {a.telefono ? `\nTel: ${a.telefono}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card-footer bg-white d-flex justify-content-between">
+                  <button
+                    className="btn btn-primary btn-sm w-100 me-2"
+                    onClick={() => navigate(`/addresses/${a.id}/edit`)}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => deleteAddress(a.id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+
               </div>
             </div>
           ))}
         </div>
       )}
-
-      {/* Volver */}
-      <div style={{ marginTop: "32px" }}>
-        <button className="cl-btn cl-btn-ghost" onClick={() => navigate("/user")}>
-          ← Volver a mi cuenta
+      <div className="mt-4">
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate("/checkout/address")}
+        >
+          ← Volver a mi carrito
         </button>
       </div>
 
     </div>
   );
+
 }

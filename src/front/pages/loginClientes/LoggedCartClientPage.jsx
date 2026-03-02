@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import "../../styles/client.css";
+import { faBox, faCalendarDays, faCartArrowDown, faLocationDot, faCcVisa } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const STATUS_LABEL = {
   pendiente: "Pendiente",
@@ -29,14 +31,12 @@ export default function LoggedCartClientPage() {
 
   if (loading) return <div className="cl-page"><div className="cl-loader">Cargando historial</div></div>;
 
-  /* Separamos el carrito activo (pendiente) del historial real */
   const historial = carritos.filter((c) => c.estado !== "pendiente");
   const activo    = carritos.find((c) => c.estado === "pendiente");
 
   return (
     <div className="cl-page cl-page-wide">
 
-      {/* Cabecera */}
       <div className="cl-page-header">
         <div className="cl-page-header-left">
           <div className="cl-breadcrumb">
@@ -49,15 +49,14 @@ export default function LoggedCartClientPage() {
         </div>
         {activo && (
           <button className="cl-btn cl-btn-accent" onClick={() => navigate("/user/cart")}>
-            🛒 Ver carrito activo
+            <FontAwesomeIcon icon={faCartArrowDown} /> Ver carrito activo
           </button>
         )}
       </div>
 
-      {/* Lista vacía */}
       {historial.length === 0 ? (
         <div className="cl-empty">
-          <div className="cl-empty-icon">📦</div>
+          <div className="cl-empty-icon"><FontAwesomeIcon icon={faBox} /></div>
           <p className="cl-empty-title">Sin pedidos todavía</p>
           <p className="cl-empty-text">Cuando realices tu primer pedido aparecerá aquí.</p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
@@ -84,10 +83,10 @@ export default function LoggedCartClientPage() {
             <div className="cl-order-card-body">
               <div className="cl-order-meta">
                 {c.fecha && (
-                  <span>📅 {new Date(c.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>
+                  <span><FontAwesomeIcon icon={faCalendarDays} /> {new Date(c.fecha).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>
                 )}
-                {c.direccion_entrega && <span>📍 {c.direccion_entrega}</span>}
-                {c.metodo_pago && <span>💳 {c.metodo_pago}</span>}
+                {c.direccion_entrega && <span><FontAwesomeIcon icon={faLocationDot} /> {c.direccion_entrega}</span>}
+                {c.metodo_pago && <span><FontAwesomeIcon icon={faCcVisa} /> {c.metodo_pago}</span>}
               </div>
               <div style={{ marginTop: "14px" }}>
                 <button
@@ -102,7 +101,6 @@ export default function LoggedCartClientPage() {
         ))
       )}
 
-      {/* Botón volver */}
       <div style={{ marginTop: "24px" }}>
         <button className="cl-btn cl-btn-ghost" onClick={() => navigate("/user")}>
           ← Volver a mi cuenta

@@ -23,7 +23,6 @@
   background: var(--white);
 }
 
-/* ── HERO ── */
 .bk-hero {
   background: linear-gradient(135deg, var(--blue) 0%, #0d1b2a 100%);
   min-height: 480px;
@@ -184,7 +183,6 @@
   margin-top: 4px;
 }
 
-/* ── FEATURES BAR ── */
 .bk-features-bar {
   background: var(--bg-light);
   border-bottom: 1px solid #e8e0d5;
@@ -229,7 +227,6 @@
   color: #888;
 }
 
-/* ── SECTION ── */
 .bk-section {
   padding: 64px 0;
 }
@@ -255,7 +252,6 @@
   line-height: 1.7;
 }
 
-/* ── BOOKS GRID ── */
 .bk-books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -353,7 +349,6 @@
   background: var(--primary);
 }
 
-/* ── SALE STRIP ── */
 .bk-sale-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -462,7 +457,6 @@
   background: var(--primary-dark);
 }
 
-/* ── SALE LOADING / EMPTY ── */
 .bk-sale-loading {
   text-align: center;
   padding: 48px;
@@ -484,7 +478,6 @@
   border-radius: 8px;
 }
 
-/* ── STATS ── */
 .bk-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -515,7 +508,6 @@
   letter-spacing: 1px;
 }
 
-/* ── TESTIMONIALS ── */
 .bk-testimonials-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -578,7 +570,6 @@
   margin-bottom: 12px;
 }
 
-/* ── NEWSLETTER ── */
 .bk-newsletter {
   background: linear-gradient(135deg, var(--blue) 0%, #0d1b2a 100%);
   padding: 64px 0;
@@ -638,7 +629,6 @@
   background: var(--primary-dark);
 }
 
-/* ── DEV PANEL ── */
 .bk-dev-panel {
   border: 2px dashed #e0d6cc;
   border-radius: 8px;
@@ -703,7 +693,6 @@
   color: white;
 }
 
-/* ── ROLE QUICK ACCESS ── */
 .bk-role-access {
   display: flex;
   flex-wrap: wrap;
@@ -763,14 +752,12 @@
   background: var(--primary-dark);
 }
 
-/* ── DIVIDER ── */
 .bk-divider {
   height: 1px;
   background: #e8e0d5;
   margin: 0;
 }
 
-/* ── SECTION HEADER WITH ACTION ── */
 .bk-section-header {
   display: flex;
   justify-content: space-between;
@@ -794,7 +781,6 @@
   color: var(--primary-dark);
 }
 
-/* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .bk-features-bar-inner {
     grid-template-columns: repeat(2, 1fr);

@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useGlobalReducer from "../../../hooks/useGlobalReducer";
 import "../../../styles/client.css";
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function EditAddressPage() {
   const { id } = useParams();
@@ -16,7 +18,6 @@ export default function EditAddressPage() {
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
 
-  // Carga la dirección y geocodifica si faltan coordenadas
   useEffect(() => {
     fetch(`${backendUrl}/api/addresses/${id}`)
       .then((r) => r.json())
@@ -31,7 +32,6 @@ export default function EditAddressPage() {
       });
   }, []);
 
-  // Inicializa el mapa cuando el formulario está listo
   useEffect(() => {
     if (!form) return;
     const lat = form.latitud || 40.4168;
@@ -105,7 +105,6 @@ export default function EditAddressPage() {
       <div className="cl-card">
         <div className="cl-card-body">
 
-          {/* Formulario */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             {fields.map((f) => (
               <div
@@ -127,7 +126,6 @@ export default function EditAddressPage() {
             ))}
           </div>
 
-          {/* Mapa */}
           <div style={{ marginTop: "24px" }}>
             <label className="cl-label">
               Ubicación en el mapa
@@ -141,12 +139,11 @@ export default function EditAddressPage() {
             />
             {form.latitud && (
               <p style={{ fontSize: "11px", color: "var(--cl-text-muted)", marginTop: "6px" }}>
-                📍 {Number(form.latitud).toFixed(5)}, {Number(form.longitud).toFixed(5)}
+                <FontAwesomeIcon icon={faLocationDot} /> {Number(form.latitud).toFixed(5)}, {Number(form.longitud).toFixed(5)}
               </p>
             )}
           </div>
 
-          {/* Acciones */}
           <div style={{ display: "flex", gap: "12px", marginTop: "28px" }}>
             <button className="cl-btn cl-btn-accent cl-btn-lg" onClick={handleSubmit} disabled={saving}>
               {saving ? "Guardando..." : "Guardar cambios"}

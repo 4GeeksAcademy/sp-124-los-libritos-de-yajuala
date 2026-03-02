@@ -27,7 +27,6 @@ function postUrl(mode, userId, itemId) {
   if (mode === "authors") return `${API_BASE}/api/users/${userId}/swipe/authors/${itemId}`;
 }
 
-// NUEVO: endpoints de matches (likes)
 function getMatchesUrl(mode, userId) {
   if (mode === "books") return `${API_BASE}/api/users/${userId}/matches/books`;
   if (mode === "categories") return `${API_BASE}/api/users/${userId}/matches/categories`;
@@ -52,7 +51,6 @@ export default function Swipe() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // NUEVO: matches
   const [matches, setMatches] = useState([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
   const [matchesError, setMatchesError] = useState("");
@@ -132,7 +130,6 @@ export default function Swipe() {
     }
     loadFeed();
     loadMatches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, mode]);
 
   useEffect(() => {
@@ -177,6 +174,17 @@ export default function Swipe() {
 
     try {
       await postPreference(current.id, dir === "right" ? 1 : -1);
+
+      if (mode === "categories" && dir === "right") {
+        await fetch(`${API_BASE}/api/users/${userId}/favorite-categories/add`, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ category_id: current.id })
+        });
+      }
+
+
+
     } catch (e) {
       isAnimatingRef.current = false;
       setError(e.message || "No se pudo guardar la preferencia");
@@ -196,9 +204,9 @@ export default function Swipe() {
       setTopIndex((i) => i - 1);
     }, 260);
 
-    // NUEVO: refresca matches después de votar
     loadMatches();
   };
+
 
   const onPointerUp = () => {
     if (!pos.dragging) return;
@@ -214,7 +222,6 @@ export default function Swipe() {
 
   return (
     <div style={{ minHeight: "calc(100vh - 80px)", padding: 20, background: "#c9f0f7" }}>
-      {/* zona swipe centrada */}
       <div style={{ display: "grid", placeItems: "center" }}>
         <div style={{ width: 360 }}>
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
@@ -319,7 +326,6 @@ export default function Swipe() {
         </div>
       </div>
 
-      {/* NUEVO: sección inferior matches */}
       <div style={{ maxWidth: 980, margin: "28px auto 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <h3 style={{ margin: 0 }}>Sugerencias según tus gustos · {MODES[mode].label}</h3>

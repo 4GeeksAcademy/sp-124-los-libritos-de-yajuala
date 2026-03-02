@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer";
 import "./Navbar.css";
+import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-/* ════════════════════════════════════════════════════════════
-   ICONOS SVG inline (sin dependencia de librería)
-   ════════════════════════════════════════════════════════════ */
 const IcoHome = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>;
 const IcoBooks = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2zm-6 14H8v-2h4v2zm4-4H8v-2h8v2zm0-4H8V6h8v2z" /></svg>;
 const IcoCart = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 8H20L17.7 15.6A2 2 0 0115.8 17H8.2A2 2 0 016.3 15.6L4 6H2V4H5L7.3 12.4A2 2 0 009.2 14H15a2 2 0 001.9-1.4zM9 20a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z" /></svg>;
@@ -28,11 +27,6 @@ const IcoSearch = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1
 const IcoApprove = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>;
 const IcoRoute = () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z" /></svg>;
 
-/* ════════════════════════════════════════════════════════════
-   MENÚS POR ROL
-   ════════════════════════════════════════════════════════════ */
-
-// ── Cliente ───────────────────────────────────────────────────
 const MENU_CLIENTE = {
   secciones: [
     {
@@ -41,6 +35,7 @@ const MENU_CLIENTE = {
         { label: "Inicio", to: "/", icon: <IcoHome /> },
         { label: "Libros", to: "/home-client", icon: <IcoBooks /> },
         { label: "Reseñas", to: "/reviews", icon: <IcoReviews /> },
+        { label: "Categorías", to: "/user/favorite-categories", icon: <IcoCategories /> },
       ],
     },
     {
@@ -50,13 +45,12 @@ const MENU_CLIENTE = {
         { label: "Historial", to: "/user/history", icon: <IcoHistory /> },
         { label: "Mi perfil", to: "/user", icon: <IcoUser /> },
         { label: "Mis direcciones", to: "/addresses", icon: <IcoAddress /> },
+        { label: "Mis matches", to: "/swipe", icon: <IcoRoute /> },
       ],
     },
   ],
 };
 
-<<<<<<< HEAD
-// ── Admin ─────────────────────────────────────────────────────
 const MENU_ADMIN = {
   secciones: [
     {
@@ -71,6 +65,7 @@ const MENU_ADMIN = {
         { label: "Usuarios", to: "/admin/users", icon: <IcoUsers /> },
         { label: "Proveedores", to: "/admin/providers", icon: <IcoProviders /> },
         { label: "Libros", to: "/admin/books", icon: <IcoBooks /> },
+        { label: "Libros recomendados", to: "/admin/recommendations", icon: <IcoRoute /> },
         { label: "Categorías", to: "/admin/categories", icon: <IcoCategories /> },
         { label: "Carritos", to: "/admin/carts", icon: <IcoCarts /> },
       ],
@@ -85,7 +80,7 @@ const MENU_ADMIN = {
     },
   ],
 };
-=======
+
 const MENU_DELIVERY = {
   secciones: [
     {
@@ -104,12 +99,6 @@ const MENU_DELIVERY = {
   ]
 }
 
-// ── Aquí añadirás los menús de otros roles ───────────────────
-// const MENU_ADMIN    = { secciones: [...] };
-// const MENU_PROVIDER = { secciones: [...] };
->>>>>>> develop
-
-// ── Proveedor ─────────────────────────────────────────────────
 const MENU_PROVIDER = {
   secciones: [
     {
@@ -125,27 +114,12 @@ const MENU_PROVIDER = {
         { label: "Listado", to: "/provider/books", icon: <IcoBooks /> },
         { label: "Buscar libro", to: "/provider/books/search", icon: <IcoSearch /> },
         { label: "Añadir libro", to: "/provider/books/new", icon: <IcoEdit /> },
+        { label: "Solicitudes de importación", to: "/provider/notifications", icon: <FontAwesomeIcon icon={faBell} /> },
       ],
     },
   ],
 };
 
-// ── Delivery (repartidor) ─────────────────────────────────────
-const MENU_DELIVERY = {
-  secciones: [
-    {
-      label: "Mi panel",
-      items: [
-        { label: "Mi cuenta", to: "/loggeddelivery", icon: <IcoUser /> },
-        { label: "Mis rutas", to: "/loggeddelivery", icon: <IcoRoute /> },
-      ],
-    },
-  ],
-};
-
-/* ════════════════════════════════════════════════════════════
-   ETIQUETAS DE ROL (se muestran bajo el nombre en el perfil)
-   ════════════════════════════════════════════════════════════ */
 const ROL_LABELS = {
   client: "Cliente",
   admin: "Administrador",
@@ -153,25 +127,18 @@ const ROL_LABELS = {
   delivery: "Repartidor",
 };
 
-/* ════════════════════════════════════════════════════════════
-   COMPONENTE NAVBAR (sidebar vertical)
-   ════════════════════════════════════════════════════════════ */
 export const Navbar = ({ onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { store, actions } = useGlobalReducer();
 
-  // Estado colapsado/expandido (desktop)
   const [collapsed, setCollapsed] = useState(false);
-  // Estado abierto/cerrado en móvil
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Cierra el menú móvil al cambiar de ruta
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  // Notifica al Layout cuando cambia el estado colapsado
   const handleToggle = () => {
     const next = !collapsed;
     setCollapsed(next);
@@ -180,19 +147,16 @@ export const Navbar = ({ onToggle }) => {
   };
 
   const handleLogout = () => {
-    actions.setUser(null);
+    actions.logout();
     navigate("/");
   };
 
-  // Datos del usuario
+
   const user = store.user;
   const role = user?.role;
 
-<<<<<<< HEAD
-  // Sin usuario logueado → mostramos el header público con accesos a login
   if (!user) return (
     <header className="bk-header-public">
-      {/* Logo */}
       <span className="bk-header-logo" onClick={() => navigate("/")}>
         <span className="bk-header-logo-icon">📚</span>
         <span className="bk-header-logo-text">
@@ -200,34 +164,22 @@ export const Navbar = ({ onToggle }) => {
         </span>
       </span>
 
-      {/* Links centrales */}
       <nav className="bk-header-links">
         <Link to="/" className={`bk-header-link${location.pathname === "/" ? " active" : ""}`}>Inicio</Link>
       </nav>
 
-      {/* Botones de acceso */}
       <div className="bk-header-actions">
-        <Link to="/login" className="bk-header-btn bk-header-btn--client">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" /></svg>
-          Cliente
-        </Link>
-        <Link to="/login/provider" className="bk-header-btn bk-header-btn--provider">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" /></svg>
-          Proveedor
-        </Link>
-        <Link to="/login/admin" className="bk-header-btn bk-header-btn--admin">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>
-          Admin
-        </Link>
-        <Link to="/logindelivery" className="bk-header-btn bk-header-btn--delivery">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" /></svg>
-          Repartidor
-        </Link>
-      </div>
+  <Link to="/login" className="bk-header-btn bk-header-btn--client">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+    </svg>
+    Iniciar sesión
+  </Link>
+</div>
+
     </header>
   );
 
-  // Selección del menú según rol
   const menu = role === "admin" ? MENU_ADMIN
     : role === "provider" ? MENU_PROVIDER
       : role === "delivery" ? MENU_DELIVERY
@@ -236,36 +188,11 @@ export const Navbar = ({ onToggle }) => {
   const rolLabel = ROL_LABELS[role] ?? "Usuario";
   const inicial = user.name ? user.name[0].toUpperCase() : "?";
 
-  // Comprueba si un link está activo
-=======
-  // Elige el menú según el rol
-  // Cuando el usuario no está logueado mostramos solo la sección "Tienda"
-  const menu = user ? (isDelivery ? MENU_DELIVERY : MENU_CLIENTE) : {
-    secciones: [
-      {
-        label: "Tienda",
-        items: [
-          { label: "Inicio", to: "/", icon: <IcoHome /> },
-          { label: "Libros", to: "/books", icon: <IcoBooks /> },
-          { label: "Reseñas", to: "/reviews", icon: <IcoReviews /> },
-        ],
-      },
-    ],
-  };
-
-  
-
-  // Etiqueta del rol para mostrar debajo del nombre
-  const rolLabel = isCliente ? "Cliente" : isDelivery ? "Repartidor" : "Invitado";
-  
-  const inicial = user?.name ? user.name[0].toUpperCase() : "?";
->>>>>>> develop
   const isActive = (to) =>
     to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
 
   return (
     <>
-      {/* ── Botón hamburguesa (solo visible en móvil) ── */}
       <button
         className="bk-sb-mobile-btn"
         onClick={() => setMobileOpen(v => !v)}
@@ -274,16 +201,13 @@ export const Navbar = ({ onToggle }) => {
         <IcoMenu />
       </button>
 
-      {/* ── Overlay oscuro al abrir en móvil ── */}
       <div
         className={`bk-sb-overlay${mobileOpen ? " open" : ""}`}
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* ════════ SIDEBAR ════════ */}
       <aside className={`bk-sidebar${collapsed ? " collapsed" : ""}${mobileOpen ? " mobile-open" : ""}`}>
 
-        {/* ── Cabecera: logo + botón colapsar ── */}
         <div className="bk-sb-header">
           <span className="bk-sb-logo" onClick={() => navigate("/")}>
             <div className="bk-sb-logo-icon">📚</div>
@@ -296,34 +220,28 @@ export const Navbar = ({ onToggle }) => {
             onClick={handleToggle}
             title={collapsed ? "Expandir menú" : "Colapsar menú"}
           >
-            {/* La flecha rota 180° en CSS cuando está colapsado */}
             <IcoChevron />
           </button>
         </div>
 
-        {/* ── Bloque de perfil ── */}
         <div className="bk-sb-profile">
           <div className="bk-sb-avatar">{inicial}</div>
           <div className="bk-sb-profile-info">
             <div className="bk-sb-profile-name">{user.name}</div>
             <div className="bk-sb-profile-role">{rolLabel}</div>
           </div>
-          {/* Tooltip del nombre en modo colapsado */}
           <span className="bk-sb-tooltip">{user.name}</span>
         </div>
 
-        {/* ── Navegación ── */}
         <nav className="bk-sb-nav">
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
             {menu.secciones.map((seccion, si) => (
               <React.Fragment key={si}>
 
-                {/* Etiqueta de sección */}
                 <li>
                   <div className="bk-sb-section-label">{seccion.label}</div>
                 </li>
 
-                {/* Items de la sección */}
                 {seccion.items.map((item) => (
                   <li className="bk-sb-item" key={item.to + item.label}>
                     <Link
@@ -338,12 +256,10 @@ export const Navbar = ({ onToggle }) => {
                           )}
                       */}
                     </Link>
-                    {/* Tooltip visible cuando el sidebar está colapsado */}
                     <span className="bk-sb-tooltip">{item.label}</span>
                   </li>
                 ))}
 
-                {/* Separador entre secciones (excepto la última) */}
                 {si < menu.secciones.length - 1 && (
                   <li><div className="bk-sb-sep" /></li>
                 )}
@@ -353,7 +269,6 @@ export const Navbar = ({ onToggle }) => {
           </ul>
         </nav>
 
-        {/* ── Footer: cerrar sesión ── */}
         <div className="bk-sb-footer">
           <div className="bk-sb-item">
             <button className="bk-sb-logout" onClick={handleLogout}>
