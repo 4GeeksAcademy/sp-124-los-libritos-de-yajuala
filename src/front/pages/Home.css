@@ -827,3 +827,23 @@
     grid-template-columns: 1fr;
   }
 }
+.btn-outline-custom-blue {
+  color: #457b9d;
+  border-color: #457b9d;
+}
+
+.btn-outline-custom-blue:hover {
+  background-color: #457b9d;
+  color: white;
+  border-color: #457b9d;
+}
+.btn-outline-custom {
+  color: #457b9d;
+  border-color: #457b9d;
+}
+
+.btn-outline-custom:hover {
+  background-color: #457b9d;
+  color: white;
+  border-color: #457b9d;
+}

@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../Home.css";
 
 export const Delivery = () => {
   const navigate = useNavigate();
@@ -123,7 +124,10 @@ export const Delivery = () => {
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="m-0">Pedidos del repartidor</h2>
-        <button className="btn btn-outline-secondary btn-sm" onClick={loadOrders}>
+        <button
+          className="btn btn-outline-custom btn-sm"
+          onClick={loadOrders}
+        >
           Recargar
         </button>
       </div>
@@ -267,7 +271,7 @@ export const Delivery = () => {
                           </div>
                         )}
 
-                        
+
                         {detail.address.latitud != null &&
                           detail.address.longitud != null && (
                             <DeliveryMap
@@ -341,7 +345,7 @@ function DeliveryMap({ lat, lng }) {
       return;
     }
 
-  
+
     const existing = document.querySelector('script[data-google-maps="1"]');
     if (existing) {
       existing.addEventListener("load", initMap);

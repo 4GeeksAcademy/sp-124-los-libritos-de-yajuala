@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
+import "../Home.css";
 
 export default function LoggedDelivery() {
   const { store, dispatch } = useGlobalReducer();
@@ -109,9 +110,8 @@ export default function LoggedDelivery() {
 
       {message && (
         <div
-          className={`alert ${
-            message.includes("Error") ? "alert-danger" : "alert-success"
-          } py-2`}
+          className={`alert ${message.includes("Error") ? "alert-danger" : "alert-success"
+            } py-2`}
         >
           {message}
         </div>
@@ -122,7 +122,7 @@ export default function LoggedDelivery() {
           <span>Datos del perfil</span>
 
           <button
-            className="btn btn-sm btn-outline-primary"
+            className="btn btn-sm btn-outline-custom-blue"
             onClick={() => navigate(`/delivery/${store.user.id}/edit`)}
           >
             ✏️ Editar perfil
@@ -137,7 +137,7 @@ export default function LoggedDelivery() {
         </div>
       </div>
 
-      
+
     </div>
   );
 }

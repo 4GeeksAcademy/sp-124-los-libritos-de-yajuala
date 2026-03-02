@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 
+
 export default function DeliveryHistory() {
     const { store } = useGlobalReducer();
     const navigate = useNavigate();
@@ -104,7 +105,8 @@ export default function DeliveryHistory() {
             )}
 
             <button
-                className="btn btn-secondary mt-4"
+                className="btn mt-4"
+                style={{ backgroundColor: "#457b9d", borderColor: "#457b9d", color: "white" }}
                 onClick={() => navigate("/delivery/me")}
             >
                 Volver al panel
