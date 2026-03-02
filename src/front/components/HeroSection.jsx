@@ -84,8 +84,24 @@ export default function HeroSection() {
 
           <div className="bk-hero-book">
             <div className="bk-hero-book-cover">
-              <div className="bk-hero-book-title">{book.titulo}</div>
-              <div className="bk-hero-book-author">by {book.autor}</div>
+              {book.portada ? (
+                <img
+                  src={book.portada}
+                  alt={book.titulo}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "inherit",
+                    display: "block",
+                  }}
+                />
+              ) : (
+                <>
+                  <div className="bk-hero-book-title">{book.titulo}</div>
+                  <div className="bk-hero-book-author">by {book.autor}</div>
+                </>
+              )}
             </div>
           </div>
         </div>

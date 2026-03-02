@@ -31,7 +31,7 @@ export default function RecommendedBooks() {
   };
 
   return (
-    <section className="bk-section bk-section-grey">
+    <section className="py-5 bg-light">
       <div className="bk-container">
         <div className="bk-section-head">
           <h2>Recomendados para ti</h2>
@@ -45,11 +45,25 @@ export default function RecommendedBooks() {
               key={b.id}
               onClick={() => navigate(`/books/${b.id}`)}
             >
-              <BookCoverFallback
-                title={b.titulo}
-                colorIdx={Math.floor(Math.random() * 5)}
-                height={180}
-              />
+              {b.portada ? (
+                <img
+                  src={b.portada}
+                  alt={b.titulo}
+                  style={{
+                    width: "100%",
+                    height: "180px",
+                    objectFit: "cover",
+                    borderRadius: "8px 8px 0 0",
+                    display: "block",
+                  }}
+                />
+              ) : (
+                <BookCoverFallback
+                  title={b.titulo}
+                  colorIdx={Math.floor(Math.random() * 5)}
+                  height={180}
+                />
+              )}
 
               <div className="bk-book-info">
                 <div className="bk-book-name">{b.titulo}</div>
