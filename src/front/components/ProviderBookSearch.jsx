@@ -104,17 +104,25 @@ export default function ProviderBookSearch() {
 
       <div className="d-flex gap-2 mb-3">
         <button
-          style={searchType === "title" ? styles.btnPrimary : styles.btnOutline}
+          style={searchType === "title"
+            ? { background: "#457b9d", color: "#fff", border: "1px solid #457b9d", borderRadius: "8px" }
+            : styles.btnOutline
+          }
           onClick={() => setSearchType("title")}
         >
           Buscar por título
         </button>
+
         <button
-          style={searchType === "author" ? styles.btnPrimary : styles.btnOutline}
+          style={searchType === "author"
+            ? { background: "#457b9d", color: "#fff", border: "1px solid #457b9d", borderRadius: "8px" }
+            : styles.btnOutline
+          }
           onClick={() => setSearchType("author")}
         >
           Buscar por autor
         </button>
+
       </div>
 
       <div className="input-group mb-3">
@@ -125,7 +133,7 @@ export default function ProviderBookSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && searchBooks()}
         />
-        <button style={styles.btnPrimary} onClick={searchBooks} disabled={loading}>
+        <button style={{background: "#457b9d", color: "#fff", border: "1px solid #457b9d", borderRadius: "8px"}} onClick={searchBooks} disabled={loading}>
           {loading ? "Buscando..." : "Buscar"}
         </button>
       </div>
@@ -153,7 +161,7 @@ export default function ProviderBookSearch() {
                   <strong>ISBN:</strong> {book.isbn || "N/A"} <br />
                   <small>{book.descripcion || "Sin descripción"}</small>
                 </p>
-                <button style={{...styles.btnPrimary, width: "100%"}} onClick={() => importBook(book)}>
+                <button style={{ ...styles.btnPrimary, width: "100%" }} onClick={() => importBook(book)}>
                   Importar libro
                 </button>
               </div>
@@ -163,7 +171,7 @@ export default function ProviderBookSearch() {
       </div>
 
       <button
-        style={{...styles.btnNeutral, marginTop: 16}}
+        style={{ ...styles.btnNeutral, marginTop: 16 }}
         onClick={() => navigate("/provider/books/new")}
       >
         Crear libro manualmente

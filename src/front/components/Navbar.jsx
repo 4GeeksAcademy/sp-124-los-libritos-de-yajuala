@@ -183,7 +183,7 @@ export const Navbar = ({ onToggle }) => {
   const menu = role === "admin" ? MENU_ADMIN
     : role === "provider" ? MENU_PROVIDER
       : role === "delivery" ? MENU_DELIVERY
-        : MENU_CLIENTE;   // "client" o cualquier otro
+        : MENU_CLIENTE;
 
   const rolLabel = ROL_LABELS[role] ?? "Usuario";
   const inicial = user.name ? user.name[0].toUpperCase() : "?";

@@ -55,7 +55,8 @@ export const Reviews = () => {
 
         {user && (
           <button
-            className="btn btn-primary"
+            className="btn"
+            style={{ backgroundColor: "#457b9d", color: "#fff" }}
             onClick={() => navigate("/reviews/new")}
           >
             + Escribir reseña
@@ -113,7 +114,8 @@ export const Reviews = () => {
                   {(isAdmin || isOwner(review)) && (
                     <div className="d-flex gap-2">
                       <button
-                        className="btn btn-outline-primary btn-sm"
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#457b9d", color: "#fff" }}
                         onClick={() => navigate(`/reviews/${review.id}/edit`)}
                       >
                         Editar

@@ -30,7 +30,7 @@ export const ProviderOrders = () => {
   }, [store.token]);
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-5" >
       <ProviderPanelButtons />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="m-0">Mis pedidos</h1>

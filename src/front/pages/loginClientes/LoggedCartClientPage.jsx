@@ -36,7 +36,7 @@ export default function LoggedCartClientPage() {
   const activo = carritos.find((c) => c.estado === "pendiente");
 
   return (
-    <div className="cl-page cl-page-wide">
+    <div className="container-fluid cl-page p-4">
 
       <div className="cl-page-header">
         <div className="cl-page-header-left">

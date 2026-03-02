@@ -165,14 +165,16 @@ export const ProviderBooks = () => {
 
                     <div className="d-flex gap-2">
                       <button
-                        className="btn btn-info btn-sm"
+                        className="btn btn-sm"
+                        style={{background: "#457b9d", color: "#fff"}}
                         onClick={() => navigate(`/provider/books/${row.id}`)}
                       >
                         Ver ficha
                       </button>
 
                       <button
-                        className="btn btn-warning btn-sm"
+                        className="btn btn-sm"
+                        style={{background: "#f4a261", color: "#fff"}}
                         onClick={() =>
                           editQuantity(row.id, row.cantidad)
                         }

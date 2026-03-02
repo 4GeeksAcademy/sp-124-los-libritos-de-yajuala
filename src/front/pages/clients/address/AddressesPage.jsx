@@ -100,7 +100,8 @@ export default function AddressesPage() {
 
                 <div className="card-footer bg-white d-flex justify-content-between">
                   <button
-                    className="btn btn-primary btn-sm w-100 me-2"
+                    className="btn btn-sm w-100 me-2"
+                    style={{background:"#457b9d"}}
                     onClick={() => navigate(`/addresses/${a.id}/edit`)}
                   >
                     Editar

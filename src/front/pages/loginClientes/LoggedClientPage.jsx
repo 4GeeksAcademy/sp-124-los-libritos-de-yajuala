@@ -76,7 +76,8 @@ export default function LoggedClientPage() {
           />
 
           <button
-            className="btn btn-sm btn-primary position-absolute bottom-0 end-0"
+            className="btn btn-sm position-absolute bottom-0 end-0"
+            style={{background: "#457b9d"}}
             onClick={() => fileInputRef.current.click()}
             disabled={uploading}
           >

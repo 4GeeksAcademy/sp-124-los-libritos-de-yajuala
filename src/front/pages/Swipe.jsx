@@ -221,7 +221,7 @@ export default function Swipe() {
   const topCard = topIndex >= 0 ? cards[topIndex] : null;
 
   return (
-    <div style={{ minHeight: "calc(100vh - 80px)", padding: 20, background: "#c9f0f7" }}>
+    <div style={{ minHeight: "calc(100vh - 80px)", padding: 20, background: "#f8f4ef" }}>
       <div style={{ display: "grid", placeItems: "center" }}>
         <div style={{ width: 360 }}>
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
@@ -288,7 +288,7 @@ export default function Swipe() {
                       <img src={c.img} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                   ) : (
-                    <div style={{ height: 240, background: "#e8f4f8", display: "grid", placeItems: "center" }}>
+                    <div style={{ height: 240, background: "#457b9d", display: "grid", placeItems: "center" }}>
                       <span style={{ fontSize: 64 }}>{mode === "categories" ? "🏷️" : "✍️"}</span>
                     </div>
                   )}
@@ -375,7 +375,7 @@ export default function Swipe() {
                     <img src={m.img} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                 ) : (
-                  <div style={{ height: 140, background: "#e8f4f8", display: "grid", placeItems: "center" }}>
+                  <div style={{ height: 140, background: "#457b9d", display: "grid", placeItems: "center" }}>
                     <span style={{ fontSize: 40 }}>{mode === "categories" ? "🏷️" : mode === "authors" ? "✍️" : "📚"}</span>
                   </div>
                 )}

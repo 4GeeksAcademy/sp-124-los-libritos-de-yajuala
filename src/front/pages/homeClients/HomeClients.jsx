@@ -128,7 +128,7 @@ export default function HomeClients() {
                     <button className="btn btn-outline-secondary" onClick={() => navigate("/user/cart")}>
                         🛒 Mi carrito
                     </button>
-                    <button className="btn btn-primary" onClick={() => navigate("/user")}>
+                    <button className="btn" onClick={() => navigate("/user")} style={{ backgroundColor: "#457b9d", color: "#fff" }}>
                         Mi cuenta
                     </button>
                 </div>
@@ -193,7 +193,8 @@ export default function HomeClients() {
 
                                 <div className="card-footer bg-white border-0 d-flex gap-2">
                                     <button
-                                        className={`btn btn-sm w-100 ${book._added ? "btn-success" : "btn-warning"}`}
+                                        className={`btn btn-sm w-100 `}
+                                        style={{ backgroundColor: book._added ? "#28a745" : "#f4a261", color: book._added ? "white" : "black", border: "none" }}
                                         onClick={() => addToCart(book)}
                                         disabled={addingId === book.id}
                                     >
