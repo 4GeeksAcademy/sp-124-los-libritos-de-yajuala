@@ -67,8 +67,9 @@ export default function CheckoutPaymentPage() {
 
   if (!address || !store.activeCart) return <div className="cl-page"><div className="cl-loader">Cargando</div></div>;
 
-  const total = store.activeCart.monto_total ?? 0;
-
+  const total = store.activeCart?.items?.reduce((acc, item) => {
+    return acc + (Number(item.precio) * Number(item.cantidad));
+  }, 0) ?? 0;
   return (
     <div className="container-fluid py-4">
 
