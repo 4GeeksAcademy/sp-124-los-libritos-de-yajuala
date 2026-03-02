@@ -2,23 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../../hooks/useGlobalReducer";
 import "../../styles/client.css";
-import { faBox, faCalendarDays, faCartArrowDown, faLocationDot, faCcVisa } from "@fortawesome/free-solid-svg-icons";
+import { faBox, faCalendarDays, faCartArrowDown, faLocationDot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCcVisa } from "@fortawesome/free-brands-svg-icons";
 
 const STATUS_LABEL = {
   pendiente: "Pendiente",
-  pagado:    "Pagado",
-  enviado:   "Enviado",
+  pagado: "Pagado",
+  enviado: "Enviado",
   entregado: "Entregado",
   cancelado: "Cancelado",
 };
 
 export default function LoggedCartClientPage() {
   const { store } = useGlobalReducer();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [carritos, setCarritos] = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!store.user) { navigate("/login"); return; }
@@ -32,7 +33,7 @@ export default function LoggedCartClientPage() {
   if (loading) return <div className="cl-page"><div className="cl-loader">Cargando historial</div></div>;
 
   const historial = carritos.filter((c) => c.estado !== "pendiente");
-  const activo    = carritos.find((c) => c.estado === "pendiente");
+  const activo = carritos.find((c) => c.estado === "pendiente");
 
   return (
     <div className="cl-page cl-page-wide">

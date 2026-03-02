@@ -4,9 +4,9 @@ import useGlobalReducer from "../../hooks/useGlobalReducer";
 import CheckoutPaypalPay from "./CheckoutPaypalPay";
 import "../../styles/client.css";
 import React from "react";
-import { faCcVisa, faCcPaypal, faGooglePay, faMoneyBillWave, faBitcoin } from "@fortawesome/free-brands-svg-icons";
+import { faCcVisa, faCcPaypal, faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { faBitcoinSign, faLocationDot, faMoneyBillWave } from "@fortawesome/free-solid-svg-icons";
 
 const METHOD_LABELS = {
   card: "Tarjeta de crédito / débito",
@@ -15,7 +15,7 @@ const METHOD_LABELS = {
   cash: "Contra reembolso",
   crypto: "Criptomonedas",
 };
-const METHOD_ICONS = { card: <FontAwesomeIcon icon={faCcVisa} />, paypal: <FontAwesomeIcon icon={faCcPaypal} />, google_test: <FontAwesomeIcon icon={faGooglePay} />, cash: <FontAwesomeIcon icon={faMoneyBillWave} />, crypto: <FontAwesomeIcon icon={faBitcoin} /> };
+const METHOD_ICONS = { card: <FontAwesomeIcon icon={faCcVisa} />, paypal: <FontAwesomeIcon icon={faCcPaypal} />, google_test: <FontAwesomeIcon icon={faGoogle} />, cash: <FontAwesomeIcon icon={faMoneyBillWave} />, crypto: <FontAwesomeIcon icon={faBitcoinSign} /> };
 
 export default function CheckoutPaymentPage() {
   const { store, dispatch } = useGlobalReducer();

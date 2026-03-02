@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/client.css";
-import { faCcVisa, faCcPaypal, faGooglePay, faMoneyBillWave, faBitcoin } from "@fortawesome/free-brands-svg-icons";
+import { faCcVisa, faCcPaypal, faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBitcoinSign, faMoneyBillWave } from "@fortawesome/free-solid-svg-icons";
 
 const METHODS = [
   { id: "card", label: "Tarjeta de crédito / débito", icon: <FontAwesomeIcon icon={faCcVisa} /> },
   { id: "paypal", label: "PayPal", icon: <FontAwesomeIcon icon={faCcPaypal} /> },
-  { id: "google_test", label: "Google Pay", icon: <FontAwesomeIcon icon={faGooglePay} /> },
+  { id: "google_test", label: "Google Pay", icon: <FontAwesomeIcon icon={faGoogle} /> },
   { id: "cash", label: "Contra reembolso", icon: <FontAwesomeIcon icon={faMoneyBillWave} /> },
-  { id: "crypto", label: "Criptomonedas", icon: <FontAwesomeIcon icon={faBitcoin} /> },
+  { id: "crypto", label: "Criptomonedas", icon: <FontAwesomeIcon icon={faBitcoinSign} /> },
 ];
 
 export default function CheckoutPaymentMethodPage() {
