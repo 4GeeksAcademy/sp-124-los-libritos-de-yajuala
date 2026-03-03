@@ -2148,10 +2148,10 @@ def google_pay_confirm():
     paymentData = body.get("paymentData", {})
 
     if not cart_id:
-        return jsonify({"msg": "Falta cart_id"}), 400
+        return jsonify({"status": "error", "msg": "Falta cart_id"}), 400
 
     if not address_id:
-        return jsonify({"msg": "Falta address_id"}), 400
+        return jsonify({"status": "error", "msg": "Falta address_id"}), 400
 
     token = (
         paymentData.get("paymentMethodData", {})
@@ -2172,9 +2172,16 @@ def google_pay_confirm():
     backend_url = request.host_url.rstrip("/")
     url = f"{backend_url}/api/carts/{cart_id}/pay"
 
-    resp = requests.post(url, json=payload)
-
-    return (resp.text, resp.status_code, resp.headers.items())
+    try:
+        resp = requests.post(url, json=payload, timeout=10)
+        try:
+            data = resp.json()
+        except Exception:
+            data = {"status": "error", "msg": "Respuesta no válida del backend"}
+        return jsonify(data), resp.status_code
+    except Exception as e:
+        print("Error al llamar al backend:", str(e))
+        return jsonify({"status": "error", "msg": "No se pudo procesar el pago"}), 500
 
 
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
