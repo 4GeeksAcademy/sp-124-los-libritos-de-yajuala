@@ -4,4 +4,3 @@ set -o errexit
 npm install --legacy-peer-deps
 npm run build
 pip install -r requirements.txt
-FLASK_APP=src/app.py flask db upgrade
