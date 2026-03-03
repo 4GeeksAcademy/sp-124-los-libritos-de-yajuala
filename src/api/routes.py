@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask import Flask, request, jsonify, url_for, Blueprint
+from flask import Flask, request, jsonify, url_for, Blueprint, Response
 from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address, Book, Author, UserBookPreference, UserCategoryPreference, UserAuthorPreference, ChatConversation, ChatMessage, UserCategoryPreference, ProveedorNotificacion, RecommendedBook
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import and_
@@ -2129,7 +2129,6 @@ def create_shipment_from_paid_cart(cart_id):
         }
     }), 201
 
-
 @api.route("/payments/google/confirm", methods=["POST"])
 def google_pay_confirm():
     body = request.get_json(silent=True) or {}
@@ -2156,15 +2155,27 @@ def google_pay_confirm():
             payment_token=token
         )
 
-        if isinstance(result, tuple) and len(result) == 2:
-            result_json, status = result
-            return jsonify(result_json), status
+        if isinstance(result, Response):
+            return result
 
-        return result
+        if isinstance(result, tuple) and len(result) == 2:
+            response_obj, status = result
+
+            if isinstance(response_obj, Response):
+                return response_obj, status
+
+            return jsonify(response_obj), status
+
+        if isinstance(result, dict):
+            return jsonify(result), 200
+
+        return jsonify({"status": "error", "msg": "Respuesta inesperada"}), 500
 
     except Exception as e:
         print("ERROR al procesar Google Pay:", str(e))
         return jsonify({"status": "error", "msg": "No se pudo procesar el pago"}), 500
+
+
 
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
 
