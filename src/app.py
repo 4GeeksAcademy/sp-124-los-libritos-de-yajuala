@@ -77,10 +77,11 @@ def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 
-@app.route("/")
-def sitemap():
-    if ENV == "development":
-        return generate_sitemap(app)
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_frontend(path):
+    if path != "" and os.path.exists(os.path.join(static_file_dir, path)):
+        return send_from_directory(static_file_dir, path)
     return send_from_directory(static_file_dir, "index.html")
 
 
