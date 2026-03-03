@@ -130,16 +130,18 @@ def agent_generate_final_response(user_message, history, resultados, user_id, de
     libro_externo = resultados[0] if resultados else None
 
     if not libro_externo:
-        return {
-        "respuesta": texto or "No encontré libros de esa categoría en nuestra base ni en fuentes externas. ¿Quieres que busque otro género o que solicite importación?",
+        query = decision.get("query") if isinstance(decision, dict) else None
+
+    return {
+        "respuesta": texto or f"No encontré libros relacionados con '{query}'. ¿Quieres que solicite importación?",
         "acciones": [
             {
                 "tipo": "solicitar_importacion",
                 "label": "Solicitar importación",
                 "payload": {
-                    "titulo": decision.get("query"),
+                    "titulo": query or "Libro solicitado",
                     "autor": "Desconocido",
-                    "categoria": decision.get("query")
+                    "categoria": query or "General"
                 }
             }
         ]
