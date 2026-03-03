@@ -1,0 +1,550 @@
+diff --git a/src/api/routes.py b/src/api/routes.py
+index 93c4169..4546ffd 100644
+--- a/src/api/routes.py
++++ b/src/api/routes.py
+@@ -2,7 +2,7 @@
+ This module takes care of starting the API Server, Loading the DB and Adding the endpoints
+ """
+ from flask import Flask, request, jsonify, url_for, Blueprint
+-from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook
++from api.models import db, User, Provider, Categoria_Libro, Categorias, Cart, CartBook, Delivery, ProviderBook, Address
+ from api.models_books import Book
+ from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+ from sqlalchemy import and_
+@@ -12,7 +12,7 @@ from sqlalchemy import and_
+ from api.utils import generate_sitemap, APIException
+ from flask_cors import CORS
+ from api.models_reviews import Review
+-from api.models import ProviderBook
++
+ 
+ 
+ 
+@@ -102,6 +102,84 @@ def update_user(user_id):
+     return jsonify(user.serialize()), 200
+ 
+ 
++@api.route("/users/<int:user_id>/addresses", methods=["GET"])
++def get_addresses(user_id):
++    addresses = Address.query.filter_by(id_usuario=user_id).all()
++    return jsonify([a.serialize() for a in addresses]), 200
++
++
++@api.route("/users/<int:user_id>/addresses", methods=["POST"])
++def create_address(user_id):
++    data = request.json
++
++    new_address = Address(
++        id_usuario=user_id,
++        nombre=data.get("nombre"),
++        direccion=data.get("direccion"),
++        ciudad=data.get("ciudad"),
++        provincia=data.get("provincia"),
++        codigo_postal=data.get("codigo_postal"),
++        telefono=data.get("telefono")
++    )
++
++    db.session.add(new_address)
++    db.session.commit()
++
++    return jsonify(new_address.serialize()), 201
++
++
++@api.route("/addresses/<int:address_id>", methods=["PUT"])
++def update_address(address_id):
++    address = Address.query.get(address_id)
++    if not address:
++        return jsonify({"msg": "Dirección no encontrada"}), 404
++
++    data = request.json
++
++    address.nombre = data.get("nombre", address.nombre)
++    address.direccion = data.get("direccion", address.direccion)
++    address.ciudad = data.get("ciudad", address.ciudad)
++    address.provincia = data.get("provincia", address.provincia)
++    address.codigo_postal = data.get("codigo_postal", address.codigo_postal)
++    address.telefono = data.get("telefono", address.telefono)
++
++    db.session.commit()
++
++    return jsonify(address.serialize()), 200
++
++
++@api.route("/addresses/<int:address_id>", methods=["DELETE"])
++def delete_address(address_id):
++    address = Address.query.get(address_id)
++    if not address:
++        return jsonify({"msg": "Dirección no encontrada"}), 404
++
++    db.session.delete(address)
++    db.session.commit()
++
++    return jsonify({"msg": "Dirección eliminada"}), 200
++
++
++@api.route("/addresses/<int:address_id>", methods=["GET"])
++def get_address(address_id):
++    address = Address.query.get(address_id)
++    if not address:
++        return jsonify({"msg": "Dirección no encontrada"}), 404
++    return jsonify(address.serialize()), 200
++
++
++@api.route("/users/<int:user_id>/active-cart", methods=["GET"])
++def get_user_active_cart(user_id):
++    cart = Cart.query.filter_by(id_cliente=user_id, estado="pendiente").first()
++
++    if not cart:
++        cart = Cart(id_cliente=user_id, estado="pendiente", monto_total=0)
++        db.session.add(cart)
++        db.session.commit()
++
++    return jsonify({"cart": cart.serialize()}), 200
++
++
+ @api.route("/clients/<int:client_id>/carts/active", methods=["GET"])
+ def get_active_cart(client_id):
+     cart = Cart.query.filter(
+@@ -211,21 +289,13 @@ def get_book(id):
+ 
+ 
+ @api.route("/books", methods=["POST"])
+-@jwt_required()
+ def create_book():
+-    identity = get_jwt_identity()
+-    if identity.get("role") != "provider":
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    provider_id = identity["id"]
+-
+     body = request.get_json(silent=True) or {}
+ 
+     titulo = body.get("titulo")
+     autor = body.get("autor")
+     isbn = body.get("isbn")
+     precio_raw = body.get("precio")
+-    cantidad_raw = body.get("cantidad", 0)
+ 
+     if not titulo or not autor or not isbn:
+         return jsonify({"msg": "Faltan campos: titulo, autor, isbn"}), 400
+@@ -238,13 +308,6 @@ def create_book():
+     except:
+         return jsonify({"msg": "El precio debe ser un número"}), 400
+ 
+-    try:
+-        cantidad = int(cantidad_raw)
+-        if cantidad < 0:
+-            return jsonify({"msg": "La cantidad no puede ser negativa"}), 400
+-    except:
+-        return jsonify({"msg": "La cantidad debe ser un número entero"}), 400
+-
+     exists = Book.query.filter_by(isbn=isbn).first()
+     if exists:
+         return jsonify({"msg": "Ya existe un libro con ese isbn"}), 409
+@@ -256,44 +319,10 @@ def create_book():
+         precio=precio
+     )
+ 
+-    db.session.add(book)
+-    db.session.commit()
+-
+-    link = ProviderBook(
+-        id_proveedor=provider_id,
+-        id_libro=book.id,
+-        cantidad=cantidad
+-    )
+-    db.session.add(link)
+-    db.session.commit()
+-
+-    return jsonify({
+-        "book": book.serialize(),
+-        "provider_book": link.serialize()
+-    }), 201
+-
+-@api.route("/provider/books/<int:provider_book_id>", methods=["DELETE"])
+-@jwt_required()
+-def delete_provider_book(provider_book_id):
+-    identity = get_jwt_identity()
+-
+-    if identity.get("role") != "provider":
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    provider_id = identity["id"]
+-
+-    provider_book = ProviderBook.query.get(provider_book_id)
+-
+-    if not provider_book:
+-        return jsonify({"msg": "No encontrado"}), 404
+-
+-    if provider_book.id_proveedor != provider_id:
+-        return jsonify({"msg": "No puedes borrar este libro"}), 403
+-
+-    db.session.delete(provider_book)
++    db.session.add(book) #nuevo
+     db.session.commit()
+ 
+-    return jsonify({"msg": "Libro eliminado de tu catálogo"}), 200
++    return jsonify(book.serialize()), 201
+ 
+ 
+ @api.route("/books/<int:id>", methods=["PUT"])
+@@ -604,6 +633,42 @@ def delete_cart(cart_id):
+     return jsonify({"msg": "Carrito eliminado"}), 200
+ 
+ 
++@api.route("/carts/<int:cart_id>/pay", methods=["POST"])
++def pay_cart(cart_id):
++    cart = Cart.query.get(cart_id)
++
++    if not cart:
++        return jsonify({"msg": "Carrito no encontrado"}), 404
++
++    if cart.estado != "pendiente":
++        return jsonify({"msg": "Este carrito no se puede pagar"}), 400
++
++    items = CartBook.query.filter_by(id_carrito=cart_id).all()
++
++    total = 0
++    for item in items:
++        precio_con_descuento = item.precio * (1 - item.descuento)
++        total += precio_con_descuento * item.cantidad
++
++    cart.monto_total = total
++    cart.estado = "pagado"
++    db.session.commit()
++
++    new_cart = Cart(
++        id_cliente=cart.id_cliente,
++        estado="pendiente",
++        monto_total=0
++    )
++    db.session.add(new_cart)
++    db.session.commit()
++
++    return jsonify({
++        "msg": "Pago realizado con éxito",
++        "cart_pagado": cart.serialize(),
++        "nuevo_carrito": new_cart.serialize()
++    }), 200
++
++
+ @api.route("/cart-books", methods=["GET"])
+ def get_cart_books():
+     items = CartBook.query.all()
+@@ -669,7 +734,6 @@ def delete_cart_book(item_id):
+     return jsonify({"msg": "Item eliminado"}), 200
+ 
+ 
+-
+ @api.route("/delivery", methods=["GET"])
+ @jwt_required()
+ def get_delivery_list():
+@@ -689,22 +753,23 @@ def get_delivery_detail(delivery_id):
+         return jsonify({"msg": "Repartidor no encontrado"}), 404
+     return jsonify(item.serialize()), 200
+ 
+-@api.route('/delivery/login', methods=['POST']) 
+-def delivery_login(): 
+-    data = request.json 
+-    email = data.get("email") 
+-    password = data.get("password") 
+-    
+-    delivery = Delivery.query.filter_by(email=email).first() 
+-    
+-    if not delivery or not delivery.check_password(password): 
+-        return jsonify({"msg": "Credenciales incorrectas"}), 401 
+-    
+-    token = create_access_token(identity=delivery.id) 
+-    
+-    return jsonify({ 
+-        "token": token, 
+-        "user": delivery.serialize() 
++
++@api.route('/delivery/login', methods=['POST'])
++def delivery_login():
++    data = request.json
++    email = data.get("email")
++    password = data.get("password")
++
++    delivery = Delivery.query.filter_by(email=email).first()
++
++    if not delivery or not delivery.check_password(password):
++        return jsonify({"msg": "Credenciales incorrectas"}), 401
++
++    token = create_access_token(identity=delivery.id)
++
++    return jsonify({
++        "token": token,
++        "user": delivery.serialize()
+     }), 200
+ 
+ 
+@@ -739,8 +804,6 @@ def create_delivery():
+     return jsonify(d.serialize()), 201
+ 
+ 
+-
+-
+ @api.route("/delivery/<int:delivery_id>", methods=["PUT"])
+ def update_delivery(delivery_id):
+     d = Delivery.query.get(delivery_id)
+@@ -782,10 +845,6 @@ def delete_delivery(delivery_id):
+     return jsonify({"msg": "Repartidor eliminado"}), 200
+ 
+ 
+-
+-
+-
+-
+ @api.route("/reviews", methods=["GET"])
+ def get_reviews():
+     reviews = Review.query.all()
+@@ -888,8 +947,6 @@ def delete_review(review_id):
+     return jsonify({"msg": "Review eliminada"}), 200
+ 
+ 
+-
+-
+ @api.route("/login", methods=["POST"])
+ def login():
+     body = request.get_json() or {}
+@@ -947,8 +1004,6 @@ def admin_users():
+     return jsonify([u.serialize() for u in usuarios]), 200
+ 
+ 
+-
+-
+ # Login proveedores Layla abajo
+ 
+ 
+@@ -983,7 +1038,6 @@ def login_provider():
+     }), 200
+ 
+ 
+-
+ @api.route("/delivery/pedidos", methods=["GET"])
+ @jwt_required()
+ def delivery_pedidos():
+@@ -991,46 +1045,25 @@ def delivery_pedidos():
+     if user["role"] != "delivery":
+         return jsonify({"msg": "No autorizado"}), 403
+     return jsonify({"msg": "Pedidos del repartidor"}), 200
+-    user = User.query.filter_by(email=email).first()
+-    if user:
+-        return jsonify({"msg": "No tienes permiso para acceder al panel de proveedor"}), 403
+ 
+-    # Si no existe como user, buscamos en providers
+-    provider = Provider.query.filter_by(email=email).first()
+-
+-    if not provider or provider.password != password:
+-        return jsonify({"msg": "Credenciales incorrectas"}), 401
+-
+-    access_token = create_access_token(
+-        identity={
+-            "id": provider.id,
+-            "role": "provider"
+-        }
+-    )
+-
+-    return jsonify({
+-        "msg": "Login correcto",
+-        "token": access_token,
+-        "user": {**provider.serialize(), "role": "provider"}  # 👈 añadimos role
+-    }), 200
+-
+-# @api.route("/validate", methods=["GET"]) 
+-# @jwt_required() 
+-# def validate(): 
++# @api.route("/validate", methods=["GET"])
++# @jwt_required()
++# def validate():
+ #     identity = get_jwt_identity()
+-#     
+-#     user = User.query.get(identity["id"]) 
+-#     if not user: 
+-#         return jsonify({"msg": "Usuario no encontrado"}), 404 
+-#     
+-#     return jsonify({ 
+-#         "user": user.serialize(), 
+-#         "role": user.role 
++#
++#     user = User.query.get(identity["id"])
++#     if not user:
++#         return jsonify({"msg": "Usuario no encontrado"}), 404
++#
++#     return jsonify({
++#         "user": user.serialize(),
++#         "role": user.role
+ #     }), 200
+ 
+-@api.route("/validate", methods=["GET"]) 
+-@jwt_required() 
+-def validate(): 
++
++@api.route("/validate", methods=["GET"])
++@jwt_required()
++def validate():
+     identity = get_jwt_identity()
+     role = identity.get("role")
+ 
+@@ -1050,156 +1083,11 @@ def validate():
+             "user": {**entity.serialize(), "role": "delivery"}
+         }), 200
+ 
+-    user = User.query.get(identity["id"]) 
+-    if not user: 
+-        return jsonify({"msg": "Usuario no encontrado"}), 404 
+-    
+-    return jsonify({ 
+-        "user": user.serialize()
+-    }), 200
+-
+-# CRUD Provider-Books Layla
+-
+-@api.route("/provider/books", methods=["GET"])
+-@jwt_required()
+-def get_provider_books():
+-    identity = get_jwt_identity()
+-    if identity.get("role") != "provider":
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    provider_id = identity["id"]
+-
+-    links = ProviderBook.query.filter_by(id_proveedor=provider_id).all()
+-
+-    return jsonify([
+-        {
+-            "id": link.id,
+-            "cantidad": link.cantidad,
+-            "libro": link.libro.serialize() if link.libro else None
+-        }
+-        for link in links
+-    ]), 200
+-
+-@api.route("/provider/books/<int:provider_book_id>", methods=["GET"])
+-@jwt_required()
+-def get_provider_book_detail(provider_book_id):
+-    identity = get_jwt_identity()
+-
+-    if identity.get("role") != "provider":
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    provider_id = identity["id"]
+-
+-    link = ProviderBook.query.get(provider_book_id)
+-
+-    if not link:
+-        return jsonify({"msg": "No encontrado"}), 404
+-
+-    if link.id_proveedor != provider_id:
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    return jsonify({
+-        "id": link.id,
+-        "cantidad": link.cantidad,
+-        "libro": link.libro.serialize() if link.libro else None
+-    }), 200
+-@api.route("/provider/books/<int:provider_book_id>", methods=["PUT"])
+-@jwt_required()
+-def update_provider_book(provider_book_id):
+-    identity = get_jwt_identity()
+-
+-    if identity.get("role") != "provider":
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    provider_id = identity["id"]
+-    body = request.get_json(silent=True) or {}
+-
+-    link = ProviderBook.query.get(provider_book_id)
+-
+-    if not link:
+-        return jsonify({"msg": "No encontrado"}), 404
+-
+-    # 🔐 Seguridad: solo su propio libro
+-    if link.id_proveedor != provider_id:
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    book = link.libro
+-
+-    # Editar libro
+-    book.titulo = body.get("titulo", book.titulo)
+-    book.autor = body.get("autor", book.autor)
+-    book.isbn = body.get("isbn", book.isbn)
+-
+-    if "precio" in body:
+-        try:
+-            book.precio = float(body["precio"])
+-        except:
+-            return jsonify({"msg": "Precio inválido"}), 400
+-
+-    # Editar cantidad
+-    if "cantidad" in body:
+-        try:
+-            cantidad = int(body["cantidad"])
+-            if cantidad < 0:
+-                return jsonify({"msg": "Cantidad no válida"}), 400
+-            link.cantidad = cantidad
+-        except:
+-            return jsonify({"msg": "Cantidad inválida"}), 400
+-
+-    db.session.commit()
++    user = User.query.get(identity["id"])
++    if not user:
++        return jsonify({"msg": "Usuario no encontrado"}), 404
+ 
+     return jsonify({
+-        "id": link.id,
+-        "cantidad": link.cantidad,
+-        "libro": link.libro.serialize()
++        "user": user.serialize()
+     }), 200
+ 
+-# Pedidos del proveedor
+-
+-
+-@api.route("/provider/orders", methods=["GET"])
+-@jwt_required()
+-def get_provider_orders():
+-    identity = get_jwt_identity()
+-    if identity.get("role") != "provider":
+-        return jsonify({"msg": "No autorizado"}), 403
+-
+-    provider_id = identity["id"]
+-
+-    # Trae SOLO líneas de carrito (CartBook) que correspondan a libros de este proveedor
+-    rows = (
+-        db.session.query(Cart, CartBook, Book)
+-        .join(CartBook, CartBook.id_carrito == Cart.id)
+-        .join(Book, Book.id == CartBook.id_libro)
+-        .join(ProviderBook, and_(
+-            ProviderBook.id_libro == Book.id,
+-            ProviderBook.id_proveedor == provider_id
+-        ))
+-        .filter(Cart.estado == "pagado")
+-        .order_by(Cart.fecha.desc(), Cart.id.desc())
+-        .all()
+-    )
+-
+-    # Agrupar por carrito
+-    orders = {}
+-    for cart, cartbook, book in rows:
+-        if cart.id not in orders:
+-            orders[cart.id] = {
+-                "cart_id": cart.id,
+-                "estado": cart.estado,
+-                "fecha": cart.fecha.isoformat() if cart.fecha else None,
+-                "id_cliente": cart.id_cliente,
+-                "items": []
+-            }
+-
+-        orders[cart.id]["items"].append({
+-            "cart_book_id": cartbook.id,
+-            "id_libro": book.id,
+-            "titulo": book.titulo,
+-            "isbn": book.isbn,
+-            "cantidad": cartbook.cantidad,
+-            "precio": cartbook.precio,
+-            "descuento": cartbook.descuento
+-        })
+-
+-    return jsonify(list(orders.values())), 200

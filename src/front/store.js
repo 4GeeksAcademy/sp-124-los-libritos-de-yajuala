@@ -1,38 +1,92 @@
-export const initialStore=()=>{
-  return{
+export const initialStore = () => {
+  return {
     message: null,
-    todos: [
-      {
-        id: 1,
-        title: "Make the bed",
-        background: null,
-      },
-      {
-        id: 2,
-        title: "Do my homework",
-        background: null,
-      }
-    ]
-  }
-}
+    todos: [],
+
+    user: JSON.parse(localStorage.getItem("user") || "null"),
+    token: localStorage.getItem("token") || null,
+
+    cart: JSON.parse(localStorage.getItem("cart") || "[]"),
+    activeCart: null,
+  };
+};
 
 export default function storeReducer(store, action = {}) {
-  switch(action.type){
-    case 'set_hello':
+  switch (action.type) {
+    case "set_hello":
+      return { ...store, message: action.payload };
+
+    case "add_task":
+      const { id, color } = action.payload;
       return {
         ...store,
-        message: action.payload
+        todos: store.todos.map((todo) =>
+          todo.id === id ? { ...todo, background: color } : todo,
+        ),
       };
-      
-    case 'add_task':
 
-      const { id,  color } = action.payload
+    case "set_user":
+      localStorage.setItem("user", JSON.stringify(action.payload));
+      return { ...store, user: action.payload };
+
+    case "set_token":
+      localStorage.setItem("token", action.payload);
+      return {
+        ...store,
+        token: action.payload,
+      };
+
+    case "add_to_cart": {
+      const book = action.payload;
+      const exists = store.cart.find((item) => item.id === book.id);
+
+      if (exists) {
+        return {
+          ...store,
+          cart: store.cart.map((item) =>
+            item.id === book.id
+              ? { ...item, cantidad: item.cantidad + 1 }
+              : item,
+          ),
+        };
+      }
 
       return {
         ...store,
-        todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
+        cart: [...store.cart, { ...book, cantidad: 1 }],
       };
+    }
+
+    case "remove_from_cart":
+      return {
+        ...store,
+        cart: store.cart.filter((item) => item.id !== action.payload),
+      };
+
+    case "update_cart_qty":
+      return {
+        ...store,
+        cart: store.cart.map((item) =>
+          item.id === action.payload.id
+            ? { ...item, cantidad: action.payload.cantidad }
+            : item,
+        ),
+      };
+
+    case "clear_cart":
+      return {
+        ...store,
+        cart: [],
+      };
+
+    case "set_active_cart":
+      return {
+        ...store,
+        activeCart: action.payload,
+      };
+
     default:
-      throw Error('Unknown action.');
-  }    
+      console.warn("Unknown action:", action);
+      return store;
+  }
 }
