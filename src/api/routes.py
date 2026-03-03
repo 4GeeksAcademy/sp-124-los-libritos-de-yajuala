@@ -2159,13 +2159,18 @@ def google_pay_confirm():
         .get("token")
     ) or "TEST_TOKEN"
 
+    request._cached_json = {
+        "address_id": address_id,
+        "payment_method": "google_pay",
+        "payment_token": token
+    }
+
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
     try:
-        result, status = pay_cart(cart_id, address_id=address_id, payment_method="google_pay", payment_token=token)
+        result, status = pay_cart(cart_id)
 
         result_json = result.get_json() if hasattr(result, "get_json") else result
-
         return jsonify(result_json), status
 
     except Exception as e:
