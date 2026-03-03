@@ -2,7 +2,7 @@
 # exit on error
 set -o errexit
 
-npm install
+npm install --legacy-peer-deps
 npm run build
 
 pipenv install
