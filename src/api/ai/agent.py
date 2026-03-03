@@ -75,7 +75,7 @@ def agent_decide(user_message, history, user_id):
         }
 
 
-def agent_generate_final_response(user_message, history, resultados, user_id):
+def agent_generate_final_response(user_message, history, resultados, user_id, decision):
     normalized_history = normalize_history(history)
 
     fav_categories = get_user_favorite_categories(user_id)
