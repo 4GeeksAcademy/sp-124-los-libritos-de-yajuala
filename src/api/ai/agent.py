@@ -58,8 +58,13 @@ def agent_decide(user_message, history, user_id):
 
     raw = call_groq(messages)
 
+
+
     try:
-        return json.loads(raw)
+        start = raw.index("{")
+        end = raw.rindex("}") + 1
+        json_text = raw[start:end]
+        return json.loads(json_text)
     except Exception:
         print("\n\n🔥 ERROR PARSEANDO JSON 🔥")
         print(raw)
@@ -121,17 +126,16 @@ def agent_generate_final_response(user_message, history, resultados, user_id):
                 "autor": libro_importado.get("autor"),
                 "categoria": libro_importado.get("categoria")
             },
-            "acciones": [] 
+            "acciones": []
         }
 
     libro_externo = resultados[0] if resultados else None
 
     if not libro_externo:
         return {
-        "respuesta": texto or "No encontré libros para esa categoría, ¿quieres que busque otro género?",
-        "acciones": []
+            "respuesta": texto or "No encontré libros para esa categoría, ¿quieres que busque otro género?",
+            "acciones": []
         }
-
 
     titulo = libro_externo.get("titulo")
     autor = libro_externo.get("autor")
