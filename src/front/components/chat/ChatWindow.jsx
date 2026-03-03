@@ -43,7 +43,14 @@ export default function ChatWindow({ conversation }) {
     }
 
     const data = await res.json();
-    setMessages(prev => [...prev, data.user_message, data.bot_message]);
+
+    const botMessage = {
+      ...data.bot_message,
+      parsed: data.bot_data
+    };
+
+    setMessages(prev => [...prev, data.user_message, botMessage]);
+
   };
 
   const solicitarImportacion = async (payload) => {
@@ -73,15 +80,7 @@ export default function ChatWindow({ conversation }) {
         {messages.map(msg => {
           if (!msg) return null;
 
-          let parsed = null;
-
-          if (msg.sender === "bot") {
-            try {
-              parsed = JSON.parse(msg.content);
-            } catch (e) {
-              parsed = null;
-            }
-          }
+          const parsed = msg.parsed || null;
 
           const isBot = msg.sender === "bot";
 
@@ -91,11 +90,10 @@ export default function ChatWindow({ conversation }) {
               className={`d-flex ${isBot ? "justify-content-start" : "justify-content-end"}`}
             >
               <div
-                className={`p-3 rounded shadow-sm ${
-                  isBot
+                className={`p-3 rounded shadow-sm ${isBot
                     ? "bg-light border text-dark"
                     : "bg-primary text-white"
-                }`}
+                  }`}
                 style={{ maxWidth: "75%" }}
               >
                 <p className="mb-2">

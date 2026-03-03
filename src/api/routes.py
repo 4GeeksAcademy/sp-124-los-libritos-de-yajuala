@@ -2730,9 +2730,11 @@ def send_message(conversation_id):
     db.session.commit()
 
     return jsonify({
-        "user_message": msg_user.serialize(),
-        "bot_message": msg_bot.serialize()
+    "user_message": msg_user.serialize(),
+    "bot_message": msg_bot.serialize(),
+    "bot_data": bot_reply
     }), 200
+
 
 
 @api.route("/proveedores/notificaciones", methods=["POST"])
