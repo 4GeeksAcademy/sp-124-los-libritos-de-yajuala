@@ -2147,11 +2147,8 @@ def google_pay_confirm():
     address_id = body.get("address_id")
     paymentData = body.get("paymentData", {})
 
-    if not cart_id:
-        return jsonify({"status": "error", "msg": "Falta cart_id"}), 400
-
-    if not address_id:
-        return jsonify({"status": "error", "msg": "Falta address_id"}), 400
+    if not cart_id or not address_id:
+        return jsonify({"status": "error", "msg": "Faltan cart_id o address_id"}), 400
 
     token = (
         paymentData.get("paymentMethodData", {})
@@ -2168,9 +2165,11 @@ def google_pay_confirm():
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
     try:
-        result, status = pay_cart(cart_id)
+        response = pay_cart(cart_id)
 
-        result_json = result.get_json() if hasattr(result, "get_json") else result
+        result_json = response.get_json()
+        status = response.status_code
+
         return jsonify(result_json), status
 
     except Exception as e:
