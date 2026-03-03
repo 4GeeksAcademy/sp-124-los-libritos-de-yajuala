@@ -2705,12 +2705,13 @@ def send_message(conversation_id):
             f"%{decision['query']}%")).limit(5).all()
         resultados = [{"titulo": b.titulo, "autor": b.autor} for b in libros]
         bot_reply = agent_generate_final_response(
-            user_message, history, resultados, user_id)
+    user_message, history, resultados, user_id, decision
+    )
 
     elif decision["accion"] == "buscar_externos":
         resultados = google_books_search(decision["query"])
         bot_reply = agent_generate_final_response(
-            user_message, history, resultados, user_id)
+            user_message, history, resultados, user_id, decision)
 
     if isinstance(bot_reply, dict):
         bot_text = bot_reply.get("respuesta", "")
