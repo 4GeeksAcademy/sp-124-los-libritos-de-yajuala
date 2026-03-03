@@ -957,35 +957,30 @@ def pay_cart(cart_id, address_id=None, payment_method=None, payment_token=None):
     body = request.get_json(silent=True) or {}
     address_id = address_id or body.get("address_id")
     payment_method = payment_method or body.get("payment_method")
-    payment_token = payment_token or body.get("payment_token") 
+    payment_token = payment_token or body.get("payment_token")
 
     if not address_id:
         return jsonify({"msg": "Falta address_id"}), 400
-
     if not payment_method:
         return jsonify({"msg": "Falta payment_method"}), 400
 
     cart = Cart.query.get(cart_id)
     if not cart:
         return jsonify({"msg": "Carrito no encontrado"}), 404
-
     if cart.estado != "pendiente":
         return jsonify({"msg": "Este carrito no se puede pagar"}), 400
 
     address = Address.query.get(address_id)
     if not address:
         return jsonify({"msg": "Dirección no encontrada"}), 404
-
     if address.id_usuario != cart.id_cliente:
         return jsonify({"msg": "Esa dirección no pertenece al cliente"}), 403
 
     items = CartBook.query.filter_by(id_carrito=cart_id).all()
-
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         if not pb:
             return jsonify({"msg": "Inventario del proveedor no encontrado"}), 400
-
         if pb.cantidad < item.cantidad:
             return jsonify({
                 "msg": f"Stock insuficiente para '{pb.libro.titulo}'. Disponible: {pb.cantidad}, pedido: {item.cantidad}"
@@ -994,13 +989,9 @@ def pay_cart(cart_id, address_id=None, payment_method=None, payment_token=None):
     for item in items:
         pb = ProviderBook.query.get(item.provider_book_id)
         pb.cantidad -= item.cantidad
-
     db.session.commit()
 
-    total = sum(
-        (item.precio * (1 - item.descuento)) * item.cantidad
-        for item in items
-    )
+    total = sum((item.precio * (1 - item.descuento)) * item.cantidad for item in items)
 
     cart.monto_total = total
     cart.estado = "pagado"
@@ -2142,7 +2133,6 @@ def create_shipment_from_paid_cart(cart_id):
 @api.route("/payments/google/confirm", methods=["POST"])
 def google_pay_confirm():
     body = request.get_json(silent=True) or {}
-
     cart_id = body.get("cart_id")
     address_id = body.get("address_id")
     paymentData = body.get("paymentData", {})
@@ -2159,17 +2149,18 @@ def google_pay_confirm():
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
     try:
-        response = pay_cart(
+        result = pay_cart(
             cart_id,
             address_id=address_id,
             payment_method="google_pay",
             payment_token=token
         )
-        if isinstance(response, tuple):
-            result_json, status = response
+
+        if isinstance(result, tuple) and len(result) == 2:
+            result_json, status = result
             return jsonify(result_json), status
-        else:
-            return response
+
+        return result
 
     except Exception as e:
         print("ERROR al procesar Google Pay:", str(e))
