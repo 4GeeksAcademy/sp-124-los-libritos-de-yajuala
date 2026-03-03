@@ -54,6 +54,7 @@ def geocode():
     )
     data = r.json()
 
+    print("GOOGLE RESPONSE:", data)
     if data.get("status") != "OK" or not data.get("results"):
         return jsonify({
             "msg": "Geocoding failed",
