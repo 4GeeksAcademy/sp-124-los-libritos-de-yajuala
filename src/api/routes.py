@@ -2167,20 +2167,20 @@ def google_pay_confirm():
         "payment_token": token
     }
 
-    import requests
-
-    backend_url = request.host_url.rstrip("/")
-    url = f"{backend_url}/api/carts/{cart_id}/pay"
-
     try:
-        resp = requests.post(url, json=payload, timeout=10)
-        try:
-            data = resp.json()
-        except Exception:
-            data = {"status": "error", "msg": "Respuesta no válida del backend"}
-        return jsonify(data), resp.status_code
+        cart = Cart.query.get(cart_id)
+        if not cart:
+            return jsonify({"status": "error", "msg": "Carrito no encontrado"}), 404
+
+        result = cart.pay(payload)
+
+        if not isinstance(result, dict):
+            result = {"status": "error", "msg": "Respuesta inválida de la función de pago"}
+
+        return jsonify(result), 200
+
     except Exception as e:
-        print("Error al llamar al backend:", str(e))
+        print("ERROR al procesar Google Pay:", str(e))
         return jsonify({"status": "error", "msg": "No se pudo procesar el pago"}), 500
 
 
