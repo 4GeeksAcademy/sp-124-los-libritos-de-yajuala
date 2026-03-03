@@ -58,8 +58,6 @@ def agent_decide(user_message, history, user_id):
 
     raw = call_groq(messages)
 
-
-
     try:
         start = raw.index("{")
         end = raw.rindex("}") + 1
@@ -132,10 +130,20 @@ def agent_generate_final_response(user_message, history, resultados, user_id):
     libro_externo = resultados[0] if resultados else None
 
     if not libro_externo:
-        return {
-            "respuesta": texto or "No encontré libros para esa categoría, ¿quieres que busque otro género?",
-            "acciones": []
-        }
+    return {
+        "respuesta": texto or "No encontré libros de esa categoría en nuestra base ni en fuentes externas. ¿Quieres que busque otro género o que solicite importación?",
+        "acciones": [
+            {
+                "tipo": "solicitar_importacion",
+                "label": "Solicitar importación",
+                "payload": {
+                    "titulo": decision.get("query"),
+                    "autor": "Desconocido",
+                    "categoria": decision.get("query")
+                }
+            }
+        ]
+    }
 
     titulo = libro_externo.get("titulo")
     autor = libro_externo.get("autor")

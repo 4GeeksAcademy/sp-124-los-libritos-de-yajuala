@@ -51,6 +51,7 @@ export default function ChatWindow({ conversation }) {
 
     setMessages(prev => [...prev, data.user_message, botMessage]);
 
+
   };
 
   const solicitarImportacion = async (payload) => {
@@ -91,8 +92,8 @@ export default function ChatWindow({ conversation }) {
             >
               <div
                 className={`p-3 rounded shadow-sm ${isBot
-                    ? "bg-light border text-dark"
-                    : "bg-primary text-white"
+                  ? "bg-light border text-dark"
+                  : "bg-primary text-white"
                   }`}
                 style={{ maxWidth: "75%" }}
               >
