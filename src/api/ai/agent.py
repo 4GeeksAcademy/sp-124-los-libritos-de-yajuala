@@ -130,7 +130,7 @@ def agent_generate_final_response(user_message, history, resultados, user_id):
     libro_externo = resultados[0] if resultados else None
 
     if not libro_externo:
-    return {
+        return {
         "respuesta": texto or "No encontré libros de esa categoría en nuestra base ni en fuentes externas. ¿Quieres que busque otro género o que solicite importación?",
         "acciones": [
             {
