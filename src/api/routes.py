@@ -2161,28 +2161,16 @@ def google_pay_confirm():
 
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
-    payload = {
-        "address_id": address_id,
-        "payment_method": "google_pay",
-        "payment_token": token
-    }
-
     try:
-        cart = Cart.query.get(cart_id)
-        if not cart:
-            return jsonify({"status": "error", "msg": "Carrito no encontrado"}), 404
+        result, status = pay_cart(cart_id, address_id=address_id, payment_method="google_pay", payment_token=token)
 
-        result = cart.pay(payload)
+        result_json = result.get_json() if hasattr(result, "get_json") else result
 
-        if not isinstance(result, dict):
-            result = {"status": "error", "msg": "Respuesta inválida de la función de pago"}
-
-        return jsonify(result), 200
+        return jsonify(result_json), status
 
     except Exception as e:
         print("ERROR al procesar Google Pay:", str(e))
         return jsonify({"status": "error", "msg": "No se pudo procesar el pago"}), 500
-
 
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
 
