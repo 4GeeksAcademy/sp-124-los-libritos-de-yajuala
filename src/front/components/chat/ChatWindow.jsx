@@ -85,10 +85,20 @@ export default function ChatWindow({ conversation }) {
 
           return (
             <div key={msg.id} className="mb-3">
-              
+
               {!parsed && (
-                <ChatMessageBubble message={msg} />
+                <div
+                  className={`p-3 rounded mb-2 ${msg.sender === "bot"
+                      ? "bg-light border text-dark"
+                      : "bg-primary text-white"
+                    }`}
+                  style={{ maxWidth: "75%" }}
+                >
+                  {msg.content}
+                </div>
               )}
+
+
 
               {parsed && (
                 <div className="p-3 rounded bg-light border">

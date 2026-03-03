@@ -2712,11 +2712,17 @@ def send_message(conversation_id):
         bot_reply = agent_generate_final_response(
             user_message, history, resultados, user_id)
 
+    if isinstance(bot_reply, dict):
+        bot_text = bot_reply.get("respuesta", "")
+    else:
+        bot_text = str(bot_reply)
+
     msg_bot = ChatMessage(
         conversation_id=conversation_id,
         sender="bot",
-        content=json.dumps(bot_reply, ensure_ascii=False)
+        content=bot_text
     )
+
 
     db.session.add(msg_bot)
 
