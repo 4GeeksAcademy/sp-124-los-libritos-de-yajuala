@@ -128,9 +128,10 @@ def agent_generate_final_response(user_message, history, resultados, user_id):
 
     if not libro_externo:
         return {
-            "respuesta": texto,
-            "acciones": []
+        "respuesta": texto or "No encontré libros para esa categoría, ¿quieres que busque otro género?",
+        "acciones": []
         }
+
 
     titulo = libro_externo.get("titulo")
     autor = libro_externo.get("autor")

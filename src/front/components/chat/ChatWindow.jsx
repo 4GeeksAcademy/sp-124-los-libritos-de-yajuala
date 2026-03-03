@@ -57,7 +57,7 @@ export default function ChatWindow({ conversation }) {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      await res.json();
       alert("Solicitud enviada a proveedores");
     } catch (err) {
       console.error("Error solicitando importación:", err);
@@ -67,12 +67,12 @@ export default function ChatWindow({ conversation }) {
 
   return (
     <div className="d-flex flex-column h-100 p-3">
-      <div className="flex-grow-1 overflow-auto mb-3">
 
-        {Array.isArray(messages) && messages.map(msg => {
+      <div className="flex-grow-1 overflow-auto mb-3 d-flex flex-column gap-3">
+
+        {messages.map(msg => {
           if (!msg) return null;
 
-          let content = msg.content;
           let parsed = null;
 
           if (msg.sender === "bot") {
@@ -83,39 +83,35 @@ export default function ChatWindow({ conversation }) {
             }
           }
 
+          const isBot = msg.sender === "bot";
+
           return (
-            <div key={msg.id} className="mb-3">
+            <div
+              key={msg.id}
+              className={`d-flex ${isBot ? "justify-content-start" : "justify-content-end"}`}
+            >
+              <div
+                className={`p-3 rounded shadow-sm ${
+                  isBot
+                    ? "bg-light border text-dark"
+                    : "bg-primary text-white"
+                }`}
+                style={{ maxWidth: "75%" }}
+              >
+                <p className="mb-2">
+                  {parsed ? parsed.respuesta : msg.content}
+                </p>
 
-              {!parsed && (
-                <div
-                  className={`p-3 rounded mb-2 ${msg.sender === "bot"
-                      ? "bg-light border text-dark"
-                      : "bg-primary text-white"
-                    }`}
-                  style={{ maxWidth: "75%" }}
-                >
-                  {msg.content}
-                </div>
-              )}
-
-
-
-              {parsed && (
-                <div className="p-3 rounded bg-light border">
-                  <p className="mb-2">{parsed.respuesta}</p>
-
-                  {parsed.acciones?.map((accion, i) => (
-                    <button
-                      key={i}
-                      className="btn btn-primary btn-sm mt-2"
-                      onClick={() => solicitarImportacion(accion.payload)}
-                    >
-                      {accion.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
+                {parsed?.acciones?.map((accion, i) => (
+                  <button
+                    key={i}
+                    className="btn btn-sm btn-outline-primary mt-2"
+                    onClick={() => solicitarImportacion(accion.payload)}
+                  >
+                    {accion.label}
+                  </button>
+                ))}
+              </div>
             </div>
           );
         })}
