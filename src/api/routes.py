@@ -954,10 +954,10 @@ def delete_cart(cart_id):
 
 @api.route("/carts/<int:cart_id>/pay", methods=["POST"])
 def pay_cart(cart_id, address_id=None, payment_method=None, payment_token=None):
-
     body = request.get_json(silent=True) or {}
-    address_id = body.get("address_id")
-    payment_method = body.get("payment_method")
+    address_id = address_id or body.get("address_id")
+    payment_method = payment_method or body.get("payment_method")
+    payment_token = payment_token or body.get("payment_token") 
 
     if not address_id:
         return jsonify({"msg": "Falta address_id"}), 400
@@ -2156,21 +2156,20 @@ def google_pay_confirm():
         .get("token")
     ) or "TEST_TOKEN"
 
-    request._cached_json = {
-        "address_id": address_id,
-        "payment_method": "google_pay",
-        "payment_token": token
-    }
-
     print("GOOGLE PAY TEST -> cart_id:", cart_id, "address_id:", address_id)
 
     try:
-        response = pay_cart(cart_id)
-
-        result_json = response.get_json()
-        status = response.status_code
-
-        return jsonify(result_json), status
+        response = pay_cart(
+            cart_id,
+            address_id=address_id,
+            payment_method="google_pay",
+            payment_token=token
+        )
+        if isinstance(response, tuple):
+            result_json, status = response
+            return jsonify(result_json), status
+        else:
+            return response
 
     except Exception as e:
         print("ERROR al procesar Google Pay:", str(e))
